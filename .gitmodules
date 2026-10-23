@@ -1,0 +1,3 @@
+[submodule "source/hlsdk"]
+	path = source/hlsdk
+	url = https://github.com/ValveSoftware/halflife.git

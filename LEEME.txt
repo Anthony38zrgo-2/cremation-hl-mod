@@ -1,0 +1,81 @@
+CREMATION - Ricochet y Escopeta de rebote
+
+INICIAR
+Steam abierto, Half-Life cerrado: abre Cremation.exe junto a hl.exe.
+El lanzador inicia una partida nueva en Rapidcore. Usa una partida nueva para
+probar esta version; los guardados anteriores no actualizan las entidades del mapa.
+
+ARMAS
+Traes las tres armas desde el inicio, cada una en su sitio del HUD.
+
+Grupo 2: RICOCHET. Usa los modelos originales instalados de Ricochet.
+- Clic izquierdo: un disco azul, 1000 unidades/segundo, sin dano directo.
+  Puede rebotar en paredes y corrige suavemente su trayectoria hacia enemigos
+  visibles frente a el, antes del primer rebote.
+  Al impactar reduce el movimiento y la animacion del enemigo al 25% durante
+  7 segundos. El cuerpo se ve azulado y semitransparente. Otro impacto renueva
+  la duracion. Al terminar se recuperan movimiento, animacion y aspecto.
+- Clic derecho: tres discos explosivos simultaneos, separados +/-7 grados.
+  Detonan al impactar, con onda expansiva y fuerte empuje, pero poco dano:
+  hasta 4 por disco / 12 por rafaga antes de modificadores del enemigo.
+  Radio 210, empuje horizontal hasta 850 por impacto, limitado a 1200 al acumular.
+- Sin recarga ni municion consumible. Intervalos: 0.5 s primario, 1.25 s secundario.
+
+Grupo 3: ESCOPETA DE REBOTE (icono "BNC"), junto a la escopeta normal.
+- Clic izquierdo: 12 perdigones fisicos, 1000 unidades/segundo, disparados con el
+  mismo patron que la descarga doble de la escopeta original. Rebotan dos veces en
+  paredes, suelo o techo y desaparecen en el tercer golpe. Si tocan a un enemigo le
+  hacen el dano de UN perdigon y desaparecen en el acto. Gasta 2 cartuchos.
+  Intervalo 1.5 s. Con menos de 2 cartuchos recarga desde la reserva.
+- Clic derecho: granada de contacto, parecida a la del subfusil. Cuanto mas arriba
+  apuntes al lanzarla, mas dano hace: 25% del dano del lanzagranadas apuntando al
+  suelo, 50% a 30 grados, 75% a 60, 100% a 90. El dano se fija al disparar: mirar
+  arriba despues no lo aumenta. Explota al primer contacto, una sola vez, con dano
+  radial, oclusion por paredes y un empujon pequeno. Gasta 1 granada. Intervalo 1 s.
+- Municion propia del arma: 8 en el cargador, 40 de reserva, 6 granadas. El HUD
+  muestra los contadores con los iconos de cartucho y de granada AR.
+
+Escopeta normal: sigue en su grupo con su ataque, recarga y dano originales.
+No hay pistola convencional ni otras armas recogibles en este mapa.
+El HEV, el punto de inicio y los 20 zombis normales de Ravenholm se conservan.
+El enemigo mas cercano al inicio esta a 1059.9 unidades, sin vision directa.
+
+PRUEBA MANUAL PENDIENTE
+1. Arranca con Cremation.exe y comprueba que aparecen Ricochet (grupo 2), la
+   escopeta normal y "BNC" (grupo 3), y que puedes elegir las tres.
+2. Ricochet: disco primario, transparencia azul, ralentizacion y recuperacion a los
+   7 segundos; secundario de tres discos con explosion y empuje fuerte.
+3. Escopeta de rebote, primario: dispara contra una pared en un pasillo. Deben verse
+   los perdigones rebotar dos veces y desaparecer en el tercer golpe. Comprueba que
+   a un zombi le hace dano de un perdigon y no lo atraviesa.
+4. Escopeta de rebote, secundario: lanza granadas apuntando al suelo y a 90 grados y
+   compara el dano. Comprueba que no cambia si miras arriba despues de lanzar, que no
+   atraviesa paredes y que el empujon es pequeno.
+5. Alterna las tres armas, comprueba animaciones y HUD, y mira que el cargador y los
+   contadores de cada arma no se mezclan.
+6. Comprueba el arma con guardado y cambio de mapa si vas a usar guardados.
+
+Se han probado la logica de las dos armas con un motor simulado, la carga real de
+las DLL Win32, la instalacion del mapa y el arranque del servidor GoldSrc real.
+La validacion visual, el tacto, el HUD dibujado y la navegacion quedan para el
+usuario. No se ha abierto ni controlado el juego para validar esta actualizacion.
+
+GUARDADOS Y CONFIGURACION
+Los discos y perdigones en vuelo y los efectos temporales no continuan al cargar un
+guardado; se retiran al restaurar para no dejar cuerpos sin clase valida.
+Se guarda el aspecto y movimiento normales para evitar congelaciones permanentes.
+cl_lw 0 es necesario en Cremation para que el cliente heredado no prediga tiros;
+se aplica al iniciar el mod. Las demas teclas conservan su configuracion.
+
+DESARROLLO Y PROCEDENCIA
+tools/build_ricochet.ps1 compila, prueba, instala y verifica el mod completo.
+source/ricochet_proxy.cpp conserva la logica de la DLL Ravenholm y anade las armas.
+source/ricochet_balance.h contiene los valores de Ricochet.
+source/bounce_shotgun_balance.h contiene los valores de la escopeta de rebote.
+source/BOUNCE_SHOTGUN.md documenta la implementacion, sus limites y sus pruebas.
+source/RICOCHET_ANALYSIS.md documenta Freeze Shot, Triple Shot y las adaptaciones.
+ricochet-assets.json y bounce-assets.json registran los archivos usados y su origen.
+placement.json y file-manifest.json documentan posiciones y hashes.
+backups/before-ricochet y backups/before-bounce-shotgun conservan el estado previo.
+
+Requiere el Half-Life instalado. No se han modificado valve, Ricochet ni Ravenholm.

@@ -1,0 +1,7 @@
+game "Cremation"
+developer "Cremation"
+startmap "rapidcore"
+trainmap "rapidcore"
+gamedll "dlls/cremation.dll"
+type "singleplayer_only"
+secure "1"

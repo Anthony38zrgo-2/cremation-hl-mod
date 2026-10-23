@@ -1,0 +1,251 @@
+{
+  "name": "Cremation",
+  "map": "rapidcore",
+  "spawn": {
+    "origin": [
+      432,
+      -1601,
+      -220
+    ],
+    "angles": [
+      0,
+      155,
+      0
+    ]
+  },
+  "loadout": [
+    "item_suit",
+    "weapon_ricochet",
+    "weapon_shotgun",
+    "weapon_bounce_shotgun",
+    "ammo_buckshot",
+    "ammo_buckshot",
+    "ammo_buckshot"
+  ],
+  "zombies": [
+    {
+      "id": 1,
+      "classname": "monster_zombie",
+      "origin": [
+        -160,
+        800,
+        -319
+      ],
+      "distance_from_spawn": 2472.9,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 2,
+      "classname": "monster_zombie",
+      "origin": [
+        200,
+        880,
+        -319
+      ],
+      "distance_from_spawn": 2491.8,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 3,
+      "classname": "monster_zombie",
+      "origin": [
+        500,
+        700,
+        -319
+      ],
+      "distance_from_spawn": 2302.0,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 4,
+      "classname": "monster_zombie",
+      "origin": [
+        -550,
+        700,
+        -287
+      ],
+      "distance_from_spawn": 2501.8,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 5,
+      "classname": "monster_zombie",
+      "origin": [
+        -1450,
+        350,
+        -319
+      ],
+      "distance_from_spawn": 2710.8,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 6,
+      "classname": "monster_zombie",
+      "origin": [
+        -1450,
+        -150,
+        -319
+      ],
+      "distance_from_spawn": 2376.4,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 7,
+      "classname": "monster_zombie",
+      "origin": [
+        -1250,
+        0,
+        -319
+      ],
+      "distance_from_spawn": 2322.1,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 8,
+      "classname": "monster_zombie",
+      "origin": [
+        -1350,
+        200,
+        -319
+      ],
+      "distance_from_spawn": 2533.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 9,
+      "classname": "monster_zombie",
+      "origin": [
+        -850,
+        300,
+        -287
+      ],
+      "distance_from_spawn": 2292.9,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 10,
+      "classname": "monster_zombie",
+      "origin": [
+        -850,
+        -200,
+        -287
+      ],
+      "distance_from_spawn": 1899.0,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 11,
+      "classname": "monster_zombie",
+      "origin": [
+        -800,
+        -480,
+        -287
+      ],
+      "distance_from_spawn": 1665.7,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 12,
+      "classname": "monster_zombie",
+      "origin": [
+        -240,
+        100,
+        -287
+      ],
+      "distance_from_spawn": 1828.9,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 13,
+      "classname": "monster_zombie",
+      "origin": [
+        180,
+        100,
+        -287
+      ],
+      "distance_from_spawn": 1719.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 14,
+      "classname": "monster_zombie",
+      "origin": [
+        -240,
+        -300,
+        -319
+      ],
+      "distance_from_spawn": 1464.3,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 15,
+      "classname": "monster_zombie",
+      "origin": [
+        180,
+        -300,
+        -319
+      ],
+      "distance_from_spawn": 1325.2,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 16,
+      "classname": "monster_zombie",
+      "origin": [
+        960,
+        0,
+        -287
+      ],
+      "distance_from_spawn": 1685.8,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 17,
+      "classname": "monster_zombie",
+      "origin": [
+        1100,
+        -400,
+        -287
+      ],
+      "distance_from_spawn": 1374.3,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 18,
+      "classname": "monster_zombie",
+      "origin": [
+        900,
+        -650,
+        -287
+      ],
+      "distance_from_spawn": 1059.9,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 19,
+      "classname": "monster_zombie",
+      "origin": [
+        480,
+        -300,
+        -319
+      ],
+      "distance_from_spawn": 1301.9,
+      "direct_line_of_sight": false
+    },
+    {
+      "id": 20,
+      "classname": "monster_zombie",
+      "origin": [
+        480,
+        100,
+        -319
+      ],
+      "distance_from_spawn": 1701.7,
+      "direct_line_of_sight": false
+    }
+  ],
+  "navigation_nodes": 186,
+  "original_map_sha256": "c96d75b16d8507dc996c49294aeda8bb7d5279a5930576aa5b6494e89d07f9bc",
+  "runtime_source": "Half-Life2Classic_Ravenholm",
+  "validation": "Static geometry and files only; manual gameplay validation pending."
+}

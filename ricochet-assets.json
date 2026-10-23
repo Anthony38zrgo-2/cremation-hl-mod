@@ -1,0 +1,16 @@
+{
+  "dlls/hl_ravenholm.dll": "Half-Life2Classic_Ravenholm/dlls/hl.dll",
+  "models/v_9mmhandgun.mdl": "ricochet/models/v_disc.mdl",
+  "models/p_9mmhandgun.mdl": "ricochet/models/p_disc.mdl",
+  "models/w_9mmhandgun.mdl": "ricochet/models/disc.mdl",
+  "models/ricochet/disc.mdl": "ricochet/models/disc.mdl",
+  "models/ricochet/disc_hard.mdl": "ricochet/models/disc_hard.mdl",
+  "sprites/ricochet/lgtning.spr": "valve/sprites/lgtning.spr",
+  "sprites/ricochet/discreturn.spr": "ricochet/sprites/discreturn.spr",
+  "sound/ricochet/throw.wav": "ricochet/sound/weapons/cbar_miss1.wav",
+  "sound/ricochet/altfire.wav": "ricochet/sound/weapons/altfire.wav",
+  "sound/ricochet/freeze.wav": "valve/sound/weapons/electro5.wav",
+  "sound/ricochet/blast.wav": "valve/sound/weapons/explode3.wav",
+  "sound/ricochet/bounce.wav": "ricochet/sound/weapons/xbow_hit1.wav",
+  "dlls/cremation.dll": "Cremation/source/build/cremation.dll"
+}
