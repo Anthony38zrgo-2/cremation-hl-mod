@@ -85,7 +85,9 @@ static int pipeWrenchSequence(int sequence) {
 }
 static void coords(const Vector& p) { engine.pfnWriteCoord(p.x);engine.pfnWriteCoord(p.y);engine.pfnWriteCoord(p.z); }
 static void sound(edict_t* e,const char* name) { engine.pfnEmitSound(e,CHAN_WEAPON,name,1,ATTN_NORM,0,100); }
+#include "blood_cultist_voices.h"
 static void hookEmitSound(edict_t* entity,int channel,const char* sample,float volume,float attenuation,int flags,int pitch) {
+    if(cultistVoiceSound(entity,channel,sample,flags))return;
     const char* replacement=sample;
     if(pipeWrench(entity)) {
         if(!std::strcmp(sample,"weapons/cbar_hit1.wav"))replacement="weapons/pwrench_hit1.wav";
@@ -122,6 +124,7 @@ struct NailProjectile {
     edict_t* entity=nullptr; int serial=0;
     edict_t* owner=nullptr; int ownerSerial=0;
     Vector velocity{0,0,0}; float born=0,damage=9.f;
+    std::array<edict_t*,2> visuals{};std::array<int,2> visualSerials{};float nextLight=0;
 };
 static std::vector<NailProjectile> nails;
 
@@ -329,6 +332,7 @@ static int sharedAmmo(edict_t* p,int ammoIndex,int spend) {
     if(spend>0) {if(*ammo<spend)return -1;*ammo-=spend;}
     return *ammo;
 }
+#include "link_plasma.inc"
 static bool launchNail(edict_t* player,float nailDamage,bool secondary) {
     Vector aim=player->v.v_angle+player->v.punchangle;
     float yaw=aim.y*3.14159265359f/180.f,pitch=aim.x*3.14159265359f/180.f;
@@ -342,28 +346,38 @@ static bool launchNail(edict_t* player,float nailDamage,bool secondary) {
     e->v.classname=engine.pfnAllocString("cremation_nail");
     e->v.movetype=MOVETYPE_NONE;e->v.solid=SOLID_NOT;e->v.takedamage=0;
     e->v.owner=player;e->v.angles=Vector(aim.x,aim.y,0);e->v.scale=1.f;
-    engine.pfnSetModel(e,"models/cremation/nail.mdl");
+    plasmaStyle(e,PlasmaBody,.25f,240);
     Vector mins(-1,-1,-1),maxs(1,1,1);engine.pfnSetSize(e,mins,maxs);engine.pfnSetOrigin(e,origin);
-    nails.push_back({e,e->serialnumber,player,player->serialnumber,direction*1000.f,globals->time,nailDamage});
+    nails.push_back({e,e->serialnumber,player,player->serialnumber,direction*750.f,globals->time,nailDamage});
+    auto& plasma=nails.back();
+    plasma.visuals[0]=plasmaLayer(player,origin,PlasmaCore,.22f,255);
+    plasma.visuals[1]=plasmaLayer(player,origin,PlasmaHalo,.4f,150);
+    for(int i=0;i<2;++i)if(plasma.visuals[i])plasma.visualSerials[i]=plasma.visuals[i]->serialnumber;
+    plasmaUpdate(plasma);
     engine.pfnMessageBegin(MSG_BROADCAST,SvcTemp,nullptr,nullptr);
     engine.pfnWriteByte(TE_BEAMFOLLOW);engine.pfnWriteShort(engine.pfnIndexOfEdict(e));engine.pfnWriteShort(trailSprite);
-    engine.pfnWriteByte(6);engine.pfnWriteByte(3);
+    engine.pfnWriteByte(1);engine.pfnWriteByte(2);
     engine.pfnWriteByte(secondary?255:35);engine.pfnWriteByte(secondary?35:255);engine.pfnWriteByte(secondary?35:45);
-    engine.pfnWriteByte(220);engine.pfnMessageEnd();
+    engine.pfnWriteByte(85);engine.pfnMessageEnd();
     return true;
 }
 static void removeNail(NailProjectile& nail) {
+    for(int i=0;i<2;++i) {
+        auto e=nail.visuals[i];
+        if(valid(e)&&e->serialnumber==nail.visualSerials[i])engine.pfnRemoveEntity(e);
+        nail.visuals[i]=nullptr;
+    }
     if(valid(nail.entity)&&nail.entity->serialnumber==nail.serial)engine.pfnRemoveEntity(nail.entity);
     nail.entity=nullptr;
 }
 static void advanceNails(float dt) {
     for(auto& nail:nails) {
-        if(!valid(nail.entity)||nail.entity->serialnumber!=nail.serial) {nail.entity=nullptr;continue;}
+        if(!valid(nail.entity)||nail.entity->serialnumber!=nail.serial) {removeNail(nail);continue;}
         if(!valid(nail.owner)||nail.owner->serialnumber!=nail.ownerSerial||nail.owner->v.health<=0||globals->time-nail.born>6.f) {removeNail(nail);continue;}
         Vector from=nail.entity->v.origin,to=from+nail.velocity*dt;
         TraceResult tr{};engine.pfnTraceLine(from,to,0,nail.owner,&tr);
         if(tr.fStartSolid||tr.fAllSolid) {removeNail(nail);continue;}
-        if(tr.flFraction>=1.f) {engine.pfnSetOrigin(nail.entity,to);continue;}
+        if(tr.flFraction>=1.f) {engine.pfnSetOrigin(nail.entity,to);plasmaUpdate(nail);continue;}
         engine.pfnSetOrigin(nail.entity,tr.vecEndPos);
         auto victim=tr.pHit;
         if(valid(victim)&&victim->v.takedamage>0&&victim->pvPrivateData) {
@@ -376,19 +390,22 @@ static void advanceNails(float dt) {
     nails.erase(std::remove_if(nails.begin(),nails.end(),[](const NailProjectile& n){return !n.entity;}),nails.end());
 }
 static bool fireNailgun(edict_t* p,bool secondary) {
-    const int cost=secondary?3:1;
+    // Continuous secondary is owned by linkPostThink, never by nail projectiles.
+    if(secondary)return false;
+    const int cost=1;
     if(sharedAmmo(p,nailAmmoIndex,0)<cost)return false;
-    if(!launchNail(p,secondary?18.f:9.f,secondary))return false;
+    if(!launchNail(p,9.f,false))return false;
     int remaining=sharedAmmo(p,nailAmmoIndex,cost);
     if(msgAmmoX&&nailAmmoIndex>=0&&remaining>=0) {
         engine.pfnMessageBegin(MSG_ONE,msgAmmoX,nullptr,p);
         engine.pfnWriteByte(nailAmmoIndex);engine.pfnWriteByte(remaining);engine.pfnMessageEnd();
     }
-    sound(p,secondary?"weapons/ut2004/link_altfire.wav":"weapons/ut2004/link_fire.wav");
+    sound(p,"weapons/ut2004/link_fire.wav");
     animation(p,5);
-    p->v.punchangle.x-=secondary?.55f:.2f;
+    p->v.punchangle.x-=.2f;
     return true;
 }
+#include "link_gun.inc"
 #include "ut2004_rpg.inc"
 static int bounceSpawn(edict_t* e) { return raven.pfnSpawn ? raven.pfnSpawn(e) : 0; }
 static void bounceAnimation(edict_t* p,int sequence) { animation(p,sequence); }
@@ -522,7 +539,9 @@ static void hookThink(edict_t* e) {
     }
 }
 static void hookStartFrame() {
+    cultistFrame();
     rpgFrame();
+    linkFrame();
     if(raven.pfnStartFrame)raven.pfnStartFrame();
     float dt=std::max(0.f,globals->time-lastFrame);lastFrame=globals->time;
     if(dt>0) {
@@ -655,9 +674,9 @@ static void hookPostThink(edict_t* p) {
     }
     if(active && globals->time>=state.animUntil && p->v.weaponanim!=0)animation(p,0);
     if(activeNail&&!state.wasNailgun) {sound(p,"weapons/ut2004/link_equip.wav");animation(p,4);state.nailNextFire=std::max(state.nailNextFire,globals->time+.15f);state.animUntil=globals->time+.35f;}
-    if(activeNail&&globals->time>=state.nailNextFire&&(state.buttons&(Attack|Attack2))) {
-        bool secondary=(state.buttons&Attack2)!=0;
-        if(fireNailgun(p,secondary)) {state.nailNextFire=globals->time+.1f;state.animUntil=globals->time+.2f;}
+    linkPostThink(p,activeNail&&globals->time>=state.nailNextFire,(state.buttons&Attack2)!=0);
+    if(activeNail&&globals->time>=state.nailNextFire&&(state.buttons&Attack)&&!(state.buttons&Attack2)) {
+        if(fireNailgun(p,false)) {state.nailNextFire=globals->time+(1.f/7.5f);state.animUntil=globals->time+.2f;}
     }
     if(activeNail&&globals->time>=state.animUntil&&p->v.weaponanim!=0)animation(p,0);
     state.wasNailgun=activeNail;
@@ -811,12 +830,17 @@ static int hookSpawn(edict_t* e) {
                        "weapons/doom3/chainsaw/idle_01.wav","weapons/doom3/chainsaw/idle_02.wav",
                        "weapons/doom3/chainsaw/pull.wav","weapons/doom3/chainsaw/put_away.wav"})
             engine.pfnPrecacheSound(const_cast<char*>(path));
+        engine.pfnPrecacheModel(const_cast<char*>(LinkSkeletonModel));
+        for(auto path:{PlasmaBody,PlasmaCore,PlasmaHalo,LinkGlowSprite,LinkHotSprite})engine.pfnPrecacheModel(const_cast<char*>(path));
+        linkBeamSprite=engine.pfnPrecacheModel(const_cast<char*>("sprites/xbeam1.spr"));
+        cultistPrecache();
         rpgPrecache();
         bounce::precache();
     }
     int result=raven.pfnSpawn(e);
     if(classname && !std::strcmp(classname,"monster_human_grunt")) {
         startupTrace("HECUAlliance",cremationAllyHecu(e->pvPrivateData)?"zombie_faction=7":"FAILED");
+        cultistInstall(e);
     }
     // CGlock::Spawn rewrites its classname to weapon_9mmhandgun. Restore the
     // HUD name so Ravenholm SelectItem can find the actual inventory entity.
@@ -838,7 +862,7 @@ static int hookSpawn(edict_t* e) {
     return result;
 }
 static void hookActivate(edict_t* list,int count,int maxClients) {
-    rpgCharges.fill(RpgCharge{});rpgMissiles.clear();
+    rpgCharges.fill(RpgCharge{});rpgMissiles.clear();linkLocks.fill(LinkLock{});linkSkeletons.clear();
     discs.clear();nails.clear();effects.assign(globals->maxEntities,Effect{});players.fill(PlayerState{});lastFrame=globals->time;
     bounce::reset();
     raven.pfnServerActivate(list,count,maxClients);
@@ -867,7 +891,7 @@ static void hookDeactivate() {
         if(s.slowUntil)restoreSlow(s);
         if(s.pushUntil && valid(s.entity) && s.entity->serialnumber==s.serial && s.entity->v.movetype==MOVETYPE_TOSS)s.entity->v.movetype=s.movement;
     }
-    effects.clear();discs.clear();nails.clear();rpgCharges.fill(RpgCharge{});rpgMissiles.clear();bounce::reset();
+    effects.clear();discs.clear();nails.clear();rpgCharges.fill(RpgCharge{});rpgMissiles.clear();linkLocks.fill(LinkLock{});linkSkeletons.clear();bounce::reset();
     if(raven.pfnServerDeactivate)raven.pfnServerDeactivate();
 }
 static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
@@ -885,7 +909,7 @@ static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
 static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     int result=raven.pfnRestore(e,data,globalEntity);
     const char* restoredClass=text(e->v.classname);
-    if(restoredClass && !std::strcmp(restoredClass,"monster_human_grunt"))cremationAllyHecu(e->pvPrivateData);
+    if(restoredClass && !std::strcmp(restoredClass,"monster_human_grunt")) {cremationAllyHecu(e->pvPrivateData);cultistInstall(e);}
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmhandgun")||!std::strcmp(restoredClass,"weapon_glock")))e->v.classname=engine.pfnAllocString("weapon_ricochet");
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmAR")||!std::strcmp(restoredClass,"weapon_mp5")))e->v.classname=engine.pfnAllocString("weapon_nailgun");
     if(restoredClass && !std::strcmp(restoredClass,"weapon_crowbar"))e->v.classname=engine.pfnAllocString("weapon_pipewrench");
@@ -894,8 +918,8 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(!std::strcmp(text(e->v.classname),"cremation_disc")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     if(!std::strcmp(text(e->v.classname),"cremation_nail")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     bounce::removeRestored(e);
-    if(e->v.targetname && !std::strcmp(text(e->v.targetname),"ut2004_rpg_missile")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
-    int i=engine.pfnIndexOfEdict(e);if(i>0&&i<33) {players[i]=PlayerState{};rpgCharges[i]=RpgCharge{};}
+    if(e->v.targetname && (!std::strcmp(text(e->v.targetname),"ut2004_rpg_missile")||!std::strcmp(text(e->v.targetname),"cremation_link_skeleton_fx")||!std::strcmp(text(e->v.targetname),"cremation_link_plasma_fx"))) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
+    int i=engine.pfnIndexOfEdict(e);if(i>0&&i<33) {players[i]=PlayerState{};rpgCharges[i]=RpgCharge{};linkLocks[i]=LinkLock{};}
     return result;
 }
 static void hookCmdStart(const edict_t* player,const struct usercmd_s* cmd,unsigned int seed) {

@@ -1,0 +1,55 @@
+{
+  "generator": "tools/prepare_link_plasma_sprites.py",
+  "layers": {
+    "body": {
+      "path": "sprites/cremation/link_plasma_body.spr",
+      "size": [
+        64,
+        80
+      ],
+      "frames": 16,
+      "mode": "additive billboard",
+      "sha256": "2447d96fbec7b38660f33ca19f3cd568b2b47ec70633aa4bc0ab203c1630ebc3"
+    },
+    "core": {
+      "path": "sprites/cremation/link_plasma_core.spr",
+      "size": [
+        48,
+        48
+      ],
+      "frames": 16,
+      "mode": "additive billboard",
+      "sha256": "6449057c77e664a700a7526cae4dc2777595c51a0810aff45a59508f9cc6d2b4"
+    },
+    "halo": {
+      "path": "sprites/cremation/link_plasma_halo.spr",
+      "size": [
+        96,
+        96
+      ],
+      "frames": 16,
+      "mode": "additive billboard",
+      "sha256": "d54df0c3ecbbe7c802abd70412126e7bbe8715ca07dd8efecc9aa48b96ed7fab"
+    },
+    "beam_glow": {
+      "path": "sprites/cremation/link_plasma_beam_glow.spr",
+      "size": [
+        32,
+        32
+      ],
+      "frames": 16,
+      "mode": "additive billboard",
+      "sha256": "3d3c321ea0a7f415db13d3477d21ca5ed53cbf9ec5af4d2e93f43086b750bef3"
+    },
+    "beam_hot": {
+      "path": "sprites/cremation/link_plasma_beam_hot.spr",
+      "size": [
+        16,
+        16
+      ],
+      "frames": 16,
+      "mode": "additive billboard",
+      "sha256": "e4732541ea99c30b0fff6522ff9c94fba7cb3ec5200d9be7a0513a2d1eeba829"
+    }
+  }
+}

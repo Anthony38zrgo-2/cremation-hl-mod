@@ -165,3 +165,43 @@ a daño o comportamiento. Backup en backups/before-ut2004-gib-explosion-sounds/.
 Procedencia y hashes en ut2004-gib-explosion-assets.json; reinstalación con
 tools/install_ut2004_gib_explosion_sounds.py después de instaladores antiguos
 que copien sonidos donantes. Sin escucha interactiva realizada.
+
+HECU: 50 entradas vocales de cultistas/fanáticos de Blood, con 17 grupos HG ampliados y eventos de alerta, búsqueda, dolor, muerte, victoria y fuego. Familia vocal estable por personaje; cooldown y prioridad para evitar superposiciones. Detalles, fuentes primarias y resolución de dos RAW ausentes en source/BLOOD_CULTIST_VOICES.md; procedencia en blood-cultist-voices.json. DLL compilada e instalada; escucha/combate pendiente. Reiniciar el juego para cargar las nuevas frases.
+
+Link Gun: primario 25 % más lento en velocidad y cadencia (750 u/s, 7,5 tiros/s). Secundario convertido a enlace verde con objetivo fijo, daño creciente 12–48/s y consumo 2 unidades/s; muerte por enlace muestra el esqueleto adjunto translúcido verde durante 1 s. Detalles en source/LINK_GUN.md y linkgun-feature.json. DLL compilada e instalada; revisión en juego pendiente.
+
+Link Gun: haz secundario convertido a curva Bézier con ondas móviles, siguiendo al enemigo. Efecto de esqueleto con visibilidad/bounds explícitos, detección inmediata y diferida de muerte, visible 0,75 s y fade de 0,25 s. Diagnóstico LinkSkeletonFX añadido. DLL recompilada; revisión visual pendiente.
+
+Esqueleto Link Gun: duración ampliada a 6 s totales (5 s adicionales), con desvanecimiento en los últimos 0,25 s. DLL recompilada e instalada.
+
+Esqueleto Link Gun: el brillo verde y la transparencia desaparecen durante el primer segundo; después queda el modelo opaco, sin aura verde, hasta el desvanecimiento final de 5,75 a 6 s. DLL recompilada e instalada.
+
+Aspecto actual del enlace: estilo Gluon/Egon con sprites/xbeam1.spr original, envoltura verde aditiva y núcleo verde más brillante, grosor/brillo pulsantes y textura desplazándose. Conserva la curva hacia el enemigo con ondulación suavizada. Impacto sin chispas ni partículas: solo iluminación verde. DLL compilada e instalada; revisión visual pendiente.
+
+Alineación del haz Link Gun: corregido el vector lateral invertido. Se usa right=(sin(yaw),-cos(yaw),0), con up derivado de la orientación de vista; el origen queda 18 unidades al frente, 6 a la derecha y 6 debajo del ojo en ejes de vista. DLL recompilada e instalada; alineación visual pendiente de comprobación.
+
+Proyectil primario Link Gun: núcleo opaco con envoltura verde aditiva translúcida (GlowShell, RGB 35/255/65, intensidad/expansión 22). Conserva la estela verde. DLL recompilada e instalada; revisión visual pendiente.
+
+Modelo del proyectil primario Link Gun sustituido por elipsoide verde luminoso (radios 8/3/3 unidades), alineado con su dirección de vuelo. Mantiene envoltura verde y trail. Generación reproducible en tools/prepare_linkgun_projectile.py; modelo instalado en models/cremation/nail.mdl. Revisión visual pendiente.
+
+Proyectil primario con aspecto de plasma: cuerpo ovalado verde animado de bordes
+irregulares, núcleo blanco amarillento y halo verde difuso. Tres sprites aditivos
+con 16 fotogramas y pulsación de tamaño, con luz dinámica verde junto a la bola.
+La cola se redujo a 0,1 s, anchura 2 y brillo 85. Se conservan velocidad 750 u/s,
+daño 9 y cadencia 7,5/s. Los sprites secundarios se eliminan con el proyectil y
+no se reanudan en guardados. Generador reproducible:
+tools/prepare_link_plasma_sprites.py. Procedencia/hash en link-plasma-assets.json.
+DLL compilada e instalada; revisión visual en juego pendiente.
+
+Esqueleto: selecciona una muerte equivalente a la del enemigo por actividad/nombre de secuencia (hacia delante/atrás, cabeza, abdomen/pecho o simple). Sincroniza progreso, posición y orientación con el cadáver nativo, incluida selección de muerte diferida. Si no se identifica equivalencia, usa muerte simple tras 0,3 s. No trasplanta pistas de huesos entre rigs diferentes. Mantiene 6 s de duración y aura verde solo durante el primer segundo. DLL compilada e instalada; revisión en juego pendiente.
+
+Fluidez del esqueleto: se conserva la selección de muerte del enemigo y su duración, pero se deja de copiar su frame de IA por tick. La reproducción avanza por tiempo continuo y activa interpolación del cliente mediante framerate ajustado al modelo. Al terminar conserva la pose final. DLL recompilada e instalada; comprobación visual pendiente.
+
+Enlace secundario inspirado en la referencia: núcleo blanco verdoso de poca
+ondulación, envoltura verde difusa y dos filamentos verdes entrelazados con ondas
+que avanzan hacia el objetivo. Curva base orientada desde la boca al enemigo.
+Halos aditivos animados en la boca y en el contacto, con centro luminoso y luz
+verde local. No genera chispas. Los halos se eliminan al soltar/cambiar de arma,
+morir, agotar munición o perder alcance; no alteran daño ni consumo del enlace.
+Sprites generados por tools/prepare_link_plasma_sprites.py. DLL compilada e
+instalada; comparación visual con la referencia pendiente en juego.

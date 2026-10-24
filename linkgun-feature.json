@@ -1,0 +1,81 @@
+{
+  "source": "C:/Users/bill/AppData/Local/Temp/scientist.mdl",
+  "persistent_source": "assets-source/linkgun_skeleton/scientist.mdl",
+  "installed": "models/cremation/link_skeleton.mdl",
+  "sha256": "c66c18cadbe5b4941e035a658933f3d980b456af8953baaaf253436a7ab2f5f3",
+  "sequence": 31,
+  "sequence_name": "diesimple",
+  "duration_seconds": 6.0,
+  "render": "green translucent texture plus glow shell",
+  "primary": {
+    "speed": 750,
+    "shots_per_second": 7.5,
+    "damage": 9,
+    "ammo_per_shot": 1,
+    "projectile_envelope": {
+      "type": "additive translucent glow shell around opaque core",
+      "color": [
+        35,
+        255,
+        65
+      ],
+      "shell_amount": 22
+    },
+    "projectile_model": {
+      "shape": "ellipsoid",
+      "radii": [
+        8,
+        3,
+        3
+      ],
+      "color": [
+        35,
+        255,
+        65
+      ],
+      "fullbright": true,
+      "path": "models/cremation/nail.mdl",
+      "sha256": "da4daae4ff3254b756afd15cd68f79d4985de345c52c758a59a91d9820d2e287"
+    },
+    "projectile_visual": "Three additive animated billboard layers: irregular oval green plasma, yellow-white core, soft green halo; moving green dynamic light; short faint trail",
+    "sprite_frames": 16,
+    "trail": {
+      "life_seconds": 0.1,
+      "width": 2,
+      "brightness": 85
+    },
+    "visual_generator": "tools/prepare_link_plasma_sprites.py"
+  },
+  "secondary": {
+    "acquisition_range": 768,
+    "acquisition_cone_degrees": 10,
+    "fixed_target_until_release": true,
+    "ammo_per_second": 2,
+    "tick_seconds": 0.1,
+    "initial_damage_per_second": 12,
+    "damage_increase_per_second": 6,
+    "maximum_damage_per_second": 48,
+    "los_required_for_damage": true,
+    "progress_increases_only_during_effective_connection": true,
+    "color": [
+      35,
+      255,
+      65
+    ],
+    "beam_shape": "18-segment cubic Bezier, initial tangent follows aim, endpoint follows target, three traveling waves on transverse axes",
+    "beam_style": "White-green steady core, wide soft green sheath, two traveling intertwined green filaments following a curved path; additive muzzle and impact glow sprites plus green lights; no sparks",
+    "impact_sparks": false,
+    "impact_light": true,
+    "muzzle_offset": "eye + forward*18 + GoldSrc view-right*6 - view-up*6; corrected inverted lateral vector and pitch-aware vertical offset",
+    "beam_glow_sprites": [
+      "sprites/cremation/link_plasma_beam_glow.spr",
+      "sprites/cremation/link_plasma_beam_hot.spr"
+    ]
+  },
+  "validation": "Compiled and installed; no interactive gameplay or visual validation performed.",
+  "skeleton_visibility": "green glow fades over the first second, then normal opaque skeleton until final fade at 5.75\u20136 seconds",
+  "death_detection": "immediate TakeDamage result plus native delayed death within 0.35s of last link damage; recognizes freed/recycled target",
+  "green_effect_seconds": 1.0,
+  "death_animation": "Select corresponding skeleton death by victim native sequence activity/name; synchronize frame, corpse position and yaw while valid. Fallback simple death if no equivalent can be identified; no cross-rig bone-track transplantation.",
+  "death_animation_playback": "Continuous elapsed-time progression, duration synchronized to native victim death; studio framerate scaled for client interpolation, no copying low-frequency corpse frames; final pose held."
+}

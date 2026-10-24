@@ -51,6 +51,8 @@ def mappings():
     out["models/v_9mmhandgun.mdl"] = SOURCE / "ricochet_variants" / "v_ricochet_blue.mdl"
     out["models/cremation/v_ricochet_red.mdl"] = SOURCE / "ricochet_variants" / "v_ricochet_red.mdl"
     out["models/cremation/v_nailgun.mdl"] = SOURCE / "unreal_hive_hand" / "v_hgun_mp5_anims.mdl"
+    out["models/cremation/link_skeleton.mdl"] = MOD / "assets-source" / "linkgun_skeleton" / "scientist.mdl"
+    out["models/cremation/nail.mdl"] = MOD / "assets-source" / "linkgun_projectile" / "green_oval.mdl"
     chainsaw = SOURCE / "chainsaw" / "Half-Life" / "gearbox"
     for name in ("v_pipe_wrench.mdl", "p_pipe_wrench.mdl", "w_pipe_wrench.mdl"):
         out[f"models/cremation/{name}"] = chainsaw / "models" / name
@@ -69,6 +71,10 @@ def install() -> dict:
     from prepare_nailgun_animation import build_assets as build_nailgun
     build_assets()
     build_nailgun()
+    from prepare_linkgun_projectile import build_assets as build_projectile
+    build_projectile()
+    from prepare_link_plasma_sprites import build_assets as build_plasma
+    build_plasma()
     installed = {}
     for target_name, source_path in mappings().items():
         if not source_path.is_file():

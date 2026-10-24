@@ -218,11 +218,11 @@
       "backup": null
     },
     "models/cremation/nail.mdl": {
-      "source": "assets-source/additional_weapons/nailgun/nail.mdl",
-      "source_sha256": "44041ea2c4b4ae41a41272bc21294bad1a66b869b6c0aed0a9f921d51c2d3af3",
-      "sha256": "44041ea2c4b4ae41a41272bc21294bad1a66b869b6c0aed0a9f921d51c2d3af3",
-      "bytes": 2220,
-      "backup": null
+      "source": "assets-source/linkgun_projectile/green_oval.mdl",
+      "generator": "tools/prepare_linkgun_projectile.py",
+      "source_sha256": "da4daae4ff3254b756afd15cd68f79d4985de345c52c758a59a91d9820d2e287",
+      "sha256": "da4daae4ff3254b756afd15cd68f79d4985de345c52c758a59a91d9820d2e287",
+      "bytes": 10336
     },
     "sound/weapons/spike1.wav": {
       "source": "assets-source/additional_weapons/nailgun/sound/spike1.wav",
