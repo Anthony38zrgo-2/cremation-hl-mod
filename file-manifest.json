@@ -518,7 +518,7 @@
   "sound/ricochet/freeze.wav": "2ac2155f828fc704e8e946c76958b88f9ef4155fb13864323b726e98043f4e52",
   "sound/ricochet/blast.wav": "24c1deff4d9fc256ddf9043a85442bce1bc4867a171625823ceb6f30565a462f",
   "sound/ricochet/bounce.wav": "7d0d0589eded18df451f62019c144da28f4e10342b809676e7aa65952816c73c",
-  "dlls/cremation.dll": "56c7c39ebb8593babf46b236e1b81181f4ec9c54cd0dfffe43c28607e25de80c",
+  "dlls/cremation.dll": "f1cb9459f2738e305ccd360aabc342ea26f7920dbfaeaf8ec72bc0b9f46d0a1d",
   "models/p_shotgun.mdl": "fd25ea3751faa1e7c608e0c19344eb087fff06de39012fd6e3b35a361379e249",
   "models/cremation/tfc_sentry.mdl": "92afb57ad69f57237f9e296503d9cdba4e44173701908ea04c4f07ef0a92fae7",
   "models/cremation/tfc_sentry_base.mdl": "3287831ec5f4cef3e9e19ad41e4601d86efbb9454caa01f5b681c7bc5ddce965",
@@ -880,6 +880,6 @@
   "sprites/cremation/necro_hud.spr": "a8a6ec38f56a6ddbe1d5f41bb171f949b0ae0f7705237adca93b43446aff015b",
   "sprites/cremation/necro_orb.spr": "a147558b4485b514c2fc437a0c41959f5da649734b423dee5fe851b0d95acf34",
   "models/cremation/flak_ball.mdl": "232a3860c1cf1b887a152085b74d288e36c0231732a789bf5110921ed6738e03",
-  "models/hgibs.mdl": "9846267b026a5e17bad2dcc7d3eca12c259ca816316f0ea8817a0ba330069310",
-  "models/agibs.mdl": "e8afb0b751c22fabe6c8e41666a40db5cb11d1831bcd226f18a3019bc6de553e"
+  "models/hgibs.mdl": "2b77eb6c676ad34b8fc4cf9bd3e6d946b87c4bf6f2168081ccda0f77f06fa121",
+  "models/agibs.mdl": "77d63b672a5a4206d19a3862d086bdb4e45ce9ea2022db018f94d880ad7c62f9"
 }

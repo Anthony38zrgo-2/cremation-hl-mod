@@ -14,7 +14,7 @@ static std::array<LinkLock,33> linkLocks{};
 struct LinkSkeleton {
     edict_t* entity;int serial;float born;
     edict_t* victim=nullptr;int victimSerial=0,sourceSequence=-1;
-    float animationStarted=0,deathDuration=1.f;bool matched=false;
+    float animationStarted=0,deathDuration=1.f;bool matched=false,creature=false;
 };
 static std::vector<LinkSkeleton> linkSkeletons;
 static bool linkEnemy(edict_t* e) {
@@ -162,7 +162,8 @@ static void linkSkeleton(const Vector& origin,const Vector& angles,float height,
     if(!e) {startupTrace("LinkSkeletonFX","allocation failed");return;}
     raven.pfnSpawn(e);
     e->v.targetname=engine.pfnAllocString("cremation_link_skeleton_fx");
-    engine.pfnSetModel(e,LinkSkeletonModel);
+    bool creature=victim&&!victim->free&&!humanoidRemains(victim);
+    engine.pfnSetModel(e,creature?text(victim->v.model):LinkSkeletonModel);
     e->v.effects&=~EF_NODRAW;e->v.nextthink=0;
     Vector mins(-24,-24,0),maxs(24,24,std::max(64.f,height));
     engine.pfnSetSize(e,&mins.x,&maxs.x);
@@ -180,6 +181,7 @@ static void linkSkeleton(const Vector& origin,const Vector& angles,float height,
         e->v.sequence=chosen;state.matched=true;state.sourceSequence=state.victim->v.sequence;state.deathDuration=duration;
         state.animationStarted=globals->time-std::max(0.f,std::min(1.f,state.victim->v.frame/255.f))*duration;
     } else e->v.sequence=13; // Brief neutral pose while native AI chooses its death.
+    if(creature){state.creature=true;state.matched=true;state.sourceSequence=victim->v.sequence;e->v.sequence=victim->v.sequence;e->v.body=victim->v.body;e->v.skin=victim->v.skin;e->v.scale=victim->v.scale;e->v.angles=victim->v.angles;engine.pfnSetOrigin(e,&victim->v.origin.x);std::string label;int activity;linkSequenceInfo(victim,e->v.sequence,label,activity,state.deathDuration);state.animationStarted=globals->time-std::max(0.f,std::min(1.f,victim->v.frame/255.f))*state.deathDuration;}
     linkSkeletons.push_back(state);
     char report[192];std::snprintf(report,sizeof report,"entity=%d model_index=%d effects=%d origin=%.1f,%.1f,%.1f height=%.1f",engine.pfnIndexOfEdict(e),e->v.modelindex,e->v.effects,visibleOrigin.x,visibleOrigin.y,visibleOrigin.z,height);
     startupTrace("LinkSkeletonFX",report);
@@ -192,9 +194,19 @@ static void linkFrame() {
     for(auto& skeleton:linkSkeletons) {
         auto e=skeleton.entity;if(!valid(e)||e->serialnumber!=skeleton.serial) {skeleton.entity=nullptr;continue;}
         float elapsed=globals->time-skeleton.born;
-        if(elapsed>=6.f) {engine.pfnRemoveEntity(e);skeleton.entity=nullptr;continue;}
+        if(elapsed>=(skeleton.creature?5.f:6.f)) {engine.pfnRemoveEntity(e);skeleton.entity=nullptr;continue;}
         auto victim=skeleton.victim;
         bool hasVictim=victim&&!victim->free&&victim->serialnumber==skeleton.victimSerial;
+        if(skeleton.creature){
+            if(hasVictim){
+                if(e->v.sequence!=victim->v.sequence){e->v.sequence=victim->v.sequence;std::string label;int activity;linkSequenceInfo(victim,e->v.sequence,label,activity,skeleton.deathDuration);skeleton.animationStarted=globals->time-std::max(0.f,std::min(1.f,victim->v.frame/255.f))*skeleton.deathDuration;}
+                engine.pfnSetOrigin(e,&victim->v.origin.x);e->v.angles=victim->v.angles;
+            }
+            float progress=std::max(0.f,std::min(1.f,(globals->time-skeleton.animationStarted)/std::max(.1f,skeleton.deathDuration)));
+            e->v.frame=progress*255;e->v.framerate=progress<1?1:0;e->v.animtime=globals->time;e->v.effects&=~EF_NODRAW;
+            e->v.rendermode=kRenderTransColor;e->v.renderfx=kRenderFxGlowShell;e->v.rendercolor=Vector(35,255,65);e->v.renderamt=190*std::min(1.f,(5.f-elapsed)*2);
+            continue;
+        }
         int chosen=31;float duration=1;
         bool sourceDeath=hasVictim&&linkMatchDeath(victim,e,chosen,duration);
         if(sourceDeath) {

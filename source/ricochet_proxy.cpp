@@ -405,6 +405,7 @@ static bool fireNailgun(edict_t* p,bool secondary) {
     p->v.punchangle.x-=.2f;
     return true;
 }
+#include "humanoid_gibs.inc"
 #include "link_gun.inc"
 #include "ut2004_rpg.inc"
 #include "necromancer.inc"
@@ -547,6 +548,7 @@ static void hookStartFrame() {
     rpgFrame();
     linkFrame();
     necroFrame();
+    anatomicalGibFrame();
     if(raven.pfnStartFrame)raven.pfnStartFrame();
     float dt=std::max(0.f,globals->time-lastFrame);lastFrame=globals->time;
     if(dt>0) {
@@ -796,6 +798,9 @@ static void hookClientCommand(edict_t* p) {
     }
 }
 static void hookTouch(edict_t* a,edict_t* b) {
+    if(valid(a)&&a->v.targetname&&!std::strcmp(text(a->v.targetname),"cremation_anatomical_gib")){
+        if(globals->time>=a->v.fuser1&&length(a->v.velocity)>40){static const char* clips[]={"debris/flesh1.wav","debris/flesh2.wav","debris/flesh3.wav"};engine.pfnEmitSound(a,CHAN_BODY,clips[a->v.body%3],.65f,ATTN_NORM,0,100);a->v.fuser1=globals->time+.2f;}return;
+    }
     if(rpgPickup(a,b)||rpgPickup(b,a))return;
     if(rpgTouch(a,b))return;
     if(bounce::engineerMetal(a,b)||bounce::engineerMetal(b,a))return;
@@ -876,9 +881,11 @@ static int hookSpawn(edict_t* e) {
         char report[160];std::snprintf(report,sizeof report,"%s weapons=%d body=%d model=%s health=%.0f",text(e->v.targetname),e->v.weapons,e->v.body,text(e->v.model),e->v.health);
         startupTrace("HECU",report);
     }
+    humanGibInstall(e);
     return result;
 }
 static void hookActivate(edict_t* list,int count,int maxClients) {
+    anatomicalGibs.clear();humanNativeGibs.clear();humanGibContext=false;
     necroStates.fill(NecroState{});necroFires.clear();incendiaryGrenades.clear();
     rpgCharges.fill(RpgCharge{});rpgMissiles.clear();linkLocks.fill(LinkLock{});linkSkeletons.clear();
     discs.clear();nails.clear();effects.assign(globals->maxEntities,Effect{});players.fill(PlayerState{});lastFrame=globals->time;
@@ -939,6 +946,8 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmAR")||!std::strcmp(restoredClass,"weapon_mp5")))e->v.classname=engine.pfnAllocString("weapon_nailgun");
     if(restoredClass && !std::strcmp(restoredClass,"weapon_crowbar"))e->v.classname=engine.pfnAllocString("weapon_pipewrench");
     if(restoredClass && !std::strcmp(restoredClass,bounce::CarrierName))e->v.classname=engine.pfnAllocString(bounce::WeaponName);
+    if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_anatomical_gib"))e->v.flags|=FL_KILLME;
+    humanGibInstall(e);
     if(auto s=getEffect(e))*s=Effect{};
     if(!std::strcmp(text(e->v.classname),"cremation_disc")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     if(!std::strcmp(text(e->v.classname),"cremation_nail")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
@@ -996,6 +1005,7 @@ extern "C" void __stdcall GiveFnptrsToDll(enginefuncs_t* incoming,globalvars_t* 
     for(size_t i=0;i<sizeof(forwardTargets)/sizeof(forwardTargets[0]);++i)forwardTargets[i]=GetProcAddress(ravenModule,forwardNames[i]);
     hookedEngine.pfnWalkMove=hookWalkMove;hookedEngine.pfnMoveToOrigin=hookMoveToOrigin;
     hookedEngine.pfnGetModelPtr=hookModelPtr;
+    hookedEngine.pfnSetModel=hookGibSetModel;
     hookedEngine.pfnEmitSound=hookEmitSound;
     hookedEngine.pfnRegUserMsg=hookRegisterMsg;hookedEngine.pfnMessageBegin=hookMessageBegin;hookedEngine.pfnMessageEnd=hookMessageEnd;
     hookedEngine.pfnWriteString=hookWriteString;hookedEngine.pfnWriteByte=hookWriteByte;

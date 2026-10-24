@@ -4,10 +4,10 @@ $cdtexture "D:/SteamLibrary/steamapps/common/Half-Life/Cremation/assets-source/u
 $bodygroup gibs
 {
  studio "headmalem"
- studio "malearmm"
  studio "maletorsom"
- studio "malefootm"
- studio "ThighUTM"
- studio "femalearmm"
+ studio "arm_left"
+ studio "arm_right"
+ studio "leg_left"
+ studio "leg_right"
 }
 $sequence idle "idle" fps 1

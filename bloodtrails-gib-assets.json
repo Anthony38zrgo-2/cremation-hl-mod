@@ -1,0 +1,8 @@
+{
+  "archive": "C:/Users/bill/Downloads/bloodtrailsforgibs.zip",
+  "integration": "Original archive studio flags transferred to current UT models, preserving geometry and doubled organ scale.",
+  "human_flags": 36,
+  "alien_flags": 16,
+  "reference_models": "assets-source/bloodtrailsforgibs",
+  "impact_blood": "Up to five red decals per anatomical human gib, on floor/wall contact; respects violence_hblood."
+}

@@ -18,11 +18,11 @@
   "models": {
     "hgibs": [
       "headmalem",
-      "malearmm",
       "maletorsom",
-      "malefootm",
-      "ThighUTM",
-      "femalearmm"
+      "arm_left",
+      "arm_right",
+      "leg_left",
+      "leg_right"
     ],
     "agibs": [
       "PHeartM",
@@ -32,5 +32,7 @@
     ]
   },
   "conversion": "first animation frame, centered rigid mesh, original UV and textures, size adjusted for GoldSrc",
-  "backup": "backups/before-ut99-gibs"
+  "backup": "backups/before-ut99-gibs",
+  "creature_scale_multiplier": 2,
+  "human_gibbing": "Fixed six-piece set for zombies and HECU; no random body selection"
 }
