@@ -1,0 +1,14 @@
+static const char* necroCharred[][2]={
+{"models/crossbow_bolt.mdl","models/cremation/charred/crossbow_bolt.mdl"},
+{"models/grigori.mdl","models/cremation/charred/grigori.mdl"},
+{"models/headcrab_black.mdl","models/cremation/charred/headcrab_black.mdl"},
+{"models/headcrab_fast.mdl","models/cremation/charred/headcrab_fast.mdl"},
+{"models/hgruntt.mdl","models/cremation/charred/hgruntt.mdl"},
+{"models/kleiner.mdl","models/cremation/charred/kleiner.mdl"},
+{"models/metrocop.mdl","models/cremation/charred/metrocop.mdl"},
+{"models/null.mdl","models/cremation/charred/null.mdl"},
+{"models/otisT.mdl","models/cremation/charred/otisT.mdl"},
+{"models/poison_zombie.mdl","models/cremation/charred/poison_zombie.mdl"},
+{"models/zombie.mdl","models/cremation/charred/zombie.mdl"},
+{"models/zombie_fast.mdl","models/cremation/charred/zombie_fast.mdl"},
+};

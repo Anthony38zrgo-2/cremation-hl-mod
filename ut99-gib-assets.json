@@ -1,0 +1,36 @@
+{
+  "source": "C:/UnrealTournament/System",
+  "exporter": "UE Viewer (UModel), https://www.gildor.org/projects/umodel",
+  "extracted": [
+    "headmalem",
+    "malearmm",
+    "maletorsom",
+    "malefootm",
+    "ThighUTM",
+    "femalearmm",
+    "HeadFemaleM",
+    "femaletorsom",
+    "femalefootm",
+    "PHeartM",
+    "LiverM",
+    "stomachM"
+  ],
+  "models": {
+    "hgibs": [
+      "headmalem",
+      "malearmm",
+      "maletorsom",
+      "malefootm",
+      "ThighUTM",
+      "femalearmm"
+    ],
+    "agibs": [
+      "PHeartM",
+      "LiverM",
+      "stomachM",
+      "PHeartM"
+    ]
+  },
+  "conversion": "first animation frame, centered rigid mesh, original UV and textures, size adjusted for GoldSrc",
+  "backup": "backups/before-ut99-gibs"
+}

@@ -1,0 +1,182 @@
+{
+  "installation": "C:/UnrealTournament",
+  "packages": [
+    "System/Botpack.u",
+    "System/UnrealShare.u",
+    "System/UnrealI.u"
+  ],
+  "format": "mono PCM16 22050 Hz",
+  "linkgun_equivalent": "UT classic Pulse Gun, confirmed from exported PulseGun.uc defaults",
+  "rocket_secondary": "Ignite: charged mode still launches rockets, not EightAltFire grenades",
+  "installed": {
+    "sound/weapons/ut2004/link_fire.wav": {
+      "source": "Botpack/PulseGun.PulseFire.wav",
+      "semitones": 0,
+      "seconds": 0.4630839002267574,
+      "sha256": "d81eb4cdb643cdeff7228c97ae8bf6444852961a6dd4b2479829eb5c6b4591d0"
+    },
+    "sound/weapons/ut2004/link_altfire.wav": {
+      "source": "Botpack/PulseGun.PulseBolt.wav",
+      "semitones": -4,
+      "seconds": 3.239546485260771,
+      "sha256": "9744108d8ca44c8432203f2626a2e4a888f78e84598166898d8ffcd54863bc63"
+    },
+    "sound/weapons/ut2004/link_equip.wav": {
+      "source": "Botpack/PulseGun.PulsePickup.wav",
+      "semitones": 0,
+      "seconds": 0.8387301587301588,
+      "sha256": "c109f1070e8a1545dc8668a43255e4077817c645c9153111e5195531b70760cc"
+    },
+    "sound/weapons/ut2004/flak_fire.wav": {
+      "source": "UnrealShare/flak.shot1.wav",
+      "semitones": 0,
+      "seconds": 1.1871655328798185,
+      "sha256": "ca94b8d387908106ab04986a68e216d84d1ff4445e2303c0e5271b8b034a9e6e"
+    },
+    "sound/weapons/ut2004/flak_altfire.wav": {
+      "source": "UnrealShare/flak.Explode1.wav",
+      "semitones": 0,
+      "seconds": 0.5662131519274376,
+      "sha256": "c2e09d3e7977129951859268cff73351ccfe839767af3d6034930c44bbffde71"
+    },
+    "sound/weapons/ut2004/flak_impact.wav": {
+      "source": "UnrealI/Cannon.CannonExplode.wav",
+      "semitones": 0,
+      "sha256": "4bf9d0b9931e7c8b8b85b57abaeff1e463bc83969f197057b4e87dc798e54eec"
+    },
+    "sound/weapons/ut2004/flak_equip.wav": {
+      "source": "UnrealI/flak.pdown.wav",
+      "semitones": 0,
+      "seconds": 0.731156462585034,
+      "sha256": "fd98c689d49fd42194152f3e4d2da6166e057da42547e0f67bf1a50c2c086fdb"
+    },
+    "sound/weapons/ut2004/load.wav": {
+      "source": "UnrealShare/Eightball.Loading.wav",
+      "semitones": 0,
+      "seconds": 0.4615873015873016,
+      "sha256": "c7c578311f0cf031430fefb58ac2f891f337d9c5e6cc840c169575c6f95bea69"
+    },
+    "sound/weapons/ut2004/plunger.wav": {
+      "source": "UnrealShare/Eightball.BarrelMove.wav",
+      "semitones": 0,
+      "seconds": 0.35863945578231293,
+      "sha256": "370653926d63061c04b475086425379a3a571c094102f2d86df64df4904f5210"
+    },
+    "sound/weapons/ut2004/flight.wav": {
+      "source": "Botpack/RocketLauncher.RocketFly1.wav",
+      "semitones": 0,
+      "seconds": 1.0071655328798186,
+      "sha256": "c9b17aed8ab7d851866b7753c738d4d7336c91bec9b207145e31604ff008d1b0"
+    },
+    "sound/weapons/ut2004/equip.wav": {
+      "source": "UnrealShare/Eightball.Selecting.wav",
+      "semitones": 0,
+      "seconds": 0.5971428571428572,
+      "sha256": "e02a8c1528c56c2e2193e3f48cb5b9a023925bceee4fc67e0f8332c9b1bd04f6"
+    },
+    "sound/common/bodysplat.wav": {
+      "source": "UnrealShare/Gibs.Gib1.wav",
+      "semitones": 0,
+      "sha256": "4ecaa5dcdea92d4a8125bc1794c61708260161284810842c256e7175c0cdbfd5"
+    },
+    "sound/common/bodydrop1.wav": {
+      "source": "UnrealShare/Gibs.gibP4.wav",
+      "semitones": 0,
+      "sha256": "13d436bbeb1b1c259ad2db0dc4f598b97092b3631eb7e5a2a5ce84f9a9572c32"
+    },
+    "sound/common/bodydrop2.wav": {
+      "source": "UnrealShare/Gibs.gibP5.wav",
+      "semitones": 0,
+      "sha256": "5162f0b492a7627d229b346a02c3dc05697d6fde6fc9c019ceab7847e25f833a"
+    },
+    "sound/common/bodydrop3.wav": {
+      "source": "UnrealShare/Gibs.gibP6.wav",
+      "semitones": 0,
+      "sha256": "fcbffdc99c8226c77e6cabf52f3819e061a0f3a00f5077c859b8930f8425fc4d"
+    },
+    "sound/common/bodydrop4.wav": {
+      "source": "UnrealShare/Gibs.gibP4.wav",
+      "semitones": 0,
+      "sha256": "13d436bbeb1b1c259ad2db0dc4f598b97092b3631eb7e5a2a5ce84f9a9572c32"
+    },
+    "sound/debris/flesh1.wav": {
+      "source": "UnrealShare/Gibs.gibP4.wav",
+      "semitones": 0,
+      "sha256": "13d436bbeb1b1c259ad2db0dc4f598b97092b3631eb7e5a2a5ce84f9a9572c32"
+    },
+    "sound/debris/flesh2.wav": {
+      "source": "UnrealShare/Gibs.gibP5.wav",
+      "semitones": 0,
+      "sha256": "5162f0b492a7627d229b346a02c3dc05697d6fde6fc9c019ceab7847e25f833a"
+    },
+    "sound/debris/flesh3.wav": {
+      "source": "UnrealShare/Gibs.gibP6.wav",
+      "semitones": 0,
+      "sha256": "fcbffdc99c8226c77e6cabf52f3819e061a0f3a00f5077c859b8930f8425fc4d"
+    },
+    "sound/debris/flesh4.wav": {
+      "source": "UnrealShare/Gibs.gibP4.wav",
+      "semitones": 0,
+      "sha256": "13d436bbeb1b1c259ad2db0dc4f598b97092b3631eb7e5a2a5ce84f9a9572c32"
+    },
+    "sound/debris/flesh5.wav": {
+      "source": "UnrealShare/Gibs.gibP5.wav",
+      "semitones": 0,
+      "sha256": "5162f0b492a7627d229b346a02c3dc05697d6fde6fc9c019ceab7847e25f833a"
+    },
+    "sound/debris/flesh6.wav": {
+      "source": "UnrealShare/Gibs.gibP6.wav",
+      "semitones": 0,
+      "sha256": "fcbffdc99c8226c77e6cabf52f3819e061a0f3a00f5077c859b8930f8425fc4d"
+    },
+    "sound/debris/flesh7.wav": {
+      "source": "UnrealShare/Gibs.gibP4.wav",
+      "semitones": 0,
+      "sha256": "13d436bbeb1b1c259ad2db0dc4f598b97092b3631eb7e5a2a5ce84f9a9572c32"
+    },
+    "sound/debris/bustflesh1.wav": {
+      "source": "UnrealShare/Gibs.gibP4.wav",
+      "semitones": 0,
+      "sha256": "13d436bbeb1b1c259ad2db0dc4f598b97092b3631eb7e5a2a5ce84f9a9572c32"
+    },
+    "sound/debris/bustflesh2.wav": {
+      "source": "UnrealShare/Gibs.gibP5.wav",
+      "semitones": 0,
+      "sha256": "5162f0b492a7627d229b346a02c3dc05697d6fde6fc9c019ceab7847e25f833a"
+    },
+    "sound/weapons/explode3.wav": {
+      "source": "Botpack/General.Expl04.wav",
+      "semitones": 0,
+      "sha256": "073c8bba8a5b08e4b35d2e63d9155f665b62db3ee1268003013ba46098157907"
+    },
+    "sound/weapons/explode4.wav": {
+      "source": "Botpack/General.Explg02.wav",
+      "semitones": 0,
+      "sha256": "e8c8163f6e6ae568ad1e757c1b305c68cb94c76ff02ead80c390237d37b594dc"
+    },
+    "sound/weapons/explode5.wav": {
+      "source": "Botpack/flak.expl2.wav",
+      "semitones": 0,
+      "sha256": "24c1deff4d9fc256ddf9043a85442bce1bc4867a171625823ceb6f30565a462f"
+    },
+    "sound/weapons/mortarhit.wav": {
+      "source": "Botpack/General.Expl04.wav",
+      "semitones": 0,
+      "sha256": "073c8bba8a5b08e4b35d2e63d9155f665b62db3ee1268003013ba46098157907"
+    },
+    "sound/weapons/energy_sing_explosion2.wav": {
+      "source": "Botpack/General.Explg02.wav",
+      "semitones": 0,
+      "sha256": "e8c8163f6e6ae568ad1e757c1b305c68cb94c76ff02ead80c390237d37b594dc"
+    },
+    "sound/ricochet/blast.wav": {
+      "source": "Botpack/flak.expl2.wav",
+      "semitones": 0,
+      "sha256": "24c1deff4d9fc256ddf9043a85442bce1bc4867a171625823ceb6f30565a462f"
+    }
+  },
+  "reverted_to_previous_sounds": [
+    "sound/weapons/ut2004/fire.wav",
+    "sound/weapons/ut2004/altfire.wav"
+  ]
+}

@@ -716,7 +716,7 @@ bool fireGrenade(edict_t* player, PlayerState& state) {
     entity->v.angles = Vector(0, vecToYaw(forward), 0);
     entity->v.gravity = GrenadeGravity;
     entity->v.velocity = Vector(0, 0, 0);
-    eng->pfnSetModel(entity, "models/grenade.mdl");
+    eng->pfnSetModel(entity, "models/cremation/flak_ball.mdl");
     Vector zero(0, 0, 0);
     if (eng->pfnSetSize) eng->pfnSetSize(entity, &zero.x, &zero.x);
     eng->pfnSetOrigin(entity, &origin.x);
@@ -795,7 +795,7 @@ void precache() {
     if (!eng) return;
     tfcPrecacheImpl();
     const char* models[] = {ViewModel, PlayerModel, WorldModel, "models/ricochet/disc.mdl",
-                            "models/grenade.mdl"};
+                            "models/cremation/flak_ball.mdl"};
     for (const char* model : models) eng->pfnPrecacheModel(const_cast<char*>(model));
     fireballSprite = eng->pfnPrecacheModel(const_cast<char*>("sprites/explode1.spr"));
     smokeSprite = eng->pfnPrecacheModel(const_cast<char*>("sprites/steam1.spr"));

@@ -43,7 +43,7 @@ static bool customWeaponList=false,customBounceList=false,customNailWeaponList=f
 static edict_t* messagePlayer=nullptr;
 static bool ownAnimation=false;
 static int shotgunAmmoIndex=-1,nailAmmoIndex=-1, ammoOffset=-1;
-static bool shotgunList=false,rpgList=false;
+static bool shotgunList=false,rpgList=false,necroList=false;
 static float lastFrame=0;
 struct HordeProbe {edict_t* entity; int serial; Vector origin; Vector previous; float previousTime; bool jumped=false; float walked=0; Vector patrol{0,0,0}; bool fallback=false,returning=false,combat=false; float initialHealth=0;};
 static std::vector<HordeProbe> hordeProbes;
@@ -407,6 +407,7 @@ static bool fireNailgun(edict_t* p,bool secondary) {
 }
 #include "link_gun.inc"
 #include "ut2004_rpg.inc"
+#include "necromancer.inc"
 static int bounceSpawn(edict_t* e) { return raven.pfnSpawn ? raven.pfnSpawn(e) : 0; }
 static void bounceAnimation(edict_t* p,int sequence) { animation(p,sequence); }
 static void bouncePush(edict_t* e,const Vector& dir,float horizontal,float vertical,float duration) {
@@ -526,12 +527,15 @@ static void hordeWalkAnimation(edict_t* e) {
 }
 static void hookThink(edict_t* e) {
     if(bounce::isSentry(e)) {e->v.nextthink=globals->time+.1f;return;}
+    bool incendiary=incendiaryBeforeThink(e);
+    edict_t* grenadeOwner=incendiary?e->v.owner:nullptr;int grenadeOwnerSerial=valid(grenadeOwner)?grenadeOwner->serialnumber:0;
     auto s=getEffect(e);
     if(s && s->slowUntil && (!aliveEnemy(e)||globals->time>=s->slowUntil))restoreSlow(*s);
     bool active=slowed(e);
     float expected=active?s->baseFrame*balance::SlowFactor:0;
     if(active)e->v.framerate=expected;
     raven.pfnThink(e);
+    incendiaryAfterThink(e,incendiary,grenadeOwner,grenadeOwnerSerial);
     for(const auto& probe:hordeProbes)if(probe.entity==e && probe.fallback && !probe.combat && aliveEnemy(e))hordeWalkAnimation(e);
     if(active && aliveEnemy(e)) {
         if(std::fabs(e->v.framerate-expected)>.0001f)s->baseFrame=e->v.framerate;
@@ -542,12 +546,14 @@ static void hookStartFrame() {
     cultistFrame();
     rpgFrame();
     linkFrame();
+    necroFrame();
     if(raven.pfnStartFrame)raven.pfnStartFrame();
     float dt=std::max(0.f,globals->time-lastFrame);lastFrame=globals->time;
     if(dt>0) {
         // Process long frames in bounded steps without changing disc travel speed.
         int steps=std::min(32,std::max(1,int(std::ceil(dt/.025f))));
         for(int i=0;i<steps;++i) {
+            necroStep(dt/steps);
             advanceDiscs(dt/steps);
             advanceNails(dt/steps);
             bounce::frame(dt/steps);
@@ -612,17 +618,18 @@ static void hookStartFrame() {
 static void hookPreThink(edict_t* p) {
     rpgNormalize(p);
     int i=engine.pfnIndexOfEdict(p);if(i>0 && i<33)players[i].buttons=p->v.button;
-    if(ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPreThink(p);
 }
 static void hookPostThink(edict_t* p) {
     int i=engine.pfnIndexOfEdict(p);if(i<=0||i>=33) {raven.pfnPlayerPostThink(p);return;}
     auto& state=players[i];
     bool carrier=bounce::isBouncePlayer(p);
-    if(ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPostThink(p);
     rpgNormalize(p);
     rpgPostThink(p,state.buttons);
+    necroPostThink(p,state.buttons);
     bool activeNail=nailgun(p);
     if(activeNail) {
         p->v.viewmodel=engine.pfnAllocString(NailViewModel);
@@ -696,7 +703,7 @@ static int hookRegisterMsg(const char* name,int size) {
     return id;
 }
 static void hookMessageBegin(int dest,int type,const float* origin,edict_t* player) {
-    shotgunList=false;rpgList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
+    shotgunList=false;rpgList=false;necroList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
     engine.pfnMessageBegin(dest,type,origin,player);
 }
 static void hookMessageEnd() {
@@ -722,6 +729,9 @@ static void hookMessageEnd() {
 static void hookWriteString(const char* value) {
     if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_rpg"))rpgList=true;
     if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_shotgun"))shotgunList=true;
+    bool necro=!std::strcmp(value,"weapon_hornetgun")||!std::strcmp(value,"weapon_necromancer");
+    if(currentMsg==msgWeaponList&&necro){necroList=true;value="weapon_necromancer";}
+    if(currentMsg==msgItemPickup&&necro)value="weapon_necromancer";
     bool pistol=!std::strcmp(value,"weapon_ricochet")||!std::strcmp(value,"weapon_9mmhandgun")||!std::strcmp(value,"weapon_glock");
     bool carrier=bounce::isCarrierClass(value);
     bool nails=!std::strcmp(value,"weapon_nailgun")||!std::strcmp(value,"weapon_9mmAR")||!std::strcmp(value,"weapon_mp5");
@@ -740,6 +750,7 @@ static void hookWriteString(const char* value) {
     engine.pfnWriteString(value);
 }
 static void hookWriteByte(int value) {
+    if(currentMsg==msgWeaponList&&necroList){const int fields[]={23,1,255,255,0,1,11,1};if(currentByte<8)value=fields[currentByte];}
     if(currentMsg==msgWeaponList && rpgList) {if(currentByte==0)rpgAmmoIndex=value;else if(currentByte==1)value=30;}
     if(currentMsg==msgWeaponList && shotgunList && currentByte==0) {shotgunAmmoIndex=value;bounce::setShellAmmoIndex(value); }
     if(currentMsg==msgSetFov && currentByte==0 && bounce::isBouncePlayer(messagePlayer))value=0;
@@ -762,12 +773,13 @@ static void hookWriteByte(int value) {
         if(currentByte==1) {curWeaponId=value;carrierCurWeapon=(value==bounce::carrierWeaponId());}
         if(currentByte==2 && curWeaponId==GlockId)value=255;
         if(currentByte==2 && curWeaponId==Mp5Id)value=255;
-        if(currentByte==2 && curWeaponId==8)value=255;
+        if(currentByte==2 && (curWeaponId==8||curWeaponId==11))value=255;
         if(currentByte==2 && curWeaponId==7)value=bounce::tfcClip(messagePlayer);
         if(currentByte==2 && carrierCurWeapon && valid(messagePlayer))value=bounce::status(messagePlayer).clip;
     }
     if(currentMsg==SvcWeaponAnim && !ownAnimation && currentByte==0) {
-        if(ricochet(messagePlayer))value=value==7?4:value==8?3:0;
+        if(necromancer(messagePlayer))value=0;
+        else if(ricochet(messagePlayer))value=value==7?4:value==8?3:0;
         else if(pipeWrench(messagePlayer))value=pipeWrenchSequence(value);
         else if(bounce::isBouncePlayer(messagePlayer)||bounce::isTfcPlayer(messagePlayer))value=bounce::remapAnimation(value);
     }
@@ -796,6 +808,8 @@ static int hookSpawn(edict_t* e) {
     bool bounceItem=bounce::isCarrierClass(classname);
     bool nailItem=classname && (!std::strcmp(classname,"weapon_nailgun")||!std::strcmp(classname,"weapon_9mmAR")||!std::strcmp(classname,"weapon_mp5"));
     bool wrenchItem=classname && (!std::strcmp(classname,"weapon_pipewrench")||!std::strcmp(classname,"weapon_crowbar"));
+    bool necroItem=classname&&(!std::strcmp(classname,"weapon_necromancer")||!std::strcmp(classname,"weapon_hornetgun"));
+    bool minionItem=classname&&!std::strcmp(classname,"monster_minion");
     bool world=classname && !std::strcmp(classname,"worldspawn");
     if(world) {
         invalidFastSequenceLogged=false;
@@ -833,11 +847,14 @@ static int hookSpawn(edict_t* e) {
         engine.pfnPrecacheModel(const_cast<char*>(LinkSkeletonModel));
         for(auto path:{PlasmaBody,PlasmaCore,PlasmaHalo,LinkGlowSprite,LinkHotSprite})engine.pfnPrecacheModel(const_cast<char*>(path));
         linkBeamSprite=engine.pfnPrecacheModel(const_cast<char*>("sprites/xbeam1.spr"));
+        necroPrecache();
         cultistPrecache();
         rpgPrecache();
         bounce::precache();
     }
     int result=raven.pfnSpawn(e);
+    if(necroItem){e->v.classname=engine.pfnAllocString("weapon_necromancer");engine.pfnSetModel(e,"models/cremation/w_necromancer.mdl");}
+    if(minionItem){e->v.classname=engine.pfnAllocString("monster_minion");engine.pfnSetModel(e,"models/cremation/minion.mdl");necroInstall(e);}
     if(classname && !std::strcmp(classname,"monster_human_grunt")) {
         startupTrace("HECUAlliance",cremationAllyHecu(e->pvPrivateData)?"zombie_faction=7":"FAILED");
         cultistInstall(e);
@@ -862,6 +879,7 @@ static int hookSpawn(edict_t* e) {
     return result;
 }
 static void hookActivate(edict_t* list,int count,int maxClients) {
+    necroStates.fill(NecroState{});necroFires.clear();incendiaryGrenades.clear();
     rpgCharges.fill(RpgCharge{});rpgMissiles.clear();linkLocks.fill(LinkLock{});linkSkeletons.clear();
     discs.clear();nails.clear();effects.assign(globals->maxEntities,Effect{});players.fill(PlayerState{});lastFrame=globals->time;
     bounce::reset();
@@ -902,13 +920,20 @@ static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
     if(push)e->v.movetype=s->movement;
     bool constructionFreeze=bounce::engineerOwnFreeze(e);
     if(constructionFreeze)e->v.flags&=~FL_FROZEN;
+    float savedGrenadeDamage=e->v.dmg;
+    for(auto& g:incendiaryGrenades)if(g.entity==e&&g.serial==e->serialnumber)e->v.dmg=g.originalDamage;
     raven.pfnSave(e,data);
+    e->v.dmg=savedGrenadeDamage;
     if(constructionFreeze)e->v.flags|=FL_FROZEN;
     e->v.rendermode=mode;e->v.renderfx=fx;e->v.renderamt=alpha;e->v.rendercolor=color;e->v.framerate=frame;e->v.movetype=movement;
 }
 static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
+    incendiaryGrenades.erase(std::remove_if(incendiaryGrenades.begin(),incendiaryGrenades.end(),[e](const IncendiaryGrenade& g){return g.entity==e;}),incendiaryGrenades.end());
     int result=raven.pfnRestore(e,data,globalEntity);
     const char* restoredClass=text(e->v.classname);
+    if(restoredClass&&!std::strcmp(restoredClass,"monster_minion"))necroInstall(e);
+    if(restoredClass&&!std::strcmp(restoredClass,"weapon_hornetgun"))e->v.classname=engine.pfnAllocString("weapon_necromancer");
+    if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_necro_fx"))e->v.flags|=FL_KILLME;
     if(restoredClass && !std::strcmp(restoredClass,"monster_human_grunt")) {cremationAllyHecu(e->pvPrivateData);cultistInstall(e);}
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmhandgun")||!std::strcmp(restoredClass,"weapon_glock")))e->v.classname=engine.pfnAllocString("weapon_ricochet");
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmAR")||!std::strcmp(restoredClass,"weapon_mp5")))e->v.classname=engine.pfnAllocString("weapon_nailgun");
@@ -1042,3 +1067,6 @@ extern "C" void cremation_sentry(entvars_t* vars) {
 extern "C" void cremation_sentry_base(entvars_t* vars) {
     auto create=reinterpret_cast<void(*)(entvars_t*)>(GetProcAddress(ravenModule,"info_target"));create(vars);
 }
+
+extern "C" void weapon_necromancer(entvars_t* vars){spawnNativeAlias(vars,"weapon_hornetgun","weapon_necromancer");}
+extern "C" void monster_minion(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_minion");}

@@ -1,0 +1,6 @@
+Sonidos originales de Unreal Tournament GOTY extraidos con UCC.
+Los nombres conservan Paquete.Grupo.Sonido.wav.
+Explosiones: detonaciones y efectos energeticos.
+Gibbing: desmembramiento.
+Impactos-de-restos: fragmentos y cuerpos golpeando superficies.
+Estas son muestras originales para escuchar; no modifican los sonidos instalados en Cremation.
