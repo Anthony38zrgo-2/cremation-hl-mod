@@ -6,9 +6,14 @@ El lanzador inicia una partida nueva en Rapidcore. Usa una partida nueva para
 probar esta version; los guardados anteriores no actualizan las entidades del mapa.
 
 ARMAS
-Traes las tres armas desde el inicio, cada una en su sitio del HUD.
+Al iniciar tienes el traje HEV, la escopeta, Ricochet, Flak Cannon, Pipe Wrench de
+Opposing Force, Nailgun, granada de mano y lanzacohetes. Tambien recibes cartuchos
+y municion de 9 mm para la Nailgun. La granada usa el modelo del RAR entregado.
 
-Grupo 2: RICOCHET. Usa los modelos originales instalados de Ricochet.
+Grupo 1: CHAINSAW. Sustituye el modelo y sonidos de Pipe Wrench;
+su combate reutiliza los ataques de la palanca de Half-Life.
+
+Grupo 2: RICOCHET. Conserva sus ataques y HUD, con la Panthergun azul.
 - Clic izquierdo: un disco azul, 1000 unidades/segundo, sin dano directo.
   Puede rebotar en paredes y corrige suavemente su trayectoria hacia enemigos
   visibles frente a el, antes del primer rebote.
@@ -35,14 +40,22 @@ Grupo 3: ESCOPETA DE REBOTE (icono "BNC"), junto a la escopeta normal.
 - Municion propia del arma: 8 en el cargador, 40 de reserva, 6 granadas. El HUD
   muestra los contadores con los iconos de cartucho y de granada AR.
 
+Grupo 3: NAILGUN de Half-Life Deathmatch.
+- Clic izquierdo: dispara un clavo con estela verde y consume 1 municion de 9 mm.
+- Clic derecho: dispara un Super Nail con estela roja y consume 3 unidades.
+- Los disparos usan el ritmo de 0,1 segundos de la Nailgun original.
+
+La granada de mano y el lanzacohetes conservan el comportamiento nativo de
+Half-Life. La Nailgun comparte la reserva de 9 mm del HUD.
+
 Escopeta normal: sigue en su grupo con su ataque, recarga y dano originales.
-No hay pistola convencional ni otras armas recogibles en este mapa.
+Ricochet ocupa el identificador de pistola; no aparece una pistola convencional.
 El HEV, el punto de inicio y los 20 zombis normales de Ravenholm se conservan.
 El enemigo mas cercano al inicio esta a 1059.9 unidades, sin vision directa.
 
 PRUEBA MANUAL PENDIENTE
-1. Arranca con Cremation.exe y comprueba que aparecen Ricochet (grupo 2), la
-   escopeta normal y "BNC" (grupo 3), y que puedes elegir las tres.
+1. Arranca con Cremation.exe y comprueba que tienes las armas de inicio: Ricochet,
+   las dos escopetas, Pipe Wrench, Nailgun, granada y lanzacohetes.
 2. Ricochet: disco primario, transparencia azul, ralentizacion y recuperacion a los
    7 segundos; secundario de tres discos con explosion y empuje fuerte.
 3. Escopeta de rebote, primario: dispara contra una pared en un pasillo. Deben verse
@@ -51,9 +64,11 @@ PRUEBA MANUAL PENDIENTE
 4. Escopeta de rebote, secundario: lanza granadas apuntando al suelo y a 90 grados y
    compara el dano. Comprueba que no cambia si miras arriba despues de lanzar, que no
    atraviesa paredes y que el empujon es pequeno.
-5. Alterna las tres armas, comprueba animaciones y HUD, y mira que el cargador y los
+5. Usa la Nailgun: el primario debe dejar estela verde; el secundario, roja, y cada
+   disparo secundario debe consumir 3 unidades de municion.
+6. Alterna las armas, comprueba animaciones y HUD, y mira que el cargador y los
    contadores de cada arma no se mezclan.
-6. Comprueba el arma con guardado y cambio de mapa si vas a usar guardados.
+7. Comprueba las armas con guardado y cambio de mapa si vas a usar guardados.
 
 Se han probado la logica de las dos armas con un motor simulado, la carga real de
 las DLL Win32, la instalacion del mapa y el arranque del servidor GoldSrc real.
@@ -72,6 +87,8 @@ tools/build_ricochet.ps1 compila, prueba, instala y verifica el mod completo.
 source/ricochet_proxy.cpp conserva la logica de la DLL Ravenholm y anade las armas.
 source/ricochet_balance.h contiene los valores de Ricochet.
 source/bounce_shotgun_balance.h contiene los valores de la escopeta de rebote.
+source/additional-weapons-assets.json y file-manifest.json registran los modelos,
+sonidos, sprites HUD y respaldos de las armas añadidas.
 source/BOUNCE_SHOTGUN.md documenta la implementacion, sus limites y sus pruebas.
 source/RICOCHET_ANALYSIS.md documenta Freeze Shot, Triple Shot y las adaptaciones.
 ricochet-assets.json y bounce-assets.json registran los archivos usados y su origen.
@@ -81,3 +98,5 @@ backups/before-ricochet y backups/before-bounce-shotgun conservan el estado prev
 Requiere el Half-Life instalado. No se han modificado valve, Ricochet ni Ravenholm.
 
 CONTROLES: B construir sentry, N desmontar, J reparar/reabastecer. Si esas teclas ya estaban asignadas, exec engineer.cfg aplica explicitamente los enlaces. Ver source/TFC_AND_HORDE.md.
+
+ACTUALIZACION: Ricochet primario recto sin seguimiento, 5 rebotes y estela triple de ancha. Secundario guiado. Flak Cannon usa exactamente el modelo de la escopeta actual. Corregido el nombre de inventario de Nailgun tras el spawn nativo.

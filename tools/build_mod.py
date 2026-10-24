@@ -6,12 +6,16 @@ from install_bounce_assets import install as install_bounce
 from install_tfc_assets import install as install_tfc
 from install_horde_assets import install as install_horde
 from install_hecu_assets import install as install_hecu
+from install_additional_weapons import install as install_additional_weapons
 
 ROOT=Path(__file__).resolve().parents[2]
 MOD=ROOT/'Cremation'
 DONOR=ROOT/'Half-Life2Classic_Ravenholm'
 SPAWN=(432,-1601,-220)
 SPAWN_YAW=155
+LOADOUT=['item_suit','weapon_ricochet','weapon_shotgun','weapon_bounce_shotgun',
+         'weapon_pipewrench','weapon_nailgun','weapon_handgrenade','weapon_rpg',
+         'ammo_9mmAR']+['ammo_buckshot']*3
 # All are regular Ravenholm zombies. No fast/poison variants or extra waves.
 POSITIONS=[(-160,800),(200,880),(500,700),(-550,700),
            (-1450,350),(-1450,-150),(-1250,0),(-1350,200),
@@ -29,6 +33,7 @@ def prepare():
     install_tfc()
     install_horde()
     install_hecu()
+    install_additional_weapons()
     for file in ('config.cfg','default.cfg'):
         if not (MOD/file).exists(): shutil.copy2(ROOT/'valve'/file,MOD/file)
     # Preserve the user's existing controls, including their auxiliary configs.
@@ -87,7 +92,7 @@ def build():
     # Real touch pickups overlap the standing player's hull at the spawn point.
     # They work in single-player without console cheats or multiplayer equip hooks.
     gear_origin=vec((SPAWN[0],SPAWN[1],floor+8))
-    loadout=['item_suit','weapon_ricochet','weapon_shotgun','weapon_bounce_shotgun']+['ammo_buckshot']*3
+    loadout=LOADOUT
     for i,classname in enumerate(loadout):
         es.append(dict(classname=classname,origin=gear_origin,angles=f'0 {SPAWN_YAW} 0',targetname=f'cremation_loadout_{i+1:02}'))
     # Six shell boxes in separate safe standing areas across the map.

@@ -172,6 +172,11 @@
     "weapon_ricochet",
     "weapon_shotgun",
     "weapon_bounce_shotgun",
+    "weapon_pipewrench",
+    "weapon_nailgun",
+    "weapon_handgrenade",
+    "weapon_rpg",
+    "ammo_9mmAR",
     "ammo_buckshot",
     "ammo_buckshot",
     "ammo_buckshot"

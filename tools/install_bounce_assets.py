@@ -1,9 +1,9 @@
 """Install weapon_bounce_shotgun resources into Cremation.
 
-The weapon uses copies of the shotgun models under its own names, so neither
-models/v_shotgun.mdl nor any Ricochet file is overwritten. The HUD icon is a new
-sprite with its own descriptor file; it reuses only the vanilla shell and AR
-grenade ammo pictures for the two counters.
+The first-person model is the user's current shotgun, including its hands
+and animations. Third-person and world models retain private shotgun
+copies, so neither stock shotgun nor Ricochet assets are overwritten. The HUD
+icon has its own descriptor and reuses the vanilla shell and grenade counters.
 """
 from pathlib import Path
 import hashlib, json, shutil, struct
@@ -11,16 +11,15 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 MOD = ROOT / 'Cremation'
-DONOR = ROOT / 'Half-Life2Classic_Ravenholm'
 
 # destination in Cremation <- read-only source
 COPIES = {
-    'models/cremation/v_bounce_shotgun.mdl': 'Half-Life2Classic_Ravenholm/models/v_shotgun.mdl',
-    'models/cremation/p_bounce_shotgun.mdl': 'valve/models/p_shotgun.mdl',
-    'models/cremation/w_bounce_shotgun.mdl': 'valve/models/w_shotgun.mdl',
+    'models/cremation/v_bounce_shotgun.mdl': 'Cremation/assets-source/additional_weapons/current_shotgun/v_shotgun.mdl',
+    'models/cremation/p_bounce_shotgun.mdl': 'Cremation/assets-source/additional_weapons/current_shotgun/p_shotgun.mdl',
+    'models/cremation/w_bounce_shotgun.mdl': 'Cremation/assets-source/additional_weapons/current_shotgun/w_shotgun.mdl',
     # The world model has zero embedded textures. GoldSrc derives this name
     # from the *installed* model path, so renaming only the mesh is incomplete.
-    'models/cremation/w_bounce_shotgunT.mdl': 'valve/models/w_shotgunt.mdl',
+    'models/cremation/w_bounce_shotgunT.mdl': 'Cremation/assets-source/additional_weapons/current_shotgun/w_shotgunt.mdl',
 }
 
 SPRITE_NAME = 'cremation_bounce_shotgun'

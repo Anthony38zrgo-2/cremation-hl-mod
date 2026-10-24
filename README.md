@@ -1,7 +1,8 @@
 # Cremation
 
 Mod para Half-Life / GoldSrc en Windows. Incluye Rapidcore con 20 zombis de
-Half-Life2Classic_Ravenholm, HEV, escopeta original, Ricochet y Flak Cannon.
+Half-Life2Classic_Ravenholm y un equipo inicial con escopeta, Ricochet, Flak Cannon,
+Pipe Wrench de Opposing Force, Nailgun, granada de mano y RPG.
 
 ## Instalar y ejecutar
 
@@ -16,6 +17,11 @@ El primario de Ricochet ralentiza con efecto azul y su secundario lanza tres
 50% más de daño y 15% más dispersión por eje; rebotan dos veces y desaparecen al
 tercer contacto con superficies o al impactar un enemigo. Su secundario lanza
 una granada cuyo daño aumenta con la elevación del apuntado.
+
+Ricochet usa la Panthergun azul. La Pipe Wrench usa los modelos y sonidos de la chainsaw, con HUD de Opposing Force, con los ataques de la palanca de Half-Life. La
+Nailgun usa modelos de TFC/Deathmatch y munición de 9 mm: el primario dispara un
+clavo con estela verde; el secundario dispara un Super Nail con estela roja y cuesta
+tres unidades de munición.
 
 ## Código y compilación
 
@@ -38,7 +44,8 @@ no se versionan. Consulta `.AGENTS`, `source/RICOCHET_ANALYSIS.md` y
 ## Procedencia y validación
 
 Mapa y recursos base: Half-Life de Valve. Zombis y DLL base:
-Half-Life2Classic_Ravenholm. Modelos y recursos del arma Ricochet: Ricochet de Valve.
+Half-Life2Classic_Ravenholm. La lógica de Ricochet proviene de Ricochet de Valve;
+el arma usa ahora la Panthergun azul suministrada por el usuario.
 Son recursos de terceros y conservan sus condiciones originales; este repositorio
 no les asigna una licencia nueva. La licencia del SDK está en `source/hlsdk/LICENSE`.
 
@@ -51,6 +58,16 @@ Ricochet tiene tres cargas y regenera una cada 2 segundos. El primario de Flak C
 
 El balance se edita sin compilar en `config/weapons/ricochet.json` y `config/weapons/flak_cannon.json`. Reinicia el mapa para aplicarlo. Consulta [la guía de configuración](config/weapons/README.md) para parámetros y rangos.
 
+El modelo de primera persona de Flak Cannon es una copia exacta de la escopeta
+actual instalada en `models/v_shotgun.mdl`, con sus manos y animaciones. El origen
+persistente est� en `assets-source/additional_weapons/current_shotgun/`.
+Ricochet usa ahora la Panthergun azul de `panthergun2.zip` y la Pipe Wrench usa la
+chainsaw de `d3_chainsaw.zip`, incluidos sus modelos y sonidos.
+El primario de Ricochet no sigue la mirada: refleja cinco veces y desaparece en el
+sexto contacto con superficies. Su estela tiene anchura 9 (antes 3). El secundario
+conserva el seguimiento de la punter�a. La Nailgun conserva su nombre seleccionable
+al terminar el spawn nativo de MP5.
+
 Balance vigente: Ricochet regenera cada 1,5 s. Flak hace 9,375 por perdigón; el secundario describe un arco lento, daño nominal 56,25–112,5 según elevación, con radio 48. Se elimina el instakill por doce impactos: el gibbing depende del daño letal. La configuración vigente está en `config/weapons`.
 
 
@@ -62,3 +79,30 @@ punteria, sin laser,25% mas lento. Flak fragmenta diagonalmente en superficies,
 pero no al alcanzar un enemigo. Ver [guia TFC y horda](source/TFC_AND_HORDE.md).
 
 Correccion de aparicion: los40 zombis mantienen sus posiciones iniciales y realizan patrullas locales fisicas. Se retiran las marcas que los concentraban en el spawn. Inicia una partida nueva para cargar el mapa corregido.
+
+## Modelos y recursos de armas
+
+Se instalaron los modelos, sonidos y sprites HUD del paquete `unreal_pack.zip`;
+`models/v_shotgun.mdl` conserva la escopeta del pack y la Flak Cannon usa su modelo
+de escopeta actual en `models/cremation/v_bounce_shotgun.mdl`, con sus manos y animaciones. La granada usa ahora los cuatro MDL de
+`graneda_tnt_by_ben.rar`. La Panthergun azul se asigna a Ricochet y la chainsaw a Pipe Wrench en rutas propias.
+La Nailgun incluye modelos, sonidos y sprites HUD de TFC/Deathmatch. Los hashes y
+copias anteriores quedan registrados en `additional-weapons-assets.json` y
+`file-manifest.json`; los recursos del pack siguen documentados en
+`unreal-pack-assets.json`.
+
+El equipo inicial de Rapidcore conserva las armas actuales y añade Pipe Wrench,
+Nailgun, granada y RPG, además de una caja de munición para la Nailgun. Estos
+cambios se compilaron; la comprobación visual y de combate en una sesión del juego
+sigue pendiente.
+
+Actualizaci�n comprobada: regresiones de trayectoria, rebotes, coste 1/3 de Nailgun y nombre seleccionable; arranque de GoldSrc durante 8 s con Nailgun y Pipe Wrench presentes. La revisi�n visual interactiva queda pendiente.
+
+
+Corrección de transferencia de sonidos: se instalaron los cinco nombres WAV heredados que solicita el DLL de Ravenholm. Como sus archivos originales no están en los paquetes disponibles, cada ruta usa una copia de un efecto compatible ya instalado; el servidor conserva los nombres e índices de sonido originales. El origen y los hashes quedan en `additional-weapons-assets.json` y `file-manifest.json`.
+
+Corrección de carga (24 octubre 2026): las seis rutas de precarga de la chainsaw usan cadenas permanentes. GoldSrc conserva estos punteros para enviar los recursos al cliente; las cadenas temporales generaban nombres de sonido corruptos y bloqueaban la entrada. Se retiraron los filtros de sonido de la corrección anterior. La carga real con hl.exe completó los recursos y registró la entrada del jugador en Rapidcore; evidencia en diagnostics/qconsole-static-sound-fix.log y diagnostics/sound-transfer-fix.json.
+
+Ricochet actualizada: modelo adelantado 6 unidades con las mismas animaciones. El secundario mantiene una variante roja opaca y una envoltura roja aditiva hasta disparar el primario; el modo persiste al guardar el arma durante la sesión. Cuatro cargas regenerables. Trails: primario anchura 12/vida 1 s; secundario anchura 10/vida 0,9 s. El secundario conserva guía, ralentiza a cada enemigo tocado y refleja hasta cinco veces; la explosión ocurre al sexto contacto. Variantes reproducibles con tools/prepare_ricochet_model.py. DLL compilada e instalada; aspecto y combate pendientes de revisión en juego.
+
+Corrección de cierre y selección Flak: el modelo rojo mantiene todas las estructuras de estudio antes de texturedataindex, ya que GoldSrc descarta la cola de píxeles tras subir texturas. La Flak publica su índice real de buckshot al registrar la escopeta, antes de intentar seleccionarla desde el HUD; también migra weapon_crossbow al restaurar partidas. Validado con cliente real: cambio rojo/azul, selección desde slot3 y ambos disparos de Flak, sin cierre durante 28 s. Pruebas test_ricochet pasadas. Evidencias: diagnostics/ricochet-crash-flak-fix.json.

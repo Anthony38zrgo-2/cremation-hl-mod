@@ -1,4 +1,4 @@
-123
+143
 selection		320 320hud1	160	160	80	20
 
 bucket1			320 320hud2	108	16	12	12
@@ -31,7 +31,7 @@ number_9		320 320hud2	108	0	12  16
 
 divider			320 320hud2	120	0	1	20
 
-cross			320 320hud2	0	72	16	16
+cross			320 320hud2	0	72	32	32
 
 suit_full		320 320hud2	0	52	20	20
 suit_empty		320 320hud2	20	52	20	20
@@ -64,7 +64,6 @@ d_grenade		320	320hud1	144	224	32	16
 d_satchel		320	320hud1	144	240	32	16
 d_tripmine		320	320hud1	192	208	32	16
 d_snark			320	320hud1	192	224	32	16
-d_PR			320	320hud1	192	224	32	16
 d_skull			320	320hud1	192	240	32	16
 d_tracktrain		320	320hud1	224	208	32	16
 
@@ -96,27 +95,26 @@ dmg_gas			640 640hud9	0	0	64	64
 dmg_rad			640 640hud9	192 0	64	64
 dmg_shock		640 640hud8	192	0	64	64
 
-number_0		640 640hud7	0	0	20	24
-number_1		640 640hud7	24	0	20	24
-number_2		640 640hud7	48	0	20	24
-number_3		640 640hud7	72	0	20	24
-number_4		640 640hud7	96	0	20	24
-number_5		640 640hud7	120	0	20	24
-number_6		640 640hud7	144	0	20	24
-number_7		640 640hud7	168	0	20	24
-number_8		640 640hud7	192	0	20	24
-number_9		640 640hud7	216	0	20	24
+number_0		640 hud/0	0	0	31	31
+number_1		640 hud/1	0	0	31	31
+number_2		640 hud/2	0	0	31	31
+number_3		640 hud/3	0	0	31	31
+number_4		640 hud/4	0	0	31	31
+number_5		640 hud/5	0	0	31	31
+number_6		640 hud/6	0	0	31	31
+number_7		640 hud/7	0	0	31	31
+number_8		640 hud/8	0	0	31	31
+number_9		640 hud/9	0	0	31	31
 
 divider			640 640hud7	240	0	2	40
+cross			640 hud/HP	0	0	31	31
 
-cross			640 640hud7	80	24	32	32
+suit_full		640 hud/PW_F	0	0	31	31
+suit_empty		640 hud/PW_E	0	0	31	31
 
-suit_full		640 640hud7	0	24	40	40
-suit_empty		640 640hud7	40	24	40	40
-
-flash_full		640 640hud7	160	24	32	32
-flash_empty		640 640hud7	112	24	32	32
-flash_beam		640 640hud7 144	24	16	32
+flash_full		640 hud/Flash_F	0	0	31	31
+flash_empty		640 hud/Flash_E	0	0	31	31
+flash_beam		640 hud/Flash_B	0	0	31	31
 
 train_back		640	640hud5 170	0	72	72
 train_stop		640	640hud5 170	72	72	72
@@ -127,7 +125,7 @@ train_forward3	640	640hud6 170	72	72	72
 autoaim_c		640	crosshairs	96	0	24	24
 
 title_half		640 640hud4	0	226	256	30
-title_life		640 640hud5	0	226	256	30
+title_life		640 640hud5	0	226	220	30
 
 d_crowbar		640	640hud1	192	0	48	16
 d_9mmhandgun	640	640hud1	192	16	32	16
@@ -147,8 +145,9 @@ d_snark			640	640hud1	192	208	32	16
 d_skull			640	640hud1	192	224	32	16
 d_tracktrain		640	640hud1	192	240	32	16
 
-item_battery	640 640hud2	176	0	44	44
-item_healthkit	640 640hud2	176	48	44	44
-item_longjump	640 640hud2	176	96	44	44
+item_battery	640 items/Bat	0	0	42	43
+item_healthkit	640 items/medkit	0	0	42	43
+item_longjump	640 items/jump	0	0	42	43
 
 grenade			640 640hud7     48      96      24      24
+d_PR			320	320hud1	192	224	32	16

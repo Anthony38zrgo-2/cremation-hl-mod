@@ -1,5 +1,5 @@
 {
-  "max_charges": 3,
+  "max_charges": 4,
   "recharge_seconds": 1.5,
   "disc_speed": 750,
   "slow_seconds": 7.0,

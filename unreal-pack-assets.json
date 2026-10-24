@@ -1,0 +1,1432 @@
+{
+  "source_archive": "unreal_pack.zip",
+  "archive_root": "Unreal_pack/",
+  "runtime_files_from_pack": 265,
+  "pack_files_copied": 264,
+  "installed_targets": {
+    "models/crossbow_bolt.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/crossbow_bolt.mdl",
+      "sha256": "25a4faa884ee18e4d4c878ab265249e5fcd2b1fe4c311701658ca9bf67a0d607",
+      "bytes": 19808
+    },
+    "models/v_357.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_357.mdl",
+      "sha256": "785df9bba0b5581a71b61fcd8a9052c9767992310ca49ba1cb6f191bf578f4f1",
+      "bytes": 297556
+    },
+    "models/v_9mmar.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_9mmAR.mdl",
+      "sha256": "72ff8077269026e948fb5fbaca07f3c88c4146c18b42506c6402ff9d4fd9052c",
+      "bytes": 445640
+    },
+    "models/v_9mmhandgun.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_9mmhandgun.mdl",
+      "sha256": "6a7712c2caa6d96ab90b131f7cc305729e5e9fae27b074143786b9615a28af38",
+      "bytes": 163336,
+      "superseded_by": {
+        "source": "assets-source/additional_weapons/hive_hand_original/v_hgun.mdl",
+        "sha256": "562cdcc2f6ae1c8c270f0d8c6d5828a8edd08bed051fc65f056124fca7f98900",
+        "reason": "Later user request installed the supplied grenade and original Hive Hand model."
+      }
+    },
+    "models/v_crossbow.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_crossbow.mdl",
+      "sha256": "9091fa5d21772827d14b81854a4985854ec8ecf7a5626c849b895bb33b6fc896",
+      "bytes": 379192
+    },
+    "models/v_crowbar.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_crowbar.mdl",
+      "sha256": "d8beba4b533278556dd611d5dae1c8aa567ecebc620b371db315026d814dd286",
+      "bytes": 159280
+    },
+    "models/v_grenade.mdl": {
+      "source": "Cremation/models/cremation/v_bounce_shotgun.mdl",
+      "sha256": "bae8594e4ca372ac0d075d9a719203ef08a5345a6a4868a97580c7aa4006d7f4",
+      "bytes": 158072,
+      "replaces": "Unreal_pack/models/v_grenade.mdl",
+      "superseded_by": {
+        "source": "assets-source/additional_weapons/granada_tnt_by_ben/v_grenade.mdl",
+        "sha256": "194b96a2a4e927e8594d97d9d7753b174642262550db5a11792330dbf0ff10fc",
+        "reason": "Later user request installed the supplied grenade and original Hive Hand model."
+      }
+    },
+    "models/v_hgun.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_hgun.mdl",
+      "sha256": "47c44d457d3a46db04790874e9242bcd448cbaa773a70955e1c67a377348a61d",
+      "bytes": 83280
+    },
+    "models/v_oldhgun.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_oldhgun.mdl",
+      "sha256": "63372a933bd42c3f2dda8be8437ca8f78ba330f7e218f0144b255921420dfa96",
+      "bytes": 358100
+    },
+    "models/v_oldhgun_Blue.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_oldhgun_Blue.mdl",
+      "sha256": "a06898fd9079b7553df76b9a4a386d18a580615f7347f3337e5301653dbe9d07",
+      "bytes": 358104
+    },
+    "models/v_rpg.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_rpg.mdl",
+      "sha256": "f69678c5e070695d9082e9c1dbb896a881d8b1d376e2190268eb9853f83f5a49",
+      "bytes": 285992
+    },
+    "models/v_satchel.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_satchel.mdl",
+      "sha256": "a5988019809087f204d39dfaa0aab038d6bdebd2359b66da2d084f0aeda4efd9",
+      "bytes": 224324
+    },
+    "models/v_satchel_radio.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_satchel_radio.mdl",
+      "sha256": "18a02a1f657cfbd786a92363c5ed2d07438586466f50b3de829d5bfa86c712c2",
+      "bytes": 222376
+    },
+    "models/w_9mmarclip.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/w_9mmarclip.mdl",
+      "sha256": "5af252cc9bf9ce76059a1df60be9c2bc181310eb444b449f55177b54ae911944",
+      "bytes": 2540
+    },
+    "models/w_9mmarclipt.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/w_9mmarclipt.mdl",
+      "sha256": "13c16a367ba3b303785c8f49b12277de7af3ef695a9b13fd066d6530695f20d3",
+      "bytes": 66632
+    },
+    "models/w_battery.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/w_battery.mdl",
+      "sha256": "a2be2cecdb0a3ed2f1a7b5b1a1598a4bb8956d2ee9f055bd4f0826f598bbd6af",
+      "bytes": 24796
+    },
+    "models/w_medkit.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/w_medkit.mdl",
+      "sha256": "0559476a8f64388673ecf5581e6f057bba4eb4f760f9b028bda085e6699b7140",
+      "bytes": 22000
+    },
+    "models/w_shotbox.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/w_shotbox.mdl",
+      "sha256": "a2b2107b6b2fff6adf2fbb0ec859f3ed3a4350d691aeb800b5d119067ad071e8",
+      "bytes": 68520
+    },
+    "models/w_shotboxt.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/w_shotboxt.mdl",
+      "sha256": "4b0fd668234ffc79e9a5681008bf841f050c2fb816145fdcfa2f8eed4306d996",
+      "bytes": 21304
+    },
+    "models/w_suit.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/w_suit.mdl",
+      "sha256": "8a5a5c12136e8c90107777767c35e8a9128ce609e606685e171f6bf31102bbfe",
+      "bytes": 94800
+    },
+    "sound/common/bodydrop1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/bodydrop1.wav",
+      "sha256": "900f3508a752fa76607b9bf3ce3aec69654aca476160c4f4f9d361879fc3e86f",
+      "bytes": 9252
+    },
+    "sound/common/bodydrop2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/bodydrop2.wav",
+      "sha256": "84872c265e55100b983ba1f16d18886e43376a3b763a3174f1611d0faba57a60",
+      "bytes": 5256
+    },
+    "sound/common/bodydrop3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/bodydrop3.wav",
+      "sha256": "8f170108d03fd7b67361543a8e9e5868800fe160f45d61d090c22cbe4b246bac",
+      "bytes": 9124
+    },
+    "sound/common/bodydrop4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/bodydrop4.wav",
+      "sha256": "4abd6668d5515af029f2a5b34d576e1e0aff4e154fd4f406e4e3856bb7a4818d",
+      "bytes": 4890
+    },
+    "sound/common/bodysplat.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/bodysplat.wav",
+      "sha256": "c766d41474c6cb68bc8203fddbe533939ac010115898c30dce90a9bab2811686",
+      "bytes": 21114
+    },
+    "sound/common/launch_deny1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/launch_deny1.wav",
+      "sha256": "3a8178df0cda00bf44bf7982ac5f260ba4335bc661da83a06ee99faa379f530b",
+      "bytes": 20222
+    },
+    "sound/common/launch_deny2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/launch_deny2.wav",
+      "sha256": "98e2d0a6c5a8c0adf9f75bdbe627b433d36d2d9c26a7b7843fe8ea892b6d7356",
+      "bytes": 20290
+    },
+    "sound/common/launch_dnmenu1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/launch_dnmenu1.wav",
+      "sha256": "4bbc4680030a300fc535279ab08362e5b5ded8189065f852b3b78052ddfd11bf",
+      "bytes": 17782
+    },
+    "sound/common/launch_glow1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/launch_glow1.wav",
+      "sha256": "5140ee43c6ba8cfab956c405f22f4ec989f427305d5b921be115b2c789451b3f",
+      "bytes": 19482
+    },
+    "sound/common/launch_select1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/launch_select1.wav",
+      "sha256": "894ef53ebfaad82a3b2c900b4d2eff5ba4e8fdf1ee339cdbb2e82f6e614fb1df",
+      "bytes": 15534
+    },
+    "sound/common/launch_select2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/launch_select2.wav",
+      "sha256": "bb580215824dd89825f114f4fbe5514f0e9783a1ca7bb7aed2376fadc349b6aa",
+      "bytes": 18086
+    },
+    "sound/common/launch_upmenu1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/launch_upmenu1.wav",
+      "sha256": "913ead8450ba2e23c2b10aad5bf29ba923f21fb1ba58943044081a7938ddf915",
+      "bytes": 18730
+    },
+    "sound/common/menu1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/menu1.wav",
+      "sha256": "f74ff5cc83fb595f2d4ccd1923bb04ce8f1db9122c2dd86bd63c364212051434",
+      "bytes": 632
+    },
+    "sound/common/menu2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/menu2.wav",
+      "sha256": "cc9137f8ba0c6439679095914a698cc0bde326a385a63ae425dbf6ff4504aaa1",
+      "bytes": 1778
+    },
+    "sound/common/menu3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/menu3.wav",
+      "sha256": "ec328ad43899db776743a4f63eac2db3332ac97d41750209a0251195a2b55536",
+      "bytes": 708
+    },
+    "sound/common/npc_step1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/npc_step1.wav",
+      "sha256": "c4a2e74827cdae345d21101a11827a5e33e93eb7c997e4d9647a8063fcede455",
+      "bytes": 3064
+    },
+    "sound/common/npc_step2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/npc_step2.wav",
+      "sha256": "cebe3203a7b5f305096557125293e7c27469e8344a2a25a89258537c48defa6f",
+      "bytes": 2556
+    },
+    "sound/common/npc_step3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/npc_step3.wav",
+      "sha256": "81f85cd032a3dfe1570c2a3854ceee389fa1215f63b8c1a052a6906d0f3f37d0",
+      "bytes": 2344
+    },
+    "sound/common/npc_step4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/npc_step4.wav",
+      "sha256": "be1f82784323cdf26df158b3d0c424b086af8b62c664ee8d8d994266d5259801",
+      "bytes": 2948
+    },
+    "sound/common/null.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/null.wav",
+      "sha256": "5271b9aa2961809f47fadecb693be2eebde2dbed62fbc4f5f4889fcd8c4a65f8",
+      "bytes": 1244
+    },
+    "sound/common/wpn_denyselect.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/wpn_denyselect.wav",
+      "sha256": "d41f0b11e60e4debe1656573f2057bc1dc710af689bff70777672939b261dfb1",
+      "bytes": 3826
+    },
+    "sound/common/wpn_hudoff.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/wpn_hudoff.wav",
+      "sha256": "00a16374d7851061578f284fc2cd69dfc26a31a9a684ffae735483d9d51bf132",
+      "bytes": 5218
+    },
+    "sound/common/wpn_hudon.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/wpn_hudon.wav",
+      "sha256": "4ecc9bd83a2ae5a393764b2c9ddbfaede190f84c74419ea2f5aa7b4993091e11",
+      "bytes": 14800
+    },
+    "sound/common/wpn_moveselect.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/wpn_moveselect.wav",
+      "sha256": "1b733551f33468f18341cf9e3f3153ee4548b39d007c3e58559b5d91b6e3916e",
+      "bytes": 5040
+    },
+    "sound/common/wpn_select.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/common/wpn_select.wav",
+      "sha256": "8133fa90c7ca9e710a4d515e102342788f7d981d84fa427adc3e55c654d0c9ba",
+      "bytes": 2986
+    },
+    "sound/items/9mmclip1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/9mmclip1.wav",
+      "sha256": "5e054363c9f8377212567be8b773b480c7669b6cb0b222e5f43b1858fd3ec606",
+      "bytes": 21072
+    },
+    "sound/items/9mmclip2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/9mmclip2.wav",
+      "sha256": "5e054363c9f8377212567be8b773b480c7669b6cb0b222e5f43b1858fd3ec606",
+      "bytes": 21072
+    },
+    "sound/items/airtank1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/airtank1.wav",
+      "sha256": "09496b111d731af60edd8d9129bc8d4f878ea5c0dddbeddfa3fff8a619ea93dd",
+      "bytes": 16984
+    },
+    "sound/items/ammopickup1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/ammopickup1.wav",
+      "sha256": "e96d2796516fd01699c27f5c30992f0134d443ef297801a805fac5ef8a80bdd3",
+      "bytes": 19964
+    },
+    "sound/items/ammopickup2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/ammopickup2.wav",
+      "sha256": "63d068488aa87a92692facf1deb6cd704c956d5806144e927855106670a1408f",
+      "bytes": 20458
+    },
+    "sound/items/clipinsert1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/clipinsert1.wav",
+      "sha256": "5b73d4b10aba1047c0d002c00921a2295b7d17205d86e145f03394db9756b715",
+      "bytes": 19518
+    },
+    "sound/items/cliprelease1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/cliprelease1.wav",
+      "sha256": "8ca78a16e1aded33bd837abc4369bb91bcc4d31e967285183a5586f7d40539fb",
+      "bytes": 6066
+    },
+    "sound/items/flashlight1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/flashlight1.wav",
+      "sha256": "53a98a4c021b38bb087d14e6b9c4db3068b220a4e7faa02134d20cf04a47785b",
+      "bytes": 866
+    },
+    "sound/items/guncock1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/guncock1.wav",
+      "sha256": "ed96f81f5b097bf2f28e988fea77a1c2f878c2c1c59682d549f06b418eb70d6b",
+      "bytes": 12534
+    },
+    "sound/items/gunpickup1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/gunpickup1.wav",
+      "sha256": "69df0e797e0e7d0fae265698d43869440a1f5a0c0ef196a8feca955734b5979a",
+      "bytes": 21052
+    },
+    "sound/items/gunpickup2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/gunpickup2.wav",
+      "sha256": "9fc23927cf89857988d6bbdce317407b2d29e0b4772109feb8baa260981e422b",
+      "bytes": 53598
+    },
+    "sound/items/gunpickup3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/gunpickup3.wav",
+      "sha256": "7798f0bf460580e5bda5aa23c16bf8835a76a4307d8797f081407b000fdd3981",
+      "bytes": 20562
+    },
+    "sound/items/gunpickup4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/gunpickup4.wav",
+      "sha256": "0c9bff556c61c1a59a5079f915b2b14d31d7e81d8cecf5557785960c545a6ab7",
+      "bytes": 23084
+    },
+    "sound/items/medcharge4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/medcharge4.wav",
+      "sha256": "72945e0b940cf9b36421346639b19f42065ed360bd9e1cca065b5d2c0cfb02ae",
+      "bytes": 17916
+    },
+    "sound/items/medshot4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/medshot4.wav",
+      "sha256": "6ef6758eb4d0017ce177db7de5c7ac0b005e416919acffc9363a1077adb11748",
+      "bytes": 15588
+    },
+    "sound/items/medshot5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/medshot5.wav",
+      "sha256": "b4a53329d365fd468682d7a7c5babfc8af9440a8e6fda4e1300f5f427fe99ab1",
+      "bytes": 18266
+    },
+    "sound/items/medshotno1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/medshotno1.wav",
+      "sha256": "8f6e40150ec1ebe9db49f73f355861df1a668116e75cc200c93ba661398189ab",
+      "bytes": 3856
+    },
+    "sound/items/smallmedkit1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/smallmedkit1.wav",
+      "sha256": "024708b5f43d6b7ee8d5b93456ef5b3616f8ce516c1ce144373535bcfe8e4403",
+      "bytes": 23286
+    },
+    "sound/items/smallmedkit2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/smallmedkit2.wav",
+      "sha256": "024708b5f43d6b7ee8d5b93456ef5b3616f8ce516c1ce144373535bcfe8e4403",
+      "bytes": 23286
+    },
+    "sound/items/suitcharge1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/suitcharge1.wav",
+      "sha256": "90e3f34e5ac1bf0fbff37eed4ada54aaa7f694bbe97af7e2951369b876ca3d0f",
+      "bytes": 22974
+    },
+    "sound/items/suitchargeno1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/suitchargeno1.wav",
+      "sha256": "1a9c2476160f1eb86a89a120210a68a2c399a6053a03cc24abfdcb78b4440b61",
+      "bytes": 6724
+    },
+    "sound/items/suitchargeok1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/suitchargeok1.wav",
+      "sha256": "00baad51adaa3f5d6664e85ae5442221db6818bfd85124c164324d22f6723ab2",
+      "bytes": 16412
+    },
+    "sound/items/weapondrop1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/items/weapondrop1.wav",
+      "sha256": "ccdef66099a7340395da9637a6e5476f0c73acd05b710770f1104a46be2594a6",
+      "bytes": 12694
+    },
+    "sound/player/breathe1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/breathe1.wav",
+      "sha256": "69bf82d908d9adec0d1dc6c5927871245f9f6a67b4b48043a9225dce0e4b5588",
+      "bytes": 79564
+    },
+    "sound/player/breathe2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/breathe2.wav",
+      "sha256": "0f1be1597bc722b7e15011b41c2de1556a2da24974150d441ac88762d34533d6",
+      "bytes": 20072
+    },
+    "sound/player/geiger1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/geiger1.wav",
+      "sha256": "30adcc3d5745f9ded5db88967719d2710f95f251b987ff9c875ea7056fb558bd",
+      "bytes": 566
+    },
+    "sound/player/geiger2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/geiger2.wav",
+      "sha256": "cc60b087f3b7c6f7c680377139ccab3319a848e352e85968bbb3ff0c6bb3aa37",
+      "bytes": 3250
+    },
+    "sound/player/geiger3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/geiger3.wav",
+      "sha256": "824f7eee17c0eb99c5879fa072d68342f718c92210044c425a4f783c8ec45ba4",
+      "bytes": 3310
+    },
+    "sound/player/geiger4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/geiger4.wav",
+      "sha256": "76b4a0c291a5774e344877e7b2c013b7f6e3c76d7c17b0e8b596cfadf1ed50c3",
+      "bytes": 2068
+    },
+    "sound/player/geiger5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/geiger5.wav",
+      "sha256": "fba7f36fc2e291e6474aa3b5f3f98ce3205b65fd5894511d39c703015b8c872d",
+      "bytes": 2240
+    },
+    "sound/player/geiger6.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/geiger6.wav",
+      "sha256": "b8527ba147e673660925542fc36112bbbc6a8467103d70e4f157f7efb140111b",
+      "bytes": 3872
+    },
+    "sound/player/heartbeat1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/heartbeat1.wav",
+      "sha256": "fed76a9cba6283426121562020fd14f85793867e0e8e251014a9e69119adf304",
+      "bytes": 8150
+    },
+    "sound/player/pl_dirt1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_dirt1.wav",
+      "sha256": "39aa0ea4fed232658f8fece713ba766853ea188971b2c0aee88ff2b5cc0cfc88",
+      "bytes": 13110
+    },
+    "sound/player/pl_dirt2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_dirt2.wav",
+      "sha256": "8467488631d8d37a7ea5c514c8246bfbb3167ede78cf4b4e4fa66f0807993b12",
+      "bytes": 14532
+    },
+    "sound/player/pl_dirt3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_dirt3.wav",
+      "sha256": "1bf5059ddc8db4a1c062769e92ca2abed9b6087d190b5e73a86b3a0c0ac9f104",
+      "bytes": 13360
+    },
+    "sound/player/pl_dirt4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_dirt4.wav",
+      "sha256": "468f930f1d7c8ca0186b0c30c4c46b766ae4f651f48133ba972730a303f29457",
+      "bytes": 12662
+    },
+    "sound/player/pl_duct1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_duct1.wav",
+      "sha256": "c36b00e56e19f3ca604424e2758ea464431e43bf1cb68b011839fb181117ee82",
+      "bytes": 15866
+    },
+    "sound/player/pl_duct2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_duct2.wav",
+      "sha256": "2843d8f9a5e97339571080b0257fb383e379da4aa9b403405180836a7274dd00",
+      "bytes": 15200
+    },
+    "sound/player/pl_duct3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_duct3.wav",
+      "sha256": "181c3aaa57ec2f82a8a30d10dac1ff453df4f9a4370e6c7721cff8d46a86a9ee",
+      "bytes": 13780
+    },
+    "sound/player/pl_duct4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_duct4.wav",
+      "sha256": "4bcf796017e0cd55e3c1c79d820fa6cbe0d850a6564e3704eaa052b27f331955",
+      "bytes": 14316
+    },
+    "sound/player/pl_fallpain1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_fallpain1.wav",
+      "sha256": "173283340dd9f843bd1a1fa0b046bf2093ecaea36712a5dd2a3a5e2fa638d7dc",
+      "bytes": 11080
+    },
+    "sound/player/pl_fallpain2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_fallpain2.wav",
+      "sha256": "9fbef260c5bb6af5117104eaa69c0849863ef6c2945ca82f8e37c269c31af1db",
+      "bytes": 11080
+    },
+    "sound/player/pl_fallpain3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_fallpain3.wav",
+      "sha256": "a15ae69b7b714ab5306490dae98b106577f20ee287a13459e61067d2604aab17",
+      "bytes": 7308
+    },
+    "sound/player/pl_grate1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_grate1.wav",
+      "sha256": "c36b00e56e19f3ca604424e2758ea464431e43bf1cb68b011839fb181117ee82",
+      "bytes": 15866
+    },
+    "sound/player/pl_grate2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_grate2.wav",
+      "sha256": "2843d8f9a5e97339571080b0257fb383e379da4aa9b403405180836a7274dd00",
+      "bytes": 15200
+    },
+    "sound/player/pl_grate3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_grate3.wav",
+      "sha256": "181c3aaa57ec2f82a8a30d10dac1ff453df4f9a4370e6c7721cff8d46a86a9ee",
+      "bytes": 13780
+    },
+    "sound/player/pl_grate4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_grate4.wav",
+      "sha256": "4bcf796017e0cd55e3c1c79d820fa6cbe0d850a6564e3704eaa052b27f331955",
+      "bytes": 14316
+    },
+    "sound/player/pl_jump1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_jump1.wav",
+      "sha256": "0b6f61937c2b749871e5e92a67852b692cccfdee7e7f78e153c51c3ce0fac1cf",
+      "bytes": 6198
+    },
+    "sound/player/pl_jump2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_jump2.wav",
+      "sha256": "4239a55718a269b7e3665b0ee1dd61b3b37b2f2289cf3cc5f008ac9f44c18ebd",
+      "bytes": 5268
+    },
+    "sound/player/pl_jumpland2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_jumpland2.wav",
+      "sha256": "53d737772129c31ebb2cc0f95495dd0b011043cd64827afdda205caa1fa15730",
+      "bytes": 4616
+    },
+    "sound/player/pl_ladder1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_ladder1.wav",
+      "sha256": "4fad66341514c9aa2b31b4c2fde7563369090da9b0b3a51e08bca3100f2ec282",
+      "bytes": 4098
+    },
+    "sound/player/pl_ladder2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_ladder2.wav",
+      "sha256": "b9c44f73c8bdbc900af4f06600e0d6456a040b296612b7d0fe53391285976a44",
+      "bytes": 4054
+    },
+    "sound/player/pl_ladder3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_ladder3.wav",
+      "sha256": "6486c6778837de73093ecae4aa1faf84f45ad30b2e3d87a000ef502a9d83a979",
+      "bytes": 5006
+    },
+    "sound/player/pl_ladder4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_ladder4.wav",
+      "sha256": "6d10a82a1a8f99778b2bc400dcf8a47781d78796e0425ee4803a9afa8f927f64",
+      "bytes": 4910
+    },
+    "sound/player/pl_metal1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_metal1.wav",
+      "sha256": "7eba50d1ae697094c9981103040a56fb15fcc17e4b0a5d46447fab7c8edf7786",
+      "bytes": 15348
+    },
+    "sound/player/pl_metal2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_metal2.wav",
+      "sha256": "14025cf17fec3446b1cd26236210a3ba820e5d668f59f89c75eba50173cad1a3",
+      "bytes": 14740
+    },
+    "sound/player/pl_metal3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_metal3.wav",
+      "sha256": "924ac9ae2e942abd0a1ae5f1dc0882555d96e13ea223e0f004f0cc5e93b63e1b",
+      "bytes": 15610
+    },
+    "sound/player/pl_metal4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_metal4.wav",
+      "sha256": "fac19aaaf4e34d7b4eb406e157b421524f8c42154d9fc24f02a1986d57517353",
+      "bytes": 15232
+    },
+    "sound/player/pl_pain2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_pain2.wav",
+      "sha256": "626e4b5159df1f100878cd728836556e9d25065f846eb9067e2dd97baf7f21eb",
+      "bytes": 6504
+    },
+    "sound/player/pl_pain4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_pain4.wav",
+      "sha256": "2497b4028834677077c9c1ccbeb3af28f5333f636bcc576d46ceb32e021ccb07",
+      "bytes": 3950
+    },
+    "sound/player/pl_pain5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_pain5.wav",
+      "sha256": "3197e6ba6d6c38cbc6a2b9403f2ca561441f945ebca2c63f73acc8e4f891702c",
+      "bytes": 3412
+    },
+    "sound/player/pl_pain6.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_pain6.wav",
+      "sha256": "57ab5ad5fbe5e109156b71459313176efe65f86e2e3ff61886a9334846ab1591",
+      "bytes": 4866
+    },
+    "sound/player/pl_pain7.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_pain7.wav",
+      "sha256": "71f49330df2247cabd87a78a6cddf247900d79b363747e5092c75c54ef9e6b04",
+      "bytes": 4420
+    },
+    "sound/player/pl_shell1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_shell1.wav",
+      "sha256": "63b5a27a57a48c5181007983a113ecde1e536fe3d5ce6d7f8e153bbf8726e4c7",
+      "bytes": 4904
+    },
+    "sound/player/pl_shell2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_shell2.wav",
+      "sha256": "7aa2804c243180470d9e0bf1501619383096c953b574cc7b492fcb098ee3f059",
+      "bytes": 9884
+    },
+    "sound/player/pl_shell3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_shell3.wav",
+      "sha256": "125c7841f45f4c050c3dc7a2d9b492d8d60f6db1457f81ee484dd0153c7d9c42",
+      "bytes": 8456
+    },
+    "sound/player/pl_slosh1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_slosh1.wav",
+      "sha256": "67fa8c9956fd3c840558f908788350c7b476dbb1ed08093b57638ccfbc1eb11f",
+      "bytes": 9892
+    },
+    "sound/player/pl_slosh2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_slosh2.wav",
+      "sha256": "bb62590fb379979b6c17bc2ad3d5ea08b1ed86aca61e62c22bed35418a7f3be2",
+      "bytes": 9440
+    },
+    "sound/player/pl_slosh3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_slosh3.wav",
+      "sha256": "1f9079b3352dca571034065d2ef75c39a9f26c6dac02baeade3df2425c830e28",
+      "bytes": 8990
+    },
+    "sound/player/pl_slosh4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_slosh4.wav",
+      "sha256": "699fe0daa89cc294498ec42a4feb8209acee3a4af9e89831067df48bd4be3275",
+      "bytes": 7688
+    },
+    "sound/player/pl_step1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_step1.wav",
+      "sha256": "ce9bfb6f57e687466349154c187897a807cf004ed5eba3824d30cb7f95751d02",
+      "bytes": 16890
+    },
+    "sound/player/pl_step2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_step2.wav",
+      "sha256": "0f61d2f03184b977ebd01106414c372b9a830f486204f02fd1dbdb1799c1ebcc",
+      "bytes": 18394
+    },
+    "sound/player/pl_step3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_step3.wav",
+      "sha256": "f97536c097962f49d0a729afc9aa9b32ce789883e201d78769ac766158bb8fec",
+      "bytes": 16090
+    },
+    "sound/player/pl_step4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_step4.wav",
+      "sha256": "f97536c097962f49d0a729afc9aa9b32ce789883e201d78769ac766158bb8fec",
+      "bytes": 16090
+    },
+    "sound/player/pl_swim1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_swim1.wav",
+      "sha256": "3cf2c6d8426f3d5861fccbc28b02c28a594dc109395a2ac7bde724887191fa5f",
+      "bytes": 27634
+    },
+    "sound/player/pl_swim2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_swim2.wav",
+      "sha256": "3cf2c6d8426f3d5861fccbc28b02c28a594dc109395a2ac7bde724887191fa5f",
+      "bytes": 27634
+    },
+    "sound/player/pl_swim3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_swim3.wav",
+      "sha256": "3cf2c6d8426f3d5861fccbc28b02c28a594dc109395a2ac7bde724887191fa5f",
+      "bytes": 27634
+    },
+    "sound/player/pl_swim4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_swim4.wav",
+      "sha256": "3cf2c6d8426f3d5861fccbc28b02c28a594dc109395a2ac7bde724887191fa5f",
+      "bytes": 27634
+    },
+    "sound/player/pl_tile1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_tile1.wav",
+      "sha256": "ce9bfb6f57e687466349154c187897a807cf004ed5eba3824d30cb7f95751d02",
+      "bytes": 16890
+    },
+    "sound/player/pl_tile2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_tile2.wav",
+      "sha256": "0f61d2f03184b977ebd01106414c372b9a830f486204f02fd1dbdb1799c1ebcc",
+      "bytes": 18394
+    },
+    "sound/player/pl_tile3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_tile3.wav",
+      "sha256": "0f61d2f03184b977ebd01106414c372b9a830f486204f02fd1dbdb1799c1ebcc",
+      "bytes": 18394
+    },
+    "sound/player/pl_tile4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_tile4.wav",
+      "sha256": "f97536c097962f49d0a729afc9aa9b32ce789883e201d78769ac766158bb8fec",
+      "bytes": 16090
+    },
+    "sound/player/pl_tile5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_tile5.wav",
+      "sha256": "f97536c097962f49d0a729afc9aa9b32ce789883e201d78769ac766158bb8fec",
+      "bytes": 16090
+    },
+    "sound/player/pl_wade1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_wade1.wav",
+      "sha256": "77d83e4015cccd6a26875bda45a55842a115ed69c4b3325348dc8b31d9096f72",
+      "bytes": 20708
+    },
+    "sound/player/pl_wade2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_wade2.wav",
+      "sha256": "605ba2f693c369db8364a0aef9610f8452301a40e69f184b70c8022bf2b19a1a",
+      "bytes": 21444
+    },
+    "sound/player/pl_wade3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_wade3.wav",
+      "sha256": "eb4352dd46bdca20e44688432ff25d624dca46b60b3f4f34a5fd0118afb43e94",
+      "bytes": 17444
+    },
+    "sound/player/pl_wade4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/pl_wade4.wav",
+      "sha256": "eb4352dd46bdca20e44688432ff25d624dca46b60b3f4f34a5fd0118afb43e94",
+      "bytes": 17444
+    },
+    "sound/player/sprayer.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/player/sprayer.wav",
+      "sha256": "662d49c240fcb5e55f89fe50e25871c7a57222e53946ddc5b6c13493b4707743",
+      "bytes": 10128
+    },
+    "sound/ui/buttonclick.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/UI/buttonclick.wav",
+      "sha256": "e8caba9de3a128687b69f3fa03a72729152c360454a25ba6716205e1839a94f2",
+      "bytes": 6464
+    },
+    "sound/ui/buttonclickrelease.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/UI/buttonclickrelease.wav",
+      "sha256": "5bbf0a8f22b59d2c136b53d31666ddddabcae5d92c6a33751b537a382cc22cc2",
+      "bytes": 18066
+    },
+    "sound/ui/buttonrollover.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/UI/buttonrollover.wav",
+      "sha256": "161dd5d48ec0ee3cda351c0dfe90a48623651338cbdc870e460b05492e8a15e3",
+      "bytes": 3342
+    },
+    "sound/weapons/357_cock1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/357_cock1.wav",
+      "sha256": "17b229056edeef1035d82bf2e6a80ee04f6f8e6bfb3d2e5066f5b182bde81c08",
+      "bytes": 2678
+    },
+    "sound/weapons/357_reload1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/357_reload1.wav",
+      "sha256": "fdfe28272ba4b6c18f2367eab4cb59d22c44a73b270a13903036025323336c99",
+      "bytes": 12840
+    },
+    "sound/weapons/357_shot1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/357_shot1.wav",
+      "sha256": "0559722f9b72aceb02d94a116170b9c597cc8d9b739d91fa49f94bf5882e26d2",
+      "bytes": 52030
+    },
+    "sound/weapons/357_shot2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/357_shot2.wav",
+      "sha256": "0559722f9b72aceb02d94a116170b9c597cc8d9b739d91fa49f94bf5882e26d2",
+      "bytes": 52030
+    },
+    "sound/weapons/bullet_hit1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/bullet_hit1.wav",
+      "sha256": "2ad264b8e0288160e0f7ff8a2ca3c5017c9d232786294bc431541bb9db61c055",
+      "bytes": 2776
+    },
+    "sound/weapons/bullet_hit2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/bullet_hit2.wav",
+      "sha256": "b643b1b837789b564c0705b55b5f12260a47f3fc850476988af8a7b719147e34",
+      "bytes": 4178
+    },
+    "sound/weapons/cbar_hit1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/cbar_hit1.wav",
+      "sha256": "24a190d8edf5b943c3273d8908255284e783653a11f611a6da011f86554c2eed",
+      "bytes": 7784
+    },
+    "sound/weapons/cbar_hit2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/cbar_hit2.wav",
+      "sha256": "fded05c96ab0255c5ee3bb4f0d778fd6f344dfdffa7f926c46bef7d1f14de380",
+      "bytes": 5530
+    },
+    "sound/weapons/cbar_hitbod1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/cbar_hitbod1.wav",
+      "sha256": "f0d86c5b96ef6e2571fe66cde068955a29a95683969833c00b8dc801d58190d3",
+      "bytes": 7048
+    },
+    "sound/weapons/cbar_hitbod2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/cbar_hitbod2.wav",
+      "sha256": "fc8857eb420e3d36464cf39b747e9c82c32e3f61149ff3b3e17b61d6b1f74e9f",
+      "bytes": 5518
+    },
+    "sound/weapons/cbar_hitbod3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/cbar_hitbod3.wav",
+      "sha256": "61278bfe5e7045b4710fa71224d8abf580c76d9cc4a6edf1cc52775d8054eb17",
+      "bytes": 7744
+    },
+    "sound/weapons/cbar_miss1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/cbar_miss1.wav",
+      "sha256": "187d46ff07ed254247d5cfedce87274ff71fea86f795cfc99837e00e0acf2c1d",
+      "bytes": 7710
+    },
+    "sound/weapons/dbarrel1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/dbarrel1.wav",
+      "sha256": "1c32cf987890b051180e6b3734177ad0f6530c1ef4265f4ac1166cee6efed800",
+      "bytes": 30426
+    },
+    "sound/weapons/debris1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/debris1.wav",
+      "sha256": "26efb87a2438a0b607aa227ec9f5e80935325671fabe9922041d3658451f1b96",
+      "bytes": 14100
+    },
+    "sound/weapons/debris2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/debris2.wav",
+      "sha256": "e6245600bdd87adc9e12d3d705576e7d24641593e4e59c37b4074cab20522b29",
+      "bytes": 10134
+    },
+    "sound/weapons/debris3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/debris3.wav",
+      "sha256": "e140ef0f01719151edbbc8ae0c9256caa6b8d731da18a3bfb8acecde5a10c11e",
+      "bytes": 30056
+    },
+    "sound/weapons/dryfire1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/dryfire1.wav",
+      "sha256": "155e1c99c487607a872696c1c9316bf339bfe317907f804d487d361b234a50f0",
+      "bytes": 3992
+    },
+    "sound/weapons/egon_off1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/egon_off1.wav",
+      "sha256": "fbc7059cf74a4944b98ba209bead7f27d755a650aa9fd093dc7516264131b18a",
+      "bytes": 72540
+    },
+    "sound/weapons/egon_run3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/egon_run3.wav",
+      "sha256": "aa5059b65b5e9c18911166e50cbc77017010b7bb79e185ae4ae540a4608a142e",
+      "bytes": 47570
+    },
+    "sound/weapons/egon_windup2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/egon_windup2.wav",
+      "sha256": "0dd83a82368eb22b92bcde56562d62f84e5c75bed30472b9e4e01eef8d0e139b",
+      "bytes": 86894
+    },
+    "sound/weapons/electro4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/electro4.wav",
+      "sha256": "cf4b8eddd7cf54d1f61f30f193617c5d799087675e2f518264b709e7acc7766f",
+      "bytes": 19010
+    },
+    "sound/weapons/electro5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/electro5.wav",
+      "sha256": "2ac2155f828fc704e8e946c76958b88f9ef4155fb13864323b726e98043f4e52",
+      "bytes": 15362
+    },
+    "sound/weapons/electro6.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/electro6.wav",
+      "sha256": "777d0f2d164603f613fd9922747e7bf7ba5b2f7d75be2e1b7074bbd97e6d96ed",
+      "bytes": 15036
+    },
+    "sound/weapons/explode3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/explode3.wav",
+      "sha256": "e5c88796ffa1bd7157ac29aaccff54d767fe67bcada52d0f5f488a03dd17d9a6",
+      "bytes": 28822
+    },
+    "sound/weapons/explode4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/explode4.wav",
+      "sha256": "f6e09e5bfe44a6ea0d0c276e8b632f7911dcbece62329851a722a53a48be42c4",
+      "bytes": 28700
+    },
+    "sound/weapons/explode5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/explode5.wav",
+      "sha256": "a39a4098aedd116a1688196a3338f03ea83f781df726bce184a03845a54f808d",
+      "bytes": 28906
+    },
+    "sound/weapons/gauss2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/gauss2.wav",
+      "sha256": "7081c03073a8abe550739c3970e051a68473462021ad235a556d35bd507500bb",
+      "bytes": 32224
+    },
+    "sound/weapons/glauncher.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/glauncher.wav",
+      "sha256": "89d409549f92f8e450ca254c2e8cca690d290b9149df95dfd07b168556108567",
+      "bytes": 20802
+    },
+    "sound/weapons/glauncher2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/glauncher2.wav",
+      "sha256": "89d409549f92f8e450ca254c2e8cca690d290b9149df95dfd07b168556108567",
+      "bytes": 20802
+    },
+    "sound/weapons/grenade_hit1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/grenade_hit1.wav",
+      "sha256": "35f73c85cb2fdacf4560f8b94ad0d340ec72161252a2c9de31490ed2aa0e6393",
+      "bytes": 14448
+    },
+    "sound/weapons/grenade_hit2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/grenade_hit2.wav",
+      "sha256": "f8cde21e284e1630c49cefda065db48140d800d3ceba2a0da51b91339cd45c71",
+      "bytes": 20968
+    },
+    "sound/weapons/grenade_hit3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/grenade_hit3.wav",
+      "sha256": "b9a3d15809ff539e92d210f405865ae1b0a2333aa0091b2027969cc0faa87097",
+      "bytes": 11080
+    },
+    "sound/weapons/gren_cock1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/gren_cock1.wav",
+      "sha256": "8f544c6b6780c007fb4b3c0640553d648a38e9c74df1d0e489aa89a65499f597",
+      "bytes": 8426
+    },
+    "sound/weapons/g_bounce1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/g_bounce1.wav",
+      "sha256": "a518d643a79c888c2a27bfcca4ce043093d3132a034588ff0de805c36302369d",
+      "bytes": 3198
+    },
+    "sound/weapons/g_bounce2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/g_bounce2.wav",
+      "sha256": "a1c973b79ff49be1059f8d9cb6cd766c4bf1d4a68f300d5da25903d4415bc2fa",
+      "bytes": 5222
+    },
+    "sound/weapons/g_bounce3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/g_bounce3.wav",
+      "sha256": "e9162767e500f8f4086ccd1d033185d364199ce3aa7a54f6ebd78000deb34405",
+      "bytes": 5474
+    },
+    "sound/weapons/g_bounce4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/g_bounce4.wav",
+      "sha256": "91092fdcd938922b44e3fc4bf6c828111d4b0b79ab9725eb70290a641eacc64b",
+      "bytes": 7618
+    },
+    "sound/weapons/g_bounce5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/g_bounce5.wav",
+      "sha256": "1074584e78caae6afefd93d0370ea4ebbb96eb11aa496302dbc4a28fe2b82a37",
+      "bytes": 6614
+    },
+    "sound/weapons/hks1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/hks1.wav",
+      "sha256": "8d879421334fb9b8ddf15fdf554ad8a94196d4b780721083321c79cf5283e53a",
+      "bytes": 39570
+    },
+    "sound/weapons/hks2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/hks2.wav",
+      "sha256": "8d879421334fb9b8ddf15fdf554ad8a94196d4b780721083321c79cf5283e53a",
+      "bytes": 39570
+    },
+    "sound/weapons/hks3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/hks3.wav",
+      "sha256": "8d879421334fb9b8ddf15fdf554ad8a94196d4b780721083321c79cf5283e53a",
+      "bytes": 39570
+    },
+    "sound/weapons/mine_activate.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/mine_activate.wav",
+      "sha256": "f21d1aa7be7138310bebdcb1288a712e627be20a94577390c53f283b3c37718f",
+      "bytes": 6042
+    },
+    "sound/weapons/mine_charge.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/mine_charge.wav",
+      "sha256": "8a0149de6872f2e1a1d5f1409605956b29ed3459ea003bcf3afaff4b8d60523c",
+      "bytes": 44294
+    },
+    "sound/weapons/mine_deploy.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/mine_deploy.wav",
+      "sha256": "7acc23233660db738fa289823da7396d12dd90e4aecd5c14d70ecb22fda1f74c",
+      "bytes": 5928
+    },
+    "sound/weapons/mortar.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/mortar.wav",
+      "sha256": "6ba460c12d82d98f3c46b253595ffdd6f1708f9f64ccae78a7c11cc7663b6388",
+      "bytes": 25748
+    },
+    "sound/weapons/mortarhit.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/mortarhit.wav",
+      "sha256": "a2e16f87f9f767b9216b2446721ac8685f594478c317c4d2adae383afc1b77da",
+      "bytes": 40366
+    },
+    "sound/weapons/pl_gun1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/pl_gun1.wav",
+      "sha256": "b83e4e479b015d56bcff46e85062d1e6356228becfe705b730d511ab69bbee40",
+      "bytes": 6382
+    },
+    "sound/weapons/pl_gun2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/pl_gun2.wav",
+      "sha256": "3fc3f99376e6250cb6f49bddd0bb64abe8284aca12915fab956e1c8b1e05b224",
+      "bytes": 6360
+    },
+    "sound/weapons/pl_gun3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/pl_gun3.wav",
+      "sha256": "87a1959b99ac94a213128caf31ceb20be37f4204cfb88bcc9151d397b6d84e1c",
+      "bytes": 40340
+    },
+    "sound/weapons/reload1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/reload1.wav",
+      "sha256": "ef3d655a98fff205594e93f384fd91bcc502e0b8ed3b046e6fdf246322543e4d",
+      "bytes": 4874
+    },
+    "sound/weapons/reload2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/reload2.wav",
+      "sha256": "d0c6d769577c9f3ee17cbd59c008cfc0cad7ba7e8a01aa5876023fb39362d562",
+      "bytes": 6098
+    },
+    "sound/weapons/reload3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/reload3.wav",
+      "sha256": "e4ec314af2dee6fb0266c940a02253931b683ad0ad096da29d0212b0e0bcb34d",
+      "bytes": 13504
+    },
+    "sound/weapons/ric1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/ric1.wav",
+      "sha256": "97fd0207f230ec8bda965c4a241d23896ce4fe73ca816c1839c0a3a3d925c4a5",
+      "bytes": 6124
+    },
+    "sound/weapons/ric2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/ric2.wav",
+      "sha256": "3ae429f875f1a06fe9e001b38b2453bbaca20f4c4e638ce75c4064367df7ca93",
+      "bytes": 7052
+    },
+    "sound/weapons/ric3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/ric3.wav",
+      "sha256": "0be68c0c96ca8fc62073c3c6643de5b3f1b464609da38ef111d1a8f5d779cc4d",
+      "bytes": 5440
+    },
+    "sound/weapons/ric4.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/ric4.wav",
+      "sha256": "52f4f955d738a6d32a236f81372835c9b132cce0afe685449e9753ac15423575",
+      "bytes": 6596
+    },
+    "sound/weapons/ric5.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/ric5.wav",
+      "sha256": "8506b07b44bba069559612438ea278153113586173c7036a2ddf242179f1e27c",
+      "bytes": 5352
+    },
+    "sound/weapons/rocket1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/rocket1.wav",
+      "sha256": "f63b63629fe377d6cc1dfd7e57c844c1ff0884db2f322f117e8c9c8b323b60c8",
+      "bytes": 55210
+    },
+    "sound/weapons/rocketfire1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/rocketfire1.wav",
+      "sha256": "95e168eecf2eb8adbe8eccd0868114a9ef9ef6679ac02fd67ec05e410627b8d2",
+      "bytes": 44874
+    },
+    "sound/weapons/sbarrel1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/sbarrel1.wav",
+      "sha256": "ca94b8d387908106ab04986a68e216d84d1ff4445e2303c0e5271b8b034a9e6e",
+      "bytes": 52398
+    },
+    "sound/weapons/scock1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/scock1.wav",
+      "sha256": "d4a9be84e23d28afdccfafa610281c1c48faf57d38662dfc8f011f855a9b03a9",
+      "bytes": 13448
+    },
+    "sound/weapons/sshell1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/sshell1.wav",
+      "sha256": "05f9cab86306b3c9e88fbe5d242d659ab74bdd3efd463ad4bb0aeb983948fbd3",
+      "bytes": 15708
+    },
+    "sound/weapons/sshell2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/sshell2.wav",
+      "sha256": "e1865a2d616226722b5781e35e3b2946dd9a55334f3e991d140bf29675ce7e4f",
+      "bytes": 11504
+    },
+    "sound/weapons/sshell3.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/sshell3.wav",
+      "sha256": "45a2f8bd652307b9ebd37115c27166d03a4d7055f3054a215036fbc342e22f6d",
+      "bytes": 21006
+    },
+    "sound/weapons/xbow_fire1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/xbow_fire1.wav",
+      "sha256": "ab34c8226df84a816a5625dddd78eac9620e06d459aa47cb459cb4b1e0f22aaa",
+      "bytes": 12264
+    },
+    "sound/weapons/xbow_fly1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/xbow_fly1.wav",
+      "sha256": "2bf8f3d8edc87c6042a2c9d4f442175de618a460498123c48411d5f326d8e4de",
+      "bytes": 11186
+    },
+    "sound/weapons/xbow_hit1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/xbow_hit1.wav",
+      "sha256": "664a50da21c4a4e680f2457d3a8862f25dfb6ff1ea26c280224b5b2ca8452531",
+      "bytes": 9002
+    },
+    "sound/weapons/xbow_hit2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/xbow_hit2.wav",
+      "sha256": "0e1a4961cc0656fdef0387370a72c682d2d53758aabe91289ad73c3f401fb34a",
+      "bytes": 10772
+    },
+    "sound/weapons/xbow_hitbod1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/xbow_hitbod1.wav",
+      "sha256": "5a21a63177077390e059e78405ca45d8ef590fe7ea430904bbffeb426deac1ad",
+      "bytes": 6852
+    },
+    "sound/weapons/xbow_hitbod2.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/xbow_hitbod2.wav",
+      "sha256": "64d366b7670419871c782bf481dacd61423c963c346499ef43e85ca3f0b54d3d",
+      "bytes": 4014
+    },
+    "sound/weapons/xbow_reload1.wav": {
+      "source": "unreal_pack.zip:Unreal_pack/sound/weapons/xbow_reload1.wav",
+      "sha256": "7a3bd67488d4b4732de3562d4d8b7ab1ef35b2288dd8d7dc1137f4615a0efdb3",
+      "bytes": 12770
+    },
+    "sprites/hud/0.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/0.spr",
+      "sha256": "17b3668d409ec3d37af3e3aaf7739460bda77e17160f91c9aee25449e9b6c54b",
+      "bytes": 1854
+    },
+    "sprites/hud/1.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/1.spr",
+      "sha256": "cc671d10a7fd8faabe6df51b46d78fe70dae4cccc4e6fca56fac924ae51e28a3",
+      "bytes": 1854
+    },
+    "sprites/hud/2.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/2.spr",
+      "sha256": "5e451aa938c0e71121bab3aacf288d8a7f691f6049cbc355c22a802b740030e2",
+      "bytes": 1854
+    },
+    "sprites/hud/3.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/3.spr",
+      "sha256": "e727b1912c12215faa7d3e3a83a2b57896420c9cb6e5e0fd60a725387872deb4",
+      "bytes": 1854
+    },
+    "sprites/hud/357.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/357.spr",
+      "sha256": "a4f3eb9fa3c53e3f5c60c42a62eb0dc90f34cceecb2c67fd50fe7bcd1162cd5b",
+      "bytes": 1854
+    },
+    "sprites/hud/4.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/4.spr",
+      "sha256": "2c19e7f28b782590cb82ce1979e85fa8a6f6dbc4b5d8d8ca470f3e4c2ce4d422",
+      "bytes": 1854
+    },
+    "sprites/hud/5.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/5.spr",
+      "sha256": "b58c85d078669f1123303ea027b9701763ffa03d845e5a1c4d87454392fdf483",
+      "bytes": 1854
+    },
+    "sprites/hud/6.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/6.spr",
+      "sha256": "db8b1f35b567cd89ebe4cec89668fb14045188344659b84fd14eb9c2febcc358",
+      "bytes": 1854
+    },
+    "sprites/hud/7.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/7.spr",
+      "sha256": "df2af0068651af6d090502fbfed7a2c3baa185ec7dd87382e6eda2e1f9709e77",
+      "bytes": 1854
+    },
+    "sprites/hud/8.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/8.spr",
+      "sha256": "80cec1a337cc847362e111eb10544c859a5a112d6bb36bdc34e32ff0d0b45ad9",
+      "bytes": 1854
+    },
+    "sprites/hud/9.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/9.spr",
+      "sha256": "09fd1d085ea13e2569bf135869e5a982a96e538fb1396e05aee333af98a76032",
+      "bytes": 1854
+    },
+    "sprites/hud/9mm.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/9mm.spr",
+      "sha256": "22a403eb8b0892aa7ebf4190fc6c85d77c645aafc9c5c6431a8b29ba3317e75a",
+      "bytes": 1854
+    },
+    "sprites/hud/arg.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/arg.spr",
+      "sha256": "e3f510483029b46706fdf45b2b15c2daff2ca07815ac4e8f07338d79c5e5d95d",
+      "bytes": 1854
+    },
+    "sprites/hud/arrow.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/arrow.spr",
+      "sha256": "1471720ef8803fa5f76e836123c25147d200b6e82ae282bd447ce36c18bbffb4",
+      "bytes": 1854
+    },
+    "sprites/hud/buck.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/buck.spr",
+      "sha256": "a82c36175eb62e5eeb61d144630a4fd8e13cc8d9e3c473078ef4927d9301402e",
+      "bytes": 1854
+    },
+    "sprites/hud/flash_B.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/flash_B.spr",
+      "sha256": "8b3a6918d799d286ea7b41fb6fcc911a7917724e4431946bf9aeba87cdf7f14b",
+      "bytes": 1854
+    },
+    "sprites/hud/flash_E.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/flash_E.spr",
+      "sha256": "0fabd5addf7a60e8f4f81c5c47062619b5975b42a8395406452c5a77391bb0f0",
+      "bytes": 1854
+    },
+    "sprites/hud/flash_F.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/flash_F.spr",
+      "sha256": "dbe1de1a6a156c86b80b80cb399964ceab56016c7fbcf7231d0db5c5f1cb0f77",
+      "bytes": 1854
+    },
+    "sprites/hud/gren.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/gren.spr",
+      "sha256": "cfa056732739e5ef631a6351d7ce614d77436b30f14a69f7eed1e09038b0fdc1",
+      "bytes": 1854
+    },
+    "sprites/hud/hornet.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/hornet.spr",
+      "sha256": "faee154c49454724de88806bc5e561b60d094de31a108d2e19d4456f3b018f78",
+      "bytes": 1854
+    },
+    "sprites/hud/HP.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/HP.spr",
+      "sha256": "7ab19117cd229e1587663e92e6c6e1fc386b3207c15e7b4af60d01f48f33bed6",
+      "bytes": 1854
+    },
+    "sprites/hud/PW_E.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/PW_E.spr",
+      "sha256": "7e7895b8bef05f726ee3063af6ae3591bcc4d5e515fe4080e01d3e7b733e7a01",
+      "bytes": 1854
+    },
+    "sprites/hud/PW_F.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/PW_F.spr",
+      "sha256": "20add23e2592606413892ab173873c0b7a0f038b5f7a8459d858df0988085097",
+      "bytes": 1854
+    },
+    "sprites/hud/rock.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/rock.spr",
+      "sha256": "9a35d193901574c8f2ade3daf633a509bacf4c2c72627157550481b8ba3e73a5",
+      "bytes": 1854
+    },
+    "sprites/hud/satch.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/satch.spr",
+      "sha256": "9aee4646eaaf7c231a43ce48e240533ed4e9fbdbf25837db9f1baf1786c7a66a",
+      "bytes": 1854
+    },
+    "sprites/hud/snark.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/snark.spr",
+      "sha256": "181546a077aa76932f9382cca6566fc5b155f9d3b0a3b05f0051968025198167",
+      "bytes": 1854
+    },
+    "sprites/hud/trip.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/trip.spr",
+      "sha256": "761a9aaf74dfb15338d3e80943e1d1e488c8c6cbd083e0d9fcb1face0688df5c",
+      "bytes": 1854
+    },
+    "sprites/hud/uran.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud/uran.spr",
+      "sha256": "b94eab27d62eeab68bb9951fda6a37bfd497eed90cf8a1d74e9360d8312b3954",
+      "bytes": 1854
+    },
+    "sprites/hud.txt": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/hud.txt; se conserva d_PR de Cremation",
+      "sha256": "f7e31fe1e91a289486748c1312f83572a5c62e8ee52c1fbd055b5b3e8cb377d8",
+      "bytes": 4634
+    },
+    "sprites/items/bat.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/items/bat.spr",
+      "sha256": "96ea95b9cc928cc73e9a7c5b49f8265202eb9a99f98193ed6015b982d496f23a",
+      "bytes": 4926
+    },
+    "sprites/items/jump.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/items/jump.spr",
+      "sha256": "851e3ecb8b3da753250665dc103165d5f3f58cab3caf774275fe2075225091c0",
+      "bytes": 4926
+    },
+    "sprites/items/medkit.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/items/medkit.spr",
+      "sha256": "fcf0fea40b2a3a4f3827c8dc5f7d5d8f4683f073847a81f8b56b0624671f9b28",
+      "bytes": 4926
+    },
+    "sprites/weapons/cross.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/cross.spr",
+      "sha256": "b5e216dc6e241cfad15ebe1e365018e348c92fa6316a140372cc517c2dbfbd09",
+      "bytes": 66366
+    },
+    "sprites/weapons/crow.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/crow.spr",
+      "sha256": "0c267ad800d2245148215cbaeb40c4788a5fbf09fca3d46322a913cb4aa432fc",
+      "bytes": 66366
+    },
+    "sprites/weapons/egon.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/egon.spr",
+      "sha256": "dd0b41e6eab3aef68cdaea4a0112dad12602df26aca5f5ee9c78c09920b387df",
+      "bytes": 66366
+    },
+    "sprites/weapons/gauss.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/gauss.spr",
+      "sha256": "94dea28c77b613cc8f6269db3f65b905eb810e1c1d728c29de10e71ee3c78140",
+      "bytes": 66366
+    },
+    "sprites/weapons/grena.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/grena.spr",
+      "sha256": "9f90eac1e08e5996457b9789574c3e090df062ab46d795d63824652930f9e9e0",
+      "bytes": 66366
+    },
+    "sprites/weapons/hornet.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/hornet.spr",
+      "sha256": "37a0dbb05a83e5d452c8f017cb1d77b50f7f72b6c4b5cddc659a510f1809dbf5",
+      "bytes": 66366
+    },
+    "sprites/weapons/MP5.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/MP5.spr",
+      "sha256": "a07e76a1ddae74f8e725ea53eaef34fd9e14809c364b88fcc20db07064466ecd",
+      "bytes": 66366
+    },
+    "sprites/weapons/pistol.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/pistol.spr",
+      "sha256": "20c0e0bbe15be87d1609c93fdce6e7c7168faf948d6fa31c09e7473034d422a6",
+      "bytes": 66366
+    },
+    "sprites/weapons/Rev.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/Rev.spr",
+      "sha256": "974c35c13ca98b540fb819ab422b7427de57a4ac0d3fe2c9f82e2b3a716b86e9",
+      "bytes": 66366
+    },
+    "sprites/weapons/RPG.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/RPG.spr",
+      "sha256": "4a995e1e22bd18b77ce9b92ff54adc51ea0087bcce7ffc504541daa57b0e6403",
+      "bytes": 66366
+    },
+    "sprites/weapons/Satchel.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/Satchel.spr",
+      "sha256": "a4fac36fcf75bea64a7aa160aff645fcd298c6ad6f66867c3bcf71f09cf751c7",
+      "bytes": 66366
+    },
+    "sprites/weapons/Shot.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/Shot.spr",
+      "sha256": "68e977fbdbe83d9287c40d560ed4dbe06e8ad2dccec3acac9c9c710e2f366bdd",
+      "bytes": 66366
+    },
+    "sprites/weapons/Snark.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/Snark.spr",
+      "sha256": "934826d3c7aa61827256c5f267d935ec60cc0cd35ef94964f9d88e22fc265563",
+      "bytes": 66366
+    },
+    "sprites/weapons/Sniper.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/Sniper.spr",
+      "sha256": "27f865420333c3e0f777d5b1b5e1a644496d61d7e517a2e97647138408882615",
+      "bytes": 66366
+    },
+    "sprites/weapons/Trip.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapons/Trip.spr",
+      "sha256": "8c528f2fc4d62e3baaf5a2ea5b1ab0acec545fb0f9d1da16281a4b70a77f0d49",
+      "bytes": 66366
+    },
+    "sprites/weapon_9mmar/Crosshair.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_9mmar/Crosshair.spr",
+      "sha256": "902ff36d55009e676042eac4d45c1b8bfd38fe60cdef4b2196e0008f6bee5966",
+      "bytes": 1854
+    },
+    "sprites/weapon_9mmar/MP5.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_9mmar/MP5.spr",
+      "sha256": "dfbdb84233f74e9fb9e234ef9ce17382397685d40ce885374b90e71b68f49913",
+      "bytes": 65970
+    },
+    "sprites/weapon_9mmar.txt": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_9mmar.txt",
+      "sha256": "f6d30d25bbd192bf87b8458730ff0335eb5f47290a896e02678b8af4278e8fb1",
+      "bytes": 479
+    },
+    "sprites/weapon_Cross/cross.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_Cross/cross.spr",
+      "sha256": "b95455375d09b6fabd0c35bc7c0b91a48ba9a7f1b77eb7f3cb5a848c18af5ab1",
+      "bytes": 66093
+    },
+    "sprites/weapon_Cross/Crosshair.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_Cross/Crosshair.spr",
+      "sha256": "902ff36d55009e676042eac4d45c1b8bfd38fe60cdef4b2196e0008f6bee5966",
+      "bytes": 1854
+    },
+    "sprites/weapon_Cross/Reticle.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_Cross/Reticle.spr",
+      "sha256": "32681a87eb7e196ec7af93677e0f395417847340d93a8b86eab99d4d34cf6e29",
+      "bytes": 65796
+    },
+    "sprites/weapon_crossbow.txt": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_crossbow.txt",
+      "sha256": "6c2b4afe4806dcc930f450a71ed1dece05adde6ed511f3cb4936182f78e733ac",
+      "bytes": 549
+    },
+    "sprites/weapon_Shotgun/Crosshair.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_Shotgun/Crosshair.spr",
+      "sha256": "902ff36d55009e676042eac4d45c1b8bfd38fe60cdef4b2196e0008f6bee5966",
+      "bytes": 1854
+    },
+    "sprites/weapon_Shotgun/Shot.spr": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_Shotgun/Shot.spr",
+      "sha256": "c22223a15b494f2d85e35c27c40d48659fc19ceeecf2122ae090ce92d50e7dac",
+      "bytes": 66048
+    },
+    "sprites/weapon_shotgun.txt": {
+      "source": "unreal_pack.zip:Unreal_pack/sprites/weapon_shotgun.txt",
+      "sha256": "390fc6acce02a1bc2245301c82a309897ebe314d5b7a4d350342332ea026abfa",
+      "bytes": 393
+    },
+    "models/v_shotgun.mdl": {
+      "source": "unreal_pack.zip:Unreal_pack/models/v_shotgun.mdl",
+      "sha256": "06f1dc54f9e7fe75b7e835d386fc3e785984d73bddcca9201fb1c631a1cb416c",
+      "bytes": 191848
+    }
+  },
+  "flak_model_substitution": {
+    "target": "models/v_grenade.mdl",
+    "source": "models/cremation/v_bounce_shotgun.mdl",
+    "reason": "El pack usa v_grenade.mdl para la Flak Cannon; se sustituye por el modelo de escopeta Flak de Cremation, conservando manos, rig y animaciones."
+  },
+  "backup_directory": "backups/before-unreal-pack-install-20261024",
+  "backed_up_existing_files": [
+    "models/v_357.mdl",
+    "models/v_9mmar.mdl",
+    "models/v_9mmhandgun.mdl",
+    "models/v_crowbar.mdl",
+    "models/v_grenade.mdl",
+    "models/w_battery.mdl",
+    "models/w_medkit.mdl",
+    "sound/items/ammopickup1.wav",
+    "sound/items/clipinsert1.wav",
+    "sound/items/cliprelease1.wav",
+    "sound/player/pl_dirt1.wav",
+    "sound/player/pl_dirt2.wav",
+    "sound/player/pl_dirt3.wav",
+    "sound/player/pl_dirt4.wav",
+    "sound/player/pl_duct1.wav",
+    "sound/player/pl_duct2.wav",
+    "sound/player/pl_duct3.wav",
+    "sound/player/pl_duct4.wav",
+    "sound/player/pl_grate1.wav",
+    "sound/player/pl_grate2.wav",
+    "sound/player/pl_grate3.wav",
+    "sound/player/pl_grate4.wav",
+    "sound/player/pl_ladder1.wav",
+    "sound/player/pl_ladder2.wav",
+    "sound/player/pl_ladder3.wav",
+    "sound/player/pl_ladder4.wav",
+    "sound/player/pl_metal1.wav",
+    "sound/player/pl_metal2.wav",
+    "sound/player/pl_metal3.wav",
+    "sound/player/pl_metal4.wav",
+    "sound/player/pl_slosh1.wav",
+    "sound/player/pl_slosh2.wav",
+    "sound/player/pl_slosh3.wav",
+    "sound/player/pl_slosh4.wav",
+    "sound/player/pl_step1.wav",
+    "sound/player/pl_step2.wav",
+    "sound/player/pl_step3.wav",
+    "sound/player/pl_step4.wav",
+    "sound/player/pl_tile1.wav",
+    "sound/player/pl_tile2.wav",
+    "sound/player/pl_tile3.wav",
+    "sound/player/pl_tile4.wav",
+    "sound/player/pl_tile5.wav",
+    "sound/player/pl_wade1.wav",
+    "sound/player/pl_wade2.wav",
+    "sound/player/pl_wade3.wav",
+    "sound/player/pl_wade4.wav",
+    "sound/ui/buttonclick.wav",
+    "sound/ui/buttonclickrelease.wav",
+    "sound/ui/buttonrollover.wav",
+    "sound/weapons/357_cock1.wav",
+    "sound/weapons/357_reload1.wav",
+    "sound/weapons/357_shot2.wav",
+    "sound/weapons/dbarrel1.wav",
+    "sound/weapons/dryfire1.wav",
+    "sound/weapons/glauncher2.wav",
+    "sound/weapons/grenade_hit1.wav",
+    "sound/weapons/grenade_hit2.wav",
+    "sound/weapons/grenade_hit3.wav",
+    "sound/weapons/hks1.wav",
+    "sound/weapons/hks2.wav",
+    "sound/weapons/hks3.wav",
+    "sound/weapons/pl_gun3.wav",
+    "sound/weapons/reload1.wav",
+    "sound/weapons/reload2.wav",
+    "sound/weapons/reload3.wav",
+    "sound/weapons/sbarrel1.wav",
+    "sound/weapons/scock1.wav",
+    "sound/weapons/sshell1.wav",
+    "sound/weapons/sshell2.wav",
+    "sound/weapons/sshell3.wav",
+    "sprites/hud.txt",
+    "sprites/weapon_9mmar.txt",
+    "models/v_shotgun.mdl"
+  ],
+  "correction_backup_directory": "backups/before-flak-pack-slot-correction-20261024",
+  "correction_backed_up_files": [
+    "models/v_shotgun.mdl",
+    "models/v_grenade.mdl"
+  ],
+  "post_install_overrides": "See additional-weapons-assets.json for the final requested grenade and Hive Hand assets."
+}

@@ -2,7 +2,7 @@
 
 
 
-Fecha de actualización: 23 de octubre de 2026.
+Fecha de actualización: 24 de octubre de 2026.
 
 Raíz de trabajo: D:\SteamLibrary\steamapps\common\Half-Life
 
@@ -24,7 +24,8 @@ La copia de Rapidcore contiene un único inicio en la sala del pilar y la piscin
 
 de la imagen del usuario, en `432 -1601 -220`, orientación `0 155 0`. Incluye HEV,
 
-escopeta, Ricochet, Escopeta de rebote y cartuchos. Se conservaron 20 zombis
+escopeta, Ricochet, Flak Cannon, Pipe Wrench de Opposing Force, Nailgun, granada,
+RPG y munición. Se conservaron 20 zombis
 
 normales de Ravenholm y 186 nodos de navegación. El zombi más cercano está a 1059.9
 
@@ -34,11 +35,17 @@ geometría consultada.
 
 
 
-Hay tres armas recogibles: `weapon_shotgun`, `weapon_ricochet` y
+El equipo inicial conserva esas armas y añade la Pipe Wrench de Opposing Force,
+la granada de mano, el RPG y la Nailgun. Hay munición de escopeta y 9 mm para poder
+usar la Nailgun desde el inicio. La pistola convencional sigue retirada del mapa;
+Ricochet ocupa su identificador interno.
 
-`weapon_bounce_shotgun`. La pistola convencional y su munición fueron retiradas del
-
-equipo del mapa.
+`weapon_pipewrench` usa la lógica de ataque de la palanca de Half-Life con los
+modelos, sonidos e icono originales de Opposing Force. Ricochet conserva su lógica
+y HUD, pero usa los modelos originales de Hive Hand. `weapon_nailgun` usa el modelo
+de Nailgun de TFC/Deathmatch: el primario lanza un clavo de 9 de daño por 1 unidad
+de munición y deja una estela verde; el secundario lanza un Super Nail de 18 de daño,
+deja una estela roja y consume 3 unidades. Ambos disparan a 1000 u/s.
 
 
 
@@ -180,9 +187,11 @@ Catálogo adicional: `modding-tools.md` en esta raíz.
 
 - `Cremation/dlls/cremation.dll`: extensión propia que carga esa DLL y conserva
 
-  sus 524 exportaciones. Añade `weapon_ricochet` y `cremation_disc`.
+  sus 524 exportaciones originales. Añade entidades para Ricochet, Flak Cannon,
+  Nailgun, Pipe Wrench y sus proyectiles.
 
-- El inventario heredado de pistola conserva el identificador 2 internamente.
+- El inventario heredado de pistola conserva el identificador 2 internamente y
+  usa los modelos originales de Hive Hand para Ricochet.
 
   El HUD y la selección muestran Ricochet, y sus ataques convencionales se filtran.
 
@@ -472,7 +481,7 @@ atribuirles la causa: el fallo confirmado de arranque fue el lector de exportaci
 
 | `Cremation/source/bounce_shotgun_balance.h` | Valores de la Escopeta de rebote, separados de Ricochet. |
 
-| `Cremation/tools/generate_proxy_exports.py` | Tabla de destinos y saltos Win32 para las exportaciones heredadas y las cinco entidades propias. |
+| `Cremation/tools/generate_proxy_exports.py` | Tabla de destinos y saltos Win32 para las exportaciones heredadas y las entidades propias. |
 
 | `Cremation/tools/finalize_proxy_exports.py` | Nombres exactos y contiguos en la reserva de `.rdata`. |
 
@@ -867,3 +876,7 @@ nueva, pues los guardados anteriores contienen las antiguas secuencias.
 Se anaden pruebas de visibilidad bloqueada/libre, proximidad, dano, cliente muerto
 y cesion persistente. La verificacion BSP exige cero secuencias cinematograficas
 y cero disparadores de patrulla. Combate visual pendiente de comprobacion manual.
+
+## Actualizaci�n chainsaw / Panthergun azul (24 octubre 2026)
+
+Pipe Wrench usa d3_chainsaw.zip (modelos y sonidos); Ricochet usa v_HGun_blue.mdl de panthergun2.zip. Flak usa una copia exacta del modelo actual models/v_shotgun.mdl, fuente persistida en assets-source/additional_weapons/current_shotgun. El primario de Ricochet no gu�a, refleja cinco veces y desaparece en el sexto contacto; trail anchura 9 y vida 0,8 s. El secundario conserva gu�a. Restaurar weapon_nailgun DESPU�S de raven.pfnSpawn: CMP5::Spawn vuelve a canonicalizar el nombre. Lo mismo se aplica al classname y modelo mundo de Pipe Wrench. Regresiones pasaron y GoldSrc arranc� 8 s, MapWeapons nailgun=1 pipewrench=1. Pendiente revisi�n visual interactiva.

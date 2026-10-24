@@ -1,0 +1,360 @@
+{
+  "source_archive": "C:/Users/bill/Downloads/graneda_tnt_by_ben.rar",
+  "later_overrides": [
+    "d3_chainsaw.zip",
+    "panthergun2.zip:v_HGun_blue.mdl"
+  ],
+  "sound_fallbacks": {
+    "weapons/ar2_fire.wav": "weapons/glauncher.wav",
+    "weapons/ar2_altfire.wav": "weapons/glauncher2.wav",
+    "weapons/energy_sing_explosion2.wav": "weapons/explode3.wav",
+    "weapons/energy_bounce1.wav": "weapons/ric1.wav",
+    "weapons/energy_bounce2.wav": "weapons/ric2.wav"
+  },
+  "archive_contents_used": [
+    "v_grenade.mdl",
+    "p_grenade.mdl",
+    "w_grenade.mdl",
+    "w_grenadet.mdl"
+  ],
+  "installed_targets": {
+    "models/v_grenade.mdl": {
+      "source": "assets-source/additional_weapons/granada_tnt_by_ben/v_grenade.mdl",
+      "source_sha256": "194b96a2a4e927e8594d97d9d7753b174642262550db5a11792330dbf0ff10fc",
+      "sha256": "194b96a2a4e927e8594d97d9d7753b174642262550db5a11792330dbf0ff10fc",
+      "bytes": 110576,
+      "backup": null
+    },
+    "models/p_grenade.mdl": {
+      "source": "assets-source/additional_weapons/granada_tnt_by_ben/p_grenade.mdl",
+      "source_sha256": "c095e2610fbe8c8ec0eae16c5913699ef8433a95c20e13e1df0bfa2bc4b07ac2",
+      "sha256": "c095e2610fbe8c8ec0eae16c5913699ef8433a95c20e13e1df0bfa2bc4b07ac2",
+      "bytes": 34236,
+      "backup": null
+    },
+    "models/w_grenade.mdl": {
+      "source": "assets-source/additional_weapons/granada_tnt_by_ben/w_grenade.mdl",
+      "source_sha256": "2a2e7f7fb72dbb77c4125f47aad81c41fd2ba880f29a719027847d618f4d9591",
+      "sha256": "2a2e7f7fb72dbb77c4125f47aad81c41fd2ba880f29a719027847d618f4d9591",
+      "bytes": 7180,
+      "backup": null
+    },
+    "models/w_grenadet.mdl": {
+      "source": "assets-source/additional_weapons/granada_tnt_by_ben/w_grenadet.mdl",
+      "source_sha256": "a33ec29507ea971e3c1ce9df00e181d721dec418df195a001e1b11bf52931e95",
+      "sha256": "a33ec29507ea971e3c1ce9df00e181d721dec418df195a001e1b11bf52931e95",
+      "bytes": 20924,
+      "backup": null
+    },
+    "models/v_9mmhandgun.mdl": {
+      "source": "assets-source/additional_weapons/ricochet_variants/v_ricochet_blue.mdl",
+      "source_sha256": "e497ed0c1a31bae0873a373dc3967d10087946a1be8f09928c86c9795ad73bd3",
+      "sha256": "e497ed0c1a31bae0873a373dc3967d10087946a1be8f09928c86c9795ad73bd3",
+      "bytes": 72908,
+      "derived_from": "assets-source/additional_weapons/panthergun/v_HGun_blue.mdl",
+      "generator": "tools/prepare_ricochet_model.py"
+    },
+    "models/p_9mmhandgun.mdl": {
+      "source": "assets-source/additional_weapons/hive_hand_original/p_hgun.mdl",
+      "source_sha256": "1aa2e66d308df63a0b3eb12c824f40f9ab1c8ba693fc270fe85e31d39a641897",
+      "sha256": "1aa2e66d308df63a0b3eb12c824f40f9ab1c8ba693fc270fe85e31d39a641897",
+      "bytes": 42296,
+      "backup": null
+    },
+    "models/w_9mmhandgun.mdl": {
+      "source": "assets-source/additional_weapons/hive_hand_original/w_hgun.mdl",
+      "source_sha256": "97a05f15c0898c281b6e8f21da05acb5c6bebb9d677b84a2b997f610330c3dce",
+      "sha256": "97a05f15c0898c281b6e8f21da05acb5c6bebb9d677b84a2b997f610330c3dce",
+      "bytes": 9024,
+      "backup": null
+    },
+    "models/cremation/v_pipe_wrench.mdl": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/models/v_pipe_wrench.mdl",
+      "source_sha256": "deefe7afadf17b34f4d45b9418b8a46f9c8e358b9f84cd728a90cebd67d47009",
+      "sha256": "deefe7afadf17b34f4d45b9418b8a46f9c8e358b9f84cd728a90cebd67d47009",
+      "bytes": 917948,
+      "backup": null
+    },
+    "models/cremation/p_pipe_wrench.mdl": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/models/p_pipe_wrench.mdl",
+      "source_sha256": "fb871e2cc672d85b30f752f984eab57de95b55815d69dfc09af388ee9b7d81f4",
+      "sha256": "fb871e2cc672d85b30f752f984eab57de95b55815d69dfc09af388ee9b7d81f4",
+      "bytes": 112980,
+      "backup": null
+    },
+    "models/cremation/w_pipe_wrench.mdl": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/models/w_pipe_wrench.mdl",
+      "source_sha256": "9c8f0eeabedf5175d3d219833730b4671acf8b1a365d17140bec26e81fd63744",
+      "sha256": "9c8f0eeabedf5175d3d219833730b4671acf8b1a365d17140bec26e81fd63744",
+      "bytes": 111568,
+      "backup": null
+    },
+    "sound/weapons/pwrench_big_hit1.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_big_hit1.wav",
+      "source_sha256": "dd5b4da34377955f29fce879137dd9458c8141db9b52ff2016927db8c2594803",
+      "sha256": "dd5b4da34377955f29fce879137dd9458c8141db9b52ff2016927db8c2594803",
+      "bytes": 39734,
+      "backup": null
+    },
+    "sound/weapons/pwrench_big_hit2.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_big_hit2.wav",
+      "source_sha256": "3eb23a88e8fa6244414137a3d67ec2510ab40c94c87df073eb15ad956b679b03",
+      "sha256": "3eb23a88e8fa6244414137a3d67ec2510ab40c94c87df073eb15ad956b679b03",
+      "bytes": 34072,
+      "backup": null
+    },
+    "sound/weapons/pwrench_big_hitbod1.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_big_hitbod1.wav",
+      "source_sha256": "77ce76b9bf79823962c9a345e2cefdfac23090a2dd4f2a4cac3c5958c5d5900a",
+      "sha256": "77ce76b9bf79823962c9a345e2cefdfac23090a2dd4f2a4cac3c5958c5d5900a",
+      "bytes": 30956,
+      "backup": null
+    },
+    "sound/weapons/pwrench_big_hitbod2.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_big_hitbod2.wav",
+      "source_sha256": "900dc538a374d8d1ec9a8ffcddb799e95df79ea3ad0027355de06819eeb8119a",
+      "sha256": "900dc538a374d8d1ec9a8ffcddb799e95df79ea3ad0027355de06819eeb8119a",
+      "bytes": 24274,
+      "backup": null
+    },
+    "sound/weapons/pwrench_big_miss.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_big_miss.wav",
+      "source_sha256": "449209f1d8315006e5eda702533306802b34d70ba744a1030b338d33dae6a045",
+      "sha256": "449209f1d8315006e5eda702533306802b34d70ba744a1030b338d33dae6a045",
+      "bytes": 18062,
+      "backup": null
+    },
+    "sound/weapons/pwrench_hit1.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_hit1.wav",
+      "source_sha256": "3726c9048f86477875044c274e2cbfba3fe205c658d3cb7e98ccf448047da7a0",
+      "sha256": "3726c9048f86477875044c274e2cbfba3fe205c658d3cb7e98ccf448047da7a0",
+      "bytes": 64760,
+      "backup": null
+    },
+    "sound/weapons/pwrench_hit2.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_hit2.wav",
+      "source_sha256": "c6ece2af347dd4bd430b1071b15076c48a07239aa911c63afa346d314f68758f",
+      "sha256": "c6ece2af347dd4bd430b1071b15076c48a07239aa911c63afa346d314f68758f",
+      "bytes": 33888,
+      "backup": null
+    },
+    "sound/weapons/pwrench_hitbod1.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_hitbod1.wav",
+      "source_sha256": "a87b1f147f01e3ff64aba012b43cb8ed9d16267b1c0be92553ca55d745e78b6f",
+      "sha256": "a87b1f147f01e3ff64aba012b43cb8ed9d16267b1c0be92553ca55d745e78b6f",
+      "bytes": 30758,
+      "backup": null
+    },
+    "sound/weapons/pwrench_hitbod2.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_hitbod2.wav",
+      "source_sha256": "d0cbd92eb84639ae13803ffbb44d71d1fc993bffe5ac2d252019a7927f178ce3",
+      "sha256": "d0cbd92eb84639ae13803ffbb44d71d1fc993bffe5ac2d252019a7927f178ce3",
+      "bytes": 27328,
+      "backup": null
+    },
+    "sound/weapons/pwrench_hitbod3.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_hitbod3.wav",
+      "source_sha256": "f979becf421a34d1fcd0cee6ec26b96af31e12848909437fcf9f85acf1029425",
+      "sha256": "f979becf421a34d1fcd0cee6ec26b96af31e12848909437fcf9f85acf1029425",
+      "bytes": 26046,
+      "backup": null
+    },
+    "sound/weapons/pwrench_miss1.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_miss1.wav",
+      "source_sha256": "0d9e2dac451b687cfae1fde41d106a06dec78a57f504f25f909074493663a011",
+      "sha256": "0d9e2dac451b687cfae1fde41d106a06dec78a57f504f25f909074493663a011",
+      "bytes": 17350,
+      "backup": null
+    },
+    "sound/weapons/pwrench_miss2.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/pwrench_miss2.wav",
+      "source_sha256": "a4b695083b1d1c76648e65ac2d000229527d4c874cc3aa4c34c88ec511b5b885",
+      "sha256": "a4b695083b1d1c76648e65ac2d000229527d4c874cc3aa4c34c88ec511b5b885",
+      "bytes": 12762,
+      "backup": null
+    },
+    "sprites/weapon_pipewrench.txt": {
+      "source": "assets-source/additional_weapons/opposing_force_pipe_wrench/sprites/weapon_pipewrench.txt",
+      "source_sha256": "7f5c2c57b80c525afedf8c928bb66947620083e4b9c200ccfab2fe56b525e8d1",
+      "sha256": "7f5c2c57b80c525afedf8c928bb66947620083e4b9c200ccfab2fe56b525e8d1",
+      "bytes": 191,
+      "backup": null
+    },
+    "sprites/320hudof01.spr": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sprites/320hudof01.spr",
+      "source_sha256": "c62abc0e158494b79ef5842f0e440feb4b8ebd83d778730d89c4542d2c07278a",
+      "sha256": "c62abc0e158494b79ef5842f0e440feb4b8ebd83d778730d89c4542d2c07278a",
+      "bytes": 66366,
+      "backup": null
+    },
+    "sprites/640hudof01.spr": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sprites/640hudof01.spr",
+      "source_sha256": "2313967b81aa93a4f07a6e4da8285652b250bfbc2c919a242ac033ce6e0ac0ec",
+      "sha256": "2313967b81aa93a4f07a6e4da8285652b250bfbc2c919a242ac033ce6e0ac0ec",
+      "bytes": 66366,
+      "backup": null
+    },
+    "sprites/640hudof02.spr": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sprites/640hudof02.spr",
+      "source_sha256": "cfb6c30c010d60e7512cf29fb32e550b92afb471bf71ece004fd2b2195d7bddc",
+      "sha256": "cfb6c30c010d60e7512cf29fb32e550b92afb471bf71ece004fd2b2195d7bddc",
+      "bytes": 66366,
+      "backup": null
+    },
+    "models/cremation/v_nailgun.mdl": {
+      "source": "assets-source/additional_weapons/nailgun/v_nailgun.mdl",
+      "source_sha256": "b34778496cf0af4a31713939dbf91bc3593bb3137a19a8896b2dc32e8920f62a",
+      "sha256": "b34778496cf0af4a31713939dbf91bc3593bb3137a19a8896b2dc32e8920f62a",
+      "bytes": 87904,
+      "backup": null
+    },
+    "models/cremation/p_nailgun.mdl": {
+      "source": "assets-source/additional_weapons/nailgun/p_nailgun.mdl",
+      "source_sha256": "40b0122838fb9d8a36c9f50ef782777581fd6e2f32b4865daa7d0ecff5619603",
+      "sha256": "40b0122838fb9d8a36c9f50ef782777581fd6e2f32b4865daa7d0ecff5619603",
+      "bytes": 28312,
+      "backup": null
+    },
+    "models/cremation/nail.mdl": {
+      "source": "assets-source/additional_weapons/nailgun/nail.mdl",
+      "source_sha256": "44041ea2c4b4ae41a41272bc21294bad1a66b869b6c0aed0a9f921d51c2d3af3",
+      "sha256": "44041ea2c4b4ae41a41272bc21294bad1a66b869b6c0aed0a9f921d51c2d3af3",
+      "bytes": 2220,
+      "backup": null
+    },
+    "sound/weapons/spike1.wav": {
+      "source": "assets-source/additional_weapons/nailgun/sound/spike1.wav",
+      "source_sha256": "8f42e75d4fd9e9d42dc6491273ac6dc95445b8d3af92f41b2e4620e0688bb711",
+      "sha256": "8f42e75d4fd9e9d42dc6491273ac6dc95445b8d3af92f41b2e4620e0688bb711",
+      "bytes": 4020,
+      "backup": null
+    },
+    "sound/weapons/spike2.wav": {
+      "source": "assets-source/additional_weapons/nailgun/sound/spike2.wav",
+      "source_sha256": "6856546ec16688b573c2e7189b6b24a17c811eaebf5310de477375c883ee51b9",
+      "sha256": "6856546ec16688b573c2e7189b6b24a17c811eaebf5310de477375c883ee51b9",
+      "bytes": 22094,
+      "backup": null
+    },
+    "sprites/weapon_nailgun.txt": {
+      "source": "assets-source/additional_weapons/nailgun/sprites/weapon_nailgun.txt",
+      "source_sha256": "f379af11716130fb5219bfd21c02f58704623c0e3f7c7e210ed681ecc135e018",
+      "sha256": "f379af11716130fb5219bfd21c02f58704623c0e3f7c7e210ed681ecc135e018",
+      "bytes": 349,
+      "backup": null
+    },
+    "sprites/tfchud07.spr": {
+      "source": "assets-source/additional_weapons/nailgun/sprites/tfchud07.spr",
+      "source_sha256": "976f88d870c787c9b2a9a951c4ddcb07d9d124d0a99cea536946a97597d12702",
+      "sha256": "976f88d870c787c9b2a9a951c4ddcb07d9d124d0a99cea536946a97597d12702",
+      "bytes": 66366,
+      "backup": null
+    },
+    "sprites/320hud2.spr": {
+      "source": "assets-source/additional_weapons/nailgun/sprites/320hud2.spr",
+      "source_sha256": "679a6fa7877f91e5593ab584f790a477d07be83311e260970d72e0ef2ab7175d",
+      "sha256": "679a6fa7877f91e5593ab584f790a477d07be83311e260970d72e0ef2ab7175d",
+      "bytes": 17214,
+      "backup": null
+    },
+    "sprites/640hud7.spr": {
+      "source": "assets-source/additional_weapons/nailgun/sprites/640hud7.spr",
+      "source_sha256": "eb71320c50499a45566d24e36c322183b1888c557cb363d03371b2f9e6448d18",
+      "sha256": "eb71320c50499a45566d24e36c322183b1888c557cb363d03371b2f9e6448d18",
+      "bytes": 33598,
+      "backup": null
+    },
+    "sprites/crosshairs.spr": {
+      "source": "assets-source/additional_weapons/nailgun/sprites/crosshairs.spr",
+      "source_sha256": "838343954bb8cb581101239df6ab9580b9803bf34a1c6af4fec0172785d7c556",
+      "sha256": "838343954bb8cb581101239df6ab9580b9803bf34a1c6af4fec0172785d7c556",
+      "bytes": 17214,
+      "backup": null
+    },
+    "sound/weapons/doom3/chainsaw/attack.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/doom3/chainsaw/attack.wav",
+      "source_sha256": "49ab86a6848147b6c5d0444108b058b6d3f676a1c3e1223780865e68d854b8e7",
+      "sha256": "49ab86a6848147b6c5d0444108b058b6d3f676a1c3e1223780865e68d854b8e7",
+      "bytes": 78838,
+      "backup": null
+    },
+    "sound/weapons/doom3/chainsaw/dry.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/doom3/chainsaw/dry.wav",
+      "source_sha256": "4d4dc9d38e7f0cd16f33090c14dc781db89bd60a1d683d302b98d07c628848ff",
+      "sha256": "4d4dc9d38e7f0cd16f33090c14dc781db89bd60a1d683d302b98d07c628848ff",
+      "bytes": 85254,
+      "backup": null
+    },
+    "sound/weapons/doom3/chainsaw/idle_01.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/doom3/chainsaw/idle_01.wav",
+      "source_sha256": "244801235593b47e0716e521431a48e02d64aea69e735b7222b0158142d9cc2e",
+      "sha256": "244801235593b47e0716e521431a48e02d64aea69e735b7222b0158142d9cc2e",
+      "bytes": 89126,
+      "backup": null
+    },
+    "sound/weapons/doom3/chainsaw/idle_02.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/doom3/chainsaw/idle_02.wav",
+      "source_sha256": "65916a420c6d41c0dfe956b895666a3994c5ce74b42c1d2685f6f0ff740c600d",
+      "sha256": "65916a420c6d41c0dfe956b895666a3994c5ce74b42c1d2685f6f0ff740c600d",
+      "bytes": 133668,
+      "backup": null
+    },
+    "sound/weapons/doom3/chainsaw/pull.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/doom3/chainsaw/pull.wav",
+      "source_sha256": "99cb434a900324c3851b8d176ad2b402490c893452f825a63e8fdd7cdca488c6",
+      "sha256": "99cb434a900324c3851b8d176ad2b402490c893452f825a63e8fdd7cdca488c6",
+      "bytes": 88048,
+      "backup": null
+    },
+    "sound/weapons/doom3/chainsaw/put_away.wav": {
+      "source": "assets-source/additional_weapons/chainsaw/Half-Life/gearbox/sound/weapons/doom3/chainsaw/put_away.wav",
+      "source_sha256": "7d1ef3e46a58cec1b7eccf68fca5e350e1aecec50a5fb70e650d3e6ab16c85c7",
+      "sha256": "7d1ef3e46a58cec1b7eccf68fca5e350e1aecec50a5fb70e650d3e6ab16c85c7",
+      "bytes": 34574,
+      "backup": null
+    },
+    "sound/weapons/ar2_fire.wav": {
+      "source": "assets-source/additional_weapons/missing_sound_fallbacks/ar2_fire.wav",
+      "source_sha256": "89d409549f92f8e450ca254c2e8cca690d290b9149df95dfd07b168556108567",
+      "sha256": "89d409549f92f8e450ca254c2e8cca690d290b9149df95dfd07b168556108567",
+      "bytes": 20802,
+      "backup": null
+    },
+    "sound/weapons/ar2_altfire.wav": {
+      "source": "assets-source/additional_weapons/missing_sound_fallbacks/ar2_altfire.wav",
+      "source_sha256": "89d409549f92f8e450ca254c2e8cca690d290b9149df95dfd07b168556108567",
+      "sha256": "89d409549f92f8e450ca254c2e8cca690d290b9149df95dfd07b168556108567",
+      "bytes": 20802,
+      "backup": null
+    },
+    "sound/weapons/energy_sing_explosion2.wav": {
+      "source": "assets-source/additional_weapons/missing_sound_fallbacks/energy_sing_explosion2.wav",
+      "source_sha256": "e5c88796ffa1bd7157ac29aaccff54d767fe67bcada52d0f5f488a03dd17d9a6",
+      "sha256": "e5c88796ffa1bd7157ac29aaccff54d767fe67bcada52d0f5f488a03dd17d9a6",
+      "bytes": 28822,
+      "backup": null
+    },
+    "sound/weapons/energy_bounce1.wav": {
+      "source": "assets-source/additional_weapons/missing_sound_fallbacks/energy_bounce1.wav",
+      "source_sha256": "97fd0207f230ec8bda965c4a241d23896ce4fe73ca816c1839c0a3a3d925c4a5",
+      "sha256": "97fd0207f230ec8bda965c4a241d23896ce4fe73ca816c1839c0a3a3d925c4a5",
+      "bytes": 6124,
+      "backup": null
+    },
+    "sound/weapons/energy_bounce2.wav": {
+      "source": "assets-source/additional_weapons/missing_sound_fallbacks/energy_bounce2.wav",
+      "source_sha256": "3ae429f875f1a06fe9e001b38b2453bbaca20f4c4e638ce75c4064367df7ca93",
+      "sha256": "3ae429f875f1a06fe9e001b38b2453bbaca20f4c4e638ce75c4064367df7ca93",
+      "bytes": 7052,
+      "backup": null
+    },
+    "models/cremation/v_ricochet_red.mdl": {
+      "source": "assets-source/additional_weapons/ricochet_variants/v_ricochet_red.mdl",
+      "source_sha256": "d84af3a7d02dcbfe8f51f198c02ad32b3d62452ad1f2f8c2ce03b30cf6dab773",
+      "sha256": "d84af3a7d02dcbfe8f51f198c02ad32b3d62452ad1f2f8c2ce03b30cf6dab773",
+      "bytes": 83540,
+      "derived_from": "assets-source/additional_weapons/panthergun/v_HGun_blue.mdl",
+      "generator": "tools/prepare_ricochet_model.py"
+    }
+  }
+}

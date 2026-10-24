@@ -1,7 +1,7 @@
 #pragma once
 namespace balance {
 inline float GuidanceTurnRate = 6.f;
-inline int MaxCharges = 3;
+inline int MaxCharges = 4;
 constexpr int HudAmmoCharges = 22;
 inline float RechargeTime = 1.5f;
 inline float DiscSpeed = 750.f;       // Valve Ricochet DISC_VELOCITY.

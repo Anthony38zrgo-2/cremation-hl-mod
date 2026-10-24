@@ -1,21 +1,21 @@
 {
   "models/cremation/v_bounce_shotgun.mdl": {
-    "source": "Half-Life2Classic_Ravenholm/models/v_shotgun.mdl",
-    "sha256": "41d2adbf05b5e4df02ba9b814318c72b807e1d12330f6079f903d105c17c7f7f",
-    "bytes": 106208
+    "source": "Cremation/assets-source/additional_weapons/current_shotgun/v_shotgun.mdl",
+    "sha256": "06f1dc54f9e7fe75b7e835d386fc3e785984d73bddcca9201fb1c631a1cb416c",
+    "bytes": 191848
   },
   "models/cremation/p_bounce_shotgun.mdl": {
-    "source": "valve/models/p_shotgun.mdl",
-    "sha256": "0462d6b8a8e96edbd8150a1fc89a7929a8f4e51c95076757abcadbfc81243fc1",
-    "bytes": 13468
+    "source": "Cremation/assets-source/additional_weapons/current_shotgun/p_shotgun.mdl",
+    "sha256": "fd25ea3751faa1e7c608e0c19344eb087fff06de39012fd6e3b35a361379e249",
+    "bytes": 26996
   },
   "models/cremation/w_bounce_shotgun.mdl": {
-    "source": "valve/models/w_shotgun.mdl",
+    "source": "Cremation/assets-source/additional_weapons/current_shotgun/w_shotgun.mdl",
     "sha256": "1d43f0cf666c0cc7812cae7b06d6824ec9f93c0aa68fa9edbd762cfd12320898",
     "bytes": 6872
   },
   "models/cremation/w_bounce_shotgunT.mdl": {
-    "source": "valve/models/w_shotgunt.mdl",
+    "source": "Cremation/assets-source/additional_weapons/current_shotgun/w_shotgunt.mdl",
     "sha256": "ec260d35128773880aa22bbe0ae54c3177568eb2dc0e1b81766f8bc4a8e76b61",
     "bytes": 6588
   },

@@ -10,6 +10,9 @@ EXPORTS
     cremation_grenade
     cremation_sentry
     cremation_sentry_base
+    weapon_nailgun
+    weapon_pipewrench
+    cremation_nail
     forward_0
     forward_1
     forward_2

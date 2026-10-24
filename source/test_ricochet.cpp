@@ -23,13 +23,15 @@ static edict_t* create(int classname) {
 static unsigned char modelHeader[244]{};
 static void* modelPtr(edict_t*) {return modelHeader;}
 static void remove(edict_t* e) {e->free=true;}
-static bool emulateGlockSpawn=false;
+static bool emulateGlockSpawn=false,emulateMp5Spawn=false;
 static int spawn(edict_t* e) {
     if(emulateGlockSpawn)e->v.classname=str("weapon_9mmhandgun");
+    if(emulateMp5Spawn)e->v.classname=str("weapon_9mmAR");
     return 0;
 }
 static void trace(const float* a,const float* b,int,edict_t*,TraceResult* tr) {
     *tr=TraceResult{};tr->flFraction=1;tr->vecEndPos=Vector(b[0],b[1],b[2]);
+    if(traceMode==3){traceMode=0;tr->flFraction=.5f;tr->vecEndPos=Vector((a[0]+b[0])*.5f,(a[1]+b[1])*.5f,(a[2]+b[2])*.5f);tr->vecPlaneNormal=Vector(-1,0,0);return;}
     if(traceMode==2){tr->flFraction=.5f;return;}
     if(traceMode==1 && a[0]<200 && b[0]>=200) {
         tr->flFraction=(200-a[0])/(b[0]-a[0]);tr->pHit=&entities[2];
@@ -80,6 +82,12 @@ int main() {
         emulateGlockSpawn=true;hookSpawn(&item);emulateGlockSpawn=false;
         assert(!std::strcmp(text(item.v.classname),"weapon_ricochet"));
     }
+    {
+        edict_t item{};item.v.classname=str("weapon_nailgun");
+        emulateMp5Spawn=true;hookSpawn(&item);emulateMp5Spawn=false;
+        assert(!std::strcmp(text(item.v.classname),"weapon_nailgun"));
+        std::puts("PASS: native MP5 Spawn cannot overwrite Nailgun inventory selection name.");
+    }
     auto enemy=&entities[2];std::memset(enemy,0,sizeof(*enemy));enemy->serialnumber=2;enemy->v.flags=FL_MONSTER;enemy->v.health=50;enemy->v.takedamage=1;
     enemy->v.absmin=Vector(200,-16,0);enemy->v.absmax=Vector(232,16,72);enemy->v.framerate=1;enemy->v.movetype=MOVETYPE_STEP;
     FakeMonster target{};target.entity=enemy;enemy->pvPrivateData=&target;
@@ -101,10 +109,10 @@ int main() {
     state.time=9;lastFrame=state.time;hookStartFrame();assert(!slowed(enemy));assert(enemy->v.rendermode==kRenderNormal && enemy->v.framerate==1 && enemy->v.movetype==MOVETYPE_STEP);
     for(auto& d:discs)removeDisc(d);discs.clear();
     msgWeaponList=10;hookMessageBegin(MSG_ONE,10,nullptr,player);hookWriteString("weapon_9mmhandgun");for(int i=0;i<8;++i)hookWriteByte(0);hookMessageEnd();
-    assert((bytes==std::vector<int>{balance::HudAmmoCharges,3,255,255,1,0,2,0}));
+    assert((bytes==std::vector<int>{balance::HudAmmoCharges,4,255,255,1,0,2,0}));
     hookMessageBegin(MSG_ONE,10,nullptr,player);hookWriteString("weapon_ricochet");
     for(int i=0;i<8;++i)hookWriteByte(0);hookMessageEnd();
-    assert((bytes==std::vector<int>{balance::HudAmmoCharges,3,255,255,1,0,2,0}));
+    assert((bytes==std::vector<int>{balance::HudAmmoCharges,4,255,255,1,0,2,0}));
     msgCurWeapon=11;hookMessageBegin(MSG_ONE,11,nullptr,player);hookWriteByte(1);hookWriteByte(2);hookWriteByte(17);hookMessageEnd();assert(bytes[2]==255);
     hookClientCommand(player);assert(commandsSeen==1);
     // Native shared reserve adapter spends the exact same buckshot array.
@@ -123,7 +131,7 @@ int main() {
     assert(hookModelPtr(enemy)==modelHeader && enemy->v.sequence==0);
     enemy->v.sequence=4;hookModelPtr(enemy);assert(enemy->v.sequence==4);
     enemy->v.classname=str("monster_zombie");
-    // Both disc types follow the owner's current aim (no automatic lock-on),
+    // Secondary discs follow the owner's current aim (no automatic lock-on),
     // including after a bounce, while preserving the new 750-unit speed.
     traceMode=0;player->v.v_angle=Vector(0,90,0);
     Projectile guided;guided.entity=&entities[8];entities[8].free=false;guided.entity->v.origin=Vector(100,0,64);
@@ -131,13 +139,13 @@ int main() {
     steer(guided,.1f);assert(guided.velocity.y>0 && std::fabs(length(guided.velocity)-750)<.01f);
     player->v.v_angle=Vector(0,-90,0);steer(guided,.2f);assert(guided.velocity.y<0);
     entities[8].free=true;player->v.v_angle=Vector(0,0,0);
-    // Three charges, no fourth shot, recharge while holstered and cap at three.
-    players[1].charges=3;state.time=20;
-    assert(fire(player,false));assert(fire(player,true));assert(fire(player,false));
+    // Four charges, no fifth shot, recharge while holstered and cap at four.
+    players[1].charges=4;state.time=20;
+    assert(fire(player,false));assert(fire(player,true));assert(fire(player,false));assert(fire(player,false));
     assert(players[1].charges==0 && !fire(player,false));
     state.time+=1.49f;recharge(players[1]);assert(players[1].charges==0);
     state.time+=.02f;recharge(players[1]);assert(players[1].charges==1);
-    state.time+=10;recharge(players[1]);assert(players[1].charges==3);
+    state.time+=10;recharge(players[1]);assert(players[1].charges==4);
     for(auto& d:discs)removeDisc(d);discs.clear();
     // Bounce Shotgun wiring: the inherited crossbow inventory is rewritten to
     // the new weapon's own HUD identity, ammo indices and bucket position.
@@ -158,10 +166,10 @@ int main() {
         assert(bytes[2]==bounce::status(player).clip);
         hookMessageBegin(MSG_ONE,12,nullptr,player);hookWriteString("weapon_crossbow");hookMessageEnd();
         assert(writtenString=="weapon_bounce_shotgun");
-        // A real shotgun keeps its own bytes untouched.
+        // Shotgun ammo registration republishes Flak HUD before first deploy.
         hookMessageBegin(MSG_ONE,10,nullptr,player);hookWriteString("weapon_shotgun");
         for(int i=0;i<8;++i)hookWriteByte(i+1);hookMessageEnd();
-        assert((bytes==std::vector<int>{1,2,3,4,5,6,7,8}));
+        assert(shotgunAmmoIndex==1 && writtenString=="weapon_bounce_shotgun");
         player->v.viewmodel=str(bounce::ViewModel);
         msgSetFov=13;
         hookMessageBegin(MSG_ONE,13,nullptr,player);hookWriteByte(45);hookMessageEnd();
@@ -193,7 +201,23 @@ int main() {
         player->v.health=100;player->v.flags=0;
         std::puts("PASS: patrol yields to visible/nearby player or damage; combat stays native after lost sight.");
     }
-    std::puts("PASS: primary, homing hit, 7s slow, movement/animation scaling and blue transparency.");
+    for(auto& d:discs)removeDisc(d);discs.clear();
+    traceMode=0;player->v.punchangle=Vector(0,0,0);player->v.v_angle=Vector(0,0,0);
+    launch(player,0,false);assert(bytes[4]==12);
+    player->v.v_angle=Vector(0,90,0);advanceDiscs(.1f);
+    assert(discs.size()==1 && std::fabs(discs[0].velocity.y)<.001f);
+    for(int hit=1;hit<=5;++hit) {traceMode=3;advanceDiscs(.01f);assert(discs.size()==1 && discs[0].bounces==hit);}
+    traceMode=3;advanceDiscs(.01f);assert(discs.empty());
+    player->v.v_angle=Vector(0,0,0);launch(player,0,true);
+    player->v.v_angle=Vector(0,90,0);advanceDiscs(.1f);assert(discs.size()==1&&discs[0].velocity.y>0);
+    for(auto& d:discs)removeDisc(d);discs.clear();
+    int nativeAmmo[32]{};nativeAmmo[1]=10;player->pvPrivateData=nativeAmmo;ammoOffset=0;nailAmmoIndex=1;msgAmmoX=0;
+    assert(fireNailgun(player,false)&&nativeAmmo[1]==9);
+    assert(fireNailgun(player,true)&&nativeAmmo[1]==6);
+    for(auto& n:nails)removeNail(n);nails.clear();player->pvPrivateData=nullptr;
+    std::puts("PASS: primary stays straight, survives five reflections and expires on sixth contact; only secondary guides.");
+    std::puts("PASS: Nailgun primary/secondary spend 1/3 ammo and create projectiles.");
+    std::puts("PASS: primary, 7s slow, movement/animation scaling and blue transparency.");
     std::puts("PASS: 3-disc +/-7deg volley, <=12 damage, strong capped knockback, restoration/save snapshot.");
     std::puts("PASS: slot-2 HUD/selection, pistol suppression, cooldown, projectile cap and shotgun input.");
     std::puts("PASS: Bounce Shotgun HUD bytes, ammo indices, clip rewrite and carrier name rewrite.");

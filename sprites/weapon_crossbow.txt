@@ -1,0 +1,15 @@
+14
+weapon			320 320hud1	80	0	80	20
+weapon_s		320 320hud1	80	20	80	20
+ammo			320 320hud2	72	16	18	18
+crosshair		320 crosshairs	72	0	24	24
+autoaim			320 crosshairs	0	96	24	24
+zoom			320 crosshairs	24	96	104	16
+zoom_autoaim	320	crosshairs	24	112	104	16
+weapon			640 weapon_Cross/cross	0	0	170	45
+weapon_s		640 weapon_Cross/cross	0	45	170	45
+ammo			640 hud/arrow	0	0	32	32
+crosshair			640 weapon_Cross/Crosshair	0	0	31	31
+autoaim			640 crosshairs	0	96	24	24
+zoom			640 weapon_Cross/Reticle	0	0	255	255
+zoom_autoaim	640	crosshairs	0	0	0	0
