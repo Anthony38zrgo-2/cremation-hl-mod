@@ -1,0 +1,49 @@
+{
+  "package": "D:/games/ut2004/UnrealTournament2004/Sounds/WeaponSounds.uax",
+  "format": "mono PCM16 22050 Hz",
+  "pitch_method": "linear resampling; lowers pitch and lengthens playback",
+  "sounds": {
+    "flak_fire.wav": {
+      "source": "BaseFiringSounds.BFlakCannonFire.wav",
+      "semitones": 0,
+      "pitch_ratio": 1.0,
+      "sha256": "ced1b88e3cfc92cddbd3ef8783b85b71021f99246705c3877397c11e4cfdf846"
+    },
+    "flak_altfire.wav": {
+      "source": "BaseFiringSounds.BFlakCannonAltFire.wav",
+      "semitones": 0,
+      "pitch_ratio": 1.0,
+      "sha256": "50657bf4b4fdf4c5b2921516fd3a252913ad273d4519bc25e2e704b7e61a8770"
+    },
+    "flak_impact.wav": {
+      "source": "BaseProjectileSounds.BFlakCannonProjectile.wav",
+      "semitones": 0,
+      "pitch_ratio": 1.0,
+      "sha256": "4d7c252fdb695cf4586efa9aa2b8119fba0045a48d2f39e5416fea6aa40ac6cd"
+    },
+    "flak_equip.wav": {
+      "source": "FlakCannon.SwitchToFlakCannon.wav",
+      "semitones": 0,
+      "pitch_ratio": 1.0,
+      "sha256": "a8a932a76c48aa14fb3c39244c77400080941cb9d469f3c43714fcf9813719ed"
+    },
+    "link_fire.wav": {
+      "source": "LinkGun.BLinkedFire.wav",
+      "semitones": 0,
+      "pitch_ratio": 1.0,
+      "sha256": "98ef4858f3802e8088cf73b86f77c1fdc4ffb8ab69dbb59eb394e3b8281c45ce"
+    },
+    "link_altfire.wav": {
+      "source": "LinkGun.BLinkedFire.wav",
+      "semitones": -4,
+      "pitch_ratio": 0.7937005259840998,
+      "sha256": "367b398b4e1117e1e225c3bdb1aae9574205989a7a30f04410db5b5fc8042bd4"
+    },
+    "link_equip.wav": {
+      "source": "LinkGun.SwitchToLinkGun.wav",
+      "semitones": 0,
+      "pitch_ratio": 1.0,
+      "sha256": "32f399ba7f16b2bff422a0d1e74a201ca35015ba5812a31f921c3c852bd2a0ef"
+    }
+  }
+}

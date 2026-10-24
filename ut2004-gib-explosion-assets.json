@@ -1,0 +1,170 @@
+{
+  "packages": [
+    "D:/games/ut2004/UnrealTournament2004/Sounds/PlayerSounds.uax",
+    "D:/games/ut2004/UnrealTournament2004/Sounds/WeaponSounds.uax"
+  ],
+  "exporter": "UT2004 UCC.exe batchexport <package> sound wav <directory>",
+  "installed_format": "mono PCM16 22050 Hz",
+  "installed": {
+    "sound/common/bodysplat.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/NewGibs.NewGib1.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 1.6104308390022675,
+      "sha256": "773a5ae55dbce6b11c55825c39eeac52df27f2b37dcc766565d31eb450bd436d",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/common/bodysplat.wav"
+    },
+    "sound/common/bodydrop1.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/ImpactSounds.BodyHit1.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.975827664399093,
+      "sha256": "ec0b9c74be4818a6f66f23e460c6b85965bbc3b7b8ba3fbbfb8282969b7b3511",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/common/bodydrop1.wav"
+    },
+    "sound/common/bodydrop2.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/ImpactSounds.BodyHit2.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.6304761904761905,
+      "sha256": "24939f09097811188b77e98225914b0231e0d7151a2d5b1de555fb26eb7ad851",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/common/bodydrop2.wav"
+    },
+    "sound/common/bodydrop3.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/ImpactSounds.BodyHit3.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.6973696145124717,
+      "sha256": "8e98e890991602c68084109e66fc7706f7e2bcaa62b8fdc130206b572f3c23c6",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/common/bodydrop3.wav"
+    },
+    "sound/common/bodydrop4.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/ImpactSounds.BodyHit4.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.6164625850340136,
+      "sha256": "3369d3974664c0a7841235657c5eb41e84dc4373c9e93378a901f53372784bb1",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/common/bodydrop4.wav"
+    },
+    "sound/debris/flesh1.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/Final.Giblets1.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.7961904761904762,
+      "sha256": "3036bc42eec866d33dc8b95d8ef4fecc05206a9b020adbfadf6131e2c2bf3b36",
+      "backup": null
+    },
+    "sound/debris/flesh2.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/Final.Giblets2.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.7645804988662132,
+      "sha256": "b905d9956c94838e14f408ddf1fd5ffab84efebaa29296c414a4e6b2c78c5e62",
+      "backup": null
+    },
+    "sound/debris/flesh3.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/Final.Giblets3.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.9924263038548753,
+      "sha256": "04d17882cca217d5102576acf1f168972f61611a1d5837af1bd0058e0998d4d8",
+      "backup": null
+    },
+    "sound/debris/flesh4.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/Final.Giblets4.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.8489795918367347,
+      "sha256": "f6cefbfec43dd8385c6b830649e474e5a106cddcfb283d0ecdbef23b35d2bb9f",
+      "backup": null
+    },
+    "sound/debris/flesh5.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/Final.Giblets5.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.7169160997732427,
+      "sha256": "f9415a7abf31f640ed1401fe6f7f80fb2ada6062251765f2975fe284b9ec5390",
+      "backup": null
+    },
+    "sound/debris/flesh6.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/Final.Giblets1.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.7961904761904762,
+      "sha256": "3036bc42eec866d33dc8b95d8ef4fecc05206a9b020adbfadf6131e2c2bf3b36",
+      "backup": null
+    },
+    "sound/debris/flesh7.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/Final.Giblets2.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 0.7645804988662132,
+      "sha256": "b905d9956c94838e14f408ddf1fd5ffab84efebaa29296c414a4e6b2c78c5e62",
+      "backup": null
+    },
+    "sound/debris/bustflesh1.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/NewGibs.NewGib2.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 1.6468480725623582,
+      "sha256": "ace51bde137fb2047b09b21bb0112e22a674697929dbd28043c9ce04c653b9ad",
+      "backup": null
+    },
+    "sound/debris/bustflesh2.wav": {
+      "source": "assets-source/ut2004_gib_explosions/PlayerSounds/NewGibs.NewGib3.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 1.6621768707482993,
+      "sha256": "a5a9f7b7edc6d1532800d940f91d0aa2a86460fb51f9750dfa402fb1ac31de61",
+      "backup": null
+    },
+    "sound/weapons/explode3.wav": {
+      "source": "assets-source/ut2004_rocket/WeaponSounds/BaseImpactAndExplosions.BExplosion1.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 2.925668934240363,
+      "sha256": "cf2908a794af7bc09cbafca4d8f11abcc198877a724284bf936bbc88a72e10bf",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/weapons/explode3.wav"
+    },
+    "sound/weapons/explode4.wav": {
+      "source": "assets-source/ut2004_rocket/WeaponSounds/BaseImpactAndExplosions.BExplosion2.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 2.246530612244898,
+      "sha256": "2acea52b1453f6fde6c94f8e1d4fe88c1a8d6e8af2a80b9587ac53ffcf41e970",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/weapons/explode4.wav"
+    },
+    "sound/weapons/explode5.wav": {
+      "source": "assets-source/ut2004_rocket/WeaponSounds/BaseImpactAndExplosions.BExplosion3.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 2.3625850340136054,
+      "sha256": "25991619f735a4d236cee2eeaa792973c20dcfe734b2c920e5f839377135e435",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/weapons/explode5.wav"
+    },
+    "sound/ricochet/blast.wav": {
+      "source": "assets-source/ut2004_rocket/WeaponSounds/BaseImpactAndExplosions.BExplosion4.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 2.2058503401360543,
+      "sha256": "9318ad020c1da4feb64f3e798cfb345794e076e540be523680d84dbc0b4aa8df",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/ricochet/blast.wav"
+    },
+    "sound/weapons/mortarhit.wav": {
+      "source": "assets-source/ut2004_rocket/WeaponSounds/BaseImpactAndExplosions.BExplosion5.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 2.4258503401360545,
+      "sha256": "61da3190742837be157e73a70e9c66df8aca271847bf9bb1da1c1d7fb5846f2a",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/weapons/mortarhit.wav"
+    },
+    "sound/weapons/energy_sing_explosion2.wav": {
+      "source": "assets-source/ut2004_rocket/WeaponSounds/BaseImpactAndExplosions.BExplosion5.wav",
+      "source_rate": 22050,
+      "source_bits": 16,
+      "duration_seconds": 2.4258503401360545,
+      "sha256": "61da3190742837be157e73a70e9c66df8aca271847bf9bb1da1c1d7fb5846f2a",
+      "backup": "backups/before-ut2004-gib-explosion-sounds/sound/weapons/energy_sing_explosion2.wav"
+    }
+  }
+}

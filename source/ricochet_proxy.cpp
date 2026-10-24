@@ -43,7 +43,7 @@ static bool customWeaponList=false,customBounceList=false,customNailWeaponList=f
 static edict_t* messagePlayer=nullptr;
 static bool ownAnimation=false;
 static int shotgunAmmoIndex=-1,nailAmmoIndex=-1, ammoOffset=-1;
-static bool shotgunList=false;
+static bool shotgunList=false,rpgList=false;
 static float lastFrame=0;
 struct HordeProbe {edict_t* entity; int serial; Vector origin; Vector previous; float previousTime; bool jumped=false; float walked=0; Vector patrol{0,0,0}; bool fallback=false,returning=false,combat=false; float initialHealth=0;};
 static std::vector<HordeProbe> hordeProbes;
@@ -384,11 +384,12 @@ static bool fireNailgun(edict_t* p,bool secondary) {
         engine.pfnMessageBegin(MSG_ONE,msgAmmoX,nullptr,p);
         engine.pfnWriteByte(nailAmmoIndex);engine.pfnWriteByte(remaining);engine.pfnMessageEnd();
     }
-    sound(p,secondary?"weapons/spike2.wav":"weapons/spike1.wav");
+    sound(p,secondary?"weapons/ut2004/link_altfire.wav":"weapons/ut2004/link_fire.wav");
     animation(p,5);
     p->v.punchangle.x-=secondary?.55f:.2f;
     return true;
 }
+#include "ut2004_rpg.inc"
 static int bounceSpawn(edict_t* e) { return raven.pfnSpawn ? raven.pfnSpawn(e) : 0; }
 static void bounceAnimation(edict_t* p,int sequence) { animation(p,sequence); }
 static void bouncePush(edict_t* e,const Vector& dir,float horizontal,float vertical,float duration) {
@@ -521,6 +522,7 @@ static void hookThink(edict_t* e) {
     }
 }
 static void hookStartFrame() {
+    rpgFrame();
     if(raven.pfnStartFrame)raven.pfnStartFrame();
     float dt=std::max(0.f,globals->time-lastFrame);lastFrame=globals->time;
     if(dt>0) {
@@ -589,16 +591,19 @@ static void hookStartFrame() {
     }
 }
 static void hookPreThink(edict_t* p) {
+    rpgNormalize(p);
     int i=engine.pfnIndexOfEdict(p);if(i>0 && i<33)players[i].buttons=p->v.button;
-    if(ricochet(p)||nailgun(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPreThink(p);
 }
 static void hookPostThink(edict_t* p) {
     int i=engine.pfnIndexOfEdict(p);if(i<=0||i>=33) {raven.pfnPlayerPostThink(p);return;}
     auto& state=players[i];
     bool carrier=bounce::isBouncePlayer(p);
-    if(ricochet(p)||nailgun(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPostThink(p);
+    rpgNormalize(p);
+    rpgPostThink(p,state.buttons);
     bool activeNail=nailgun(p);
     if(activeNail) {
         p->v.viewmodel=engine.pfnAllocString(NailViewModel);
@@ -649,7 +654,7 @@ static void hookPostThink(edict_t* p) {
         }
     }
     if(active && globals->time>=state.animUntil && p->v.weaponanim!=0)animation(p,0);
-    if(activeNail&&!state.wasNailgun) {animation(p,4);state.nailNextFire=std::max(state.nailNextFire,globals->time+.15f);state.animUntil=globals->time+.35f;}
+    if(activeNail&&!state.wasNailgun) {sound(p,"weapons/ut2004/link_equip.wav");animation(p,4);state.nailNextFire=std::max(state.nailNextFire,globals->time+.15f);state.animUntil=globals->time+.35f;}
     if(activeNail&&globals->time>=state.nailNextFire&&(state.buttons&(Attack|Attack2))) {
         bool secondary=(state.buttons&Attack2)!=0;
         if(fireNailgun(p,secondary)) {state.nailNextFire=globals->time+.1f;state.animUntil=globals->time+.2f;}
@@ -672,7 +677,7 @@ static int hookRegisterMsg(const char* name,int size) {
     return id;
 }
 static void hookMessageBegin(int dest,int type,const float* origin,edict_t* player) {
-    shotgunList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
+    shotgunList=false;rpgList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
     engine.pfnMessageBegin(dest,type,origin,player);
 }
 static void hookMessageEnd() {
@@ -696,6 +701,7 @@ static void hookMessageEnd() {
     }
 }
 static void hookWriteString(const char* value) {
+    if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_rpg"))rpgList=true;
     if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_shotgun"))shotgunList=true;
     bool pistol=!std::strcmp(value,"weapon_ricochet")||!std::strcmp(value,"weapon_9mmhandgun")||!std::strcmp(value,"weapon_glock");
     bool carrier=bounce::isCarrierClass(value);
@@ -715,6 +721,7 @@ static void hookWriteString(const char* value) {
     engine.pfnWriteString(value);
 }
 static void hookWriteByte(int value) {
+    if(currentMsg==msgWeaponList && rpgList) {if(currentByte==0)rpgAmmoIndex=value;else if(currentByte==1)value=30;}
     if(currentMsg==msgWeaponList && shotgunList && currentByte==0) {shotgunAmmoIndex=value;bounce::setShellAmmoIndex(value); }
     if(currentMsg==msgSetFov && currentByte==0 && bounce::isBouncePlayer(messagePlayer))value=0;
     if(currentMsg==msgWeaponList && customWeaponList) {
@@ -736,6 +743,7 @@ static void hookWriteByte(int value) {
         if(currentByte==1) {curWeaponId=value;carrierCurWeapon=(value==bounce::carrierWeaponId());}
         if(currentByte==2 && curWeaponId==GlockId)value=255;
         if(currentByte==2 && curWeaponId==Mp5Id)value=255;
+        if(currentByte==2 && curWeaponId==8)value=255;
         if(currentByte==2 && curWeaponId==7)value=bounce::tfcClip(messagePlayer);
         if(currentByte==2 && carrierCurWeapon && valid(messagePlayer))value=bounce::status(messagePlayer).clip;
     }
@@ -757,6 +765,8 @@ static void hookClientCommand(edict_t* p) {
     }
 }
 static void hookTouch(edict_t* a,edict_t* b) {
+    if(rpgPickup(a,b)||rpgPickup(b,a))return;
+    if(rpgTouch(a,b))return;
     if(bounce::engineerMetal(a,b)||bounce::engineerMetal(b,a))return;
     if(raven.pfnTouch)raven.pfnTouch(a,b);
 }
@@ -794,13 +804,14 @@ static int hookSpawn(edict_t* e) {
         for(auto path:{"models/ricochet/disc.mdl","models/ricochet/disc_hard.mdl","models/p_9mmhandgun.mdl"})engine.pfnPrecacheModel(const_cast<char*>(path));
         for(auto path:{"ricochet/throw.wav","ricochet/altfire.wav","ricochet/freeze.wav","ricochet/blast.wav","ricochet/bounce.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
         for(auto path:{RicochetRedModel,NailViewModel,NailPlayerModel,"models/cremation/nail.mdl",PipeWrenchViewModel,PipeWrenchPlayerModel,"models/cremation/w_pipe_wrench.mdl"})engine.pfnPrecacheModel(const_cast<char*>(path));
-        for(auto path:{"weapons/spike1.wav","weapons/spike2.wav","weapons/pwrench_big_hit1.wav","weapons/pwrench_big_hit2.wav","weapons/pwrench_big_hitbod1.wav","weapons/pwrench_big_hitbod2.wav","weapons/pwrench_big_miss.wav","weapons/pwrench_hit1.wav","weapons/pwrench_hit2.wav","weapons/pwrench_hitbod1.wav","weapons/pwrench_hitbod2.wav","weapons/pwrench_hitbod3.wav","weapons/pwrench_miss1.wav","weapons/pwrench_miss2.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
+        for(auto path:{"weapons/ut2004/link_fire.wav","weapons/ut2004/link_altfire.wav","weapons/ut2004/link_equip.wav","weapons/spike1.wav","weapons/spike2.wav","weapons/pwrench_big_hit1.wav","weapons/pwrench_big_hit2.wav","weapons/pwrench_big_hitbod1.wav","weapons/pwrench_big_hitbod2.wav","weapons/pwrench_big_miss.wav","weapons/pwrench_hit1.wav","weapons/pwrench_hit2.wav","weapons/pwrench_hitbod1.wav","weapons/pwrench_hitbod2.wav","weapons/pwrench_hitbod3.wav","weapons/pwrench_miss1.wav","weapons/pwrench_miss2.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
         // GoldSrc retains these pointers for the resource list sent at signon.
         // Each path must remain alive after worldspawn has returned.
         for(auto path:{"weapons/doom3/chainsaw/attack.wav","weapons/doom3/chainsaw/dry.wav",
                        "weapons/doom3/chainsaw/idle_01.wav","weapons/doom3/chainsaw/idle_02.wav",
                        "weapons/doom3/chainsaw/pull.wav","weapons/doom3/chainsaw/put_away.wav"})
             engine.pfnPrecacheSound(const_cast<char*>(path));
+        rpgPrecache();
         bounce::precache();
     }
     int result=raven.pfnSpawn(e);
@@ -827,6 +838,7 @@ static int hookSpawn(edict_t* e) {
     return result;
 }
 static void hookActivate(edict_t* list,int count,int maxClients) {
+    rpgCharges.fill(RpgCharge{});rpgMissiles.clear();
     discs.clear();nails.clear();effects.assign(globals->maxEntities,Effect{});players.fill(PlayerState{});lastFrame=globals->time;
     bounce::reset();
     raven.pfnServerActivate(list,count,maxClients);
@@ -855,7 +867,7 @@ static void hookDeactivate() {
         if(s.slowUntil)restoreSlow(s);
         if(s.pushUntil && valid(s.entity) && s.entity->serialnumber==s.serial && s.entity->v.movetype==MOVETYPE_TOSS)s.entity->v.movetype=s.movement;
     }
-    effects.clear();discs.clear();nails.clear();bounce::reset();
+    effects.clear();discs.clear();nails.clear();rpgCharges.fill(RpgCharge{});rpgMissiles.clear();bounce::reset();
     if(raven.pfnServerDeactivate)raven.pfnServerDeactivate();
 }
 static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
@@ -882,7 +894,8 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(!std::strcmp(text(e->v.classname),"cremation_disc")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     if(!std::strcmp(text(e->v.classname),"cremation_nail")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     bounce::removeRestored(e);
-    int i=engine.pfnIndexOfEdict(e);if(i>0&&i<33)players[i]=PlayerState{};
+    if(e->v.targetname && !std::strcmp(text(e->v.targetname),"ut2004_rpg_missile")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
+    int i=engine.pfnIndexOfEdict(e);if(i>0&&i<33) {players[i]=PlayerState{};rpgCharges[i]=RpgCharge{};}
     return result;
 }
 static void hookCmdStart(const edict_t* player,const struct usercmd_s* cmd,unsigned int seed) {
@@ -894,6 +907,7 @@ static void hookCmdStart(const edict_t* player,const struct usercmd_s* cmd,unsig
 }
 static void hookPutInServer(edict_t* player) {
     if(raven.pfnClientPutInServer)raven.pfnClientPutInServer(player);
+    int i=engine.pfnIndexOfEdict(player);if(i>0&&i<33) {rpgCharges[i]=RpgCharge{};rpgCharges[i].startPending=true;}
     startupTrace("ClientPutInServer","player entered map");
     if(engine.pfnClientCommand)engine.pfnClientCommand(player,const_cast<char*>("cl_lw 0\n"));
 }

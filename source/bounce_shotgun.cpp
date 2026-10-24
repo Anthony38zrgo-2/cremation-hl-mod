@@ -304,6 +304,8 @@ void advancePellets(float dt) {
                 remaining *= 1.f - travelled;
                 continue;
             }
+            eng->pfnSetOrigin(pellet.entity, &at.x);
+            if (host.sound) host.sound(pellet.entity, "ricochet/bounce.wav");
             if (aliveEnemy(hit) || (valid(hit) && hit->v.takedamage)) {
                 damagePelletTarget(pellet, hit, tr);
                 destroy(pellet.entity, pellet.serial);
@@ -326,7 +328,6 @@ void advancePellets(float dt) {
             Vector exit = at + plane * SurfaceOffset + dir * .5f;
             eng->pfnSetOrigin(pellet.entity, &exit.x);
             remaining *= 1.f - travelled;
-            if (host.sound) host.sound(pellet.entity, "ricochet/bounce.wav");
         }
         if (pellet.entity && exhausted) destroy(pellet.entity, pellet.serial);
     }
@@ -414,7 +415,7 @@ void sendExplosionEffect(const Vector& at, int scale) {
     eng->pfnWriteShort(fireballSprite);
     eng->pfnWriteByte(scale);
     eng->pfnWriteByte(15);
-    eng->pfnWriteByte(0); // TE_EXPLFLAG_NONE
+    eng->pfnWriteByte(TE_EXPLFLAG_NOSOUND); // UT2004 impact sound is emitted below
     eng->pfnMessageEnd();
     eng->pfnMessageBegin(MSG_PAS, SvcTempEntity, &at.x, nullptr);
     eng->pfnWriteByte(TE_SMOKE);
@@ -492,6 +493,7 @@ void explodeGrenade(Grenade& grenade, const Vector& at, edict_t* directHit = nul
     }
     bool hitEnemy=valid(directHit) && (directHit->v.flags&FL_MONSTER);
     sendExplosionEffect(at, grenade.scale);
+    if(host.sound)host.sound(grenade.entity,"weapons/ut2004/flak_impact.wav");
     radiusDamage(grenade.entity, grenade.owner, at, grenade.damage, grenade.radius, 1.f,directHit);
     if(!hitEnemy)scatterShrapnel(grenade,at,plane);
     destroy(grenade.entity, grenade.serial);
@@ -678,7 +680,7 @@ bool firePellets(edict_t* player, PlayerState& state) {
     state.nextSecondary = std::max(state.nextSecondary, state.nextPrimary);
     state.animUntil = globals->time + .9f;
     host.animation(player, AnimFire2);
-    host.sound(player, "weapons/dbarrel1.wav");
+    host.sound(player, "weapons/ut2004/flak_fire.wav");
     player->v.punchangle.x -= 2.f;
     player->v.effects = int(player->v.effects) | EF_MUZZLEFLASH;
     sendState(player);
@@ -748,7 +750,7 @@ bool fireGrenade(edict_t* player, PlayerState& state) {
     state.lastGrenadeRadius = radius;
     state.lastGrenadeElevation = elevation;
     host.animation(player, AnimFire);
-    host.sound(player, "weapons/glauncher.wav");
+    host.sound(player, "weapons/ut2004/flak_altfire.wav");
     player->v.punchangle.x -= 1.f;
     sendState(player);
     return true;
@@ -798,7 +800,7 @@ void precache() {
     fireballSprite = eng->pfnPrecacheModel(const_cast<char*>("sprites/explode1.spr"));
     smokeSprite = eng->pfnPrecacheModel(const_cast<char*>("sprites/steam1.spr"));
     trailSprite = eng->pfnPrecacheModel(const_cast<char*>("sprites/ricochet/lgtning.spr"));
-    const char* sounds[] = {"weapons/dbarrel1.wav", "weapons/glauncher.wav", "weapons/reload1.wav",
+    const char* sounds[] = {"weapons/ut2004/flak_fire.wav","weapons/ut2004/flak_altfire.wav","weapons/ut2004/flak_impact.wav","weapons/ut2004/flak_equip.wav","weapons/dbarrel1.wav", "weapons/glauncher.wav", "weapons/reload1.wav",
                             "weapons/reload3.wav", "ricochet/bounce.wav"};
     for (const char* sound : sounds) eng->pfnPrecacheSound(const_cast<char*>(sound));
     viewModelString = eng->pfnAllocString(ViewModel);
@@ -907,6 +909,7 @@ void playerPostThink(edict_t* player, int buttons) {
             state.nextSecondary = std::max(state.nextSecondary, globals->time + DeployTime);
             state.animUntil = globals->time + DeployTime;
             host.animation(player, AnimDraw);
+            if(host.sound)host.sound(player,"weapons/ut2004/flak_equip.wav");
             sendState(player);
         }
         overridePlayerModels(player);

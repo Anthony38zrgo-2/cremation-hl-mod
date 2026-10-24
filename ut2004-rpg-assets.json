@@ -1,0 +1,60 @@
+{
+  "package": "D:/games/ut2004/UnrealTournament2004/Sounds/WeaponSounds.uax",
+  "exporter": "UT2004 System/UCC.exe batchexport WeaponSounds sound wav",
+  "sounds": {
+    "fire.wav": {
+      "source": "BaseFiringSounds.BRocketLauncherFire.wav",
+      "seconds": 1.4238095238095239,
+      "rate": 22050,
+      "channels": 1,
+      "source_sample_bits": 16,
+      "installed_sample_bits": 16,
+      "sha256": "88f0e830bbb3ff70d896759f096c6f6f218745a9fa0ec220f6a617c037fa07b9"
+    },
+    "altfire.wav": {
+      "source": "BaseFiringSounds.BRocketLauncherAltFire.wav",
+      "seconds": 1.910294784580499,
+      "rate": 22050,
+      "channels": 1,
+      "source_sample_bits": 16,
+      "installed_sample_bits": 16,
+      "sha256": "fc8e4011b8c1021922ca05229614c3877da85e51890d22c946e86a004708ac95"
+    },
+    "load.wav": {
+      "source": "BaseGunTech.BRocketLauncherLoad.wav",
+      "seconds": 0.5239002267573696,
+      "rate": 22050,
+      "channels": 1,
+      "source_sample_bits": 8,
+      "installed_sample_bits": 16,
+      "sha256": "e1a15018b9cae43a9eb3c93291f38f42f64e647807c67084107fdaaf9adfc1e8"
+    },
+    "plunger.wav": {
+      "source": "RocketLauncher.RocketLauncherPlunger.wav",
+      "seconds": 0.803219954648526,
+      "rate": 22050,
+      "channels": 1,
+      "source_sample_bits": 16,
+      "installed_sample_bits": 16,
+      "sha256": "c0bcfe370beb0dbbd4a52d9f1db403644c03e7cb2e8e0a380722512f49de1c33"
+    },
+    "flight.wav": {
+      "source": "RocketLauncher.RocketLauncherProjectile.wav",
+      "seconds": 1.864716553287982,
+      "rate": 22050,
+      "channels": 1,
+      "source_sample_bits": 16,
+      "installed_sample_bits": 16,
+      "sha256": "da5c9fd34bab9c34ef77500d4d346b3b1ca9c6baed9996c9ce32a25e1e9d7ef5"
+    },
+    "equip.wav": {
+      "source": "RocketLauncher.SwitchToRocketLauncher.wav",
+      "seconds": 0.6799092970521542,
+      "rate": 22050,
+      "channels": 1,
+      "source_sample_bits": 16,
+      "installed_sample_bits": 16,
+      "sha256": "da3ebad46df5627a6276354db286f5d1c283642ba50082d66c3352a905eba6dc"
+    }
+  }
+}

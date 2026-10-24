@@ -122,3 +122,46 @@ Nailgun: conserva la geometría y texturas de Hive Hand Unreal; sus secuencias s
 Corrección de animación Nailgun: el donante es ahora la MP5 original de Half-Life (valve/models/v_9mmar.mdl), persistido como v_mp5_motion.mdl. Se adapta movimiento global Bone01 y del conjunto arma/manos Bone04 al rig de Hive Hand; se conservan geometría y texturas Hive Hand, y tiempos/fotogramas originales de las secuencias MP5. Sustituye la adaptación anterior de la ametralladora Unreal. Revisión visual pendiente.
 
 Nailgun: corregida la orientación del retarget MP5 mediante transformación de rotaciones entre los ejes de referencia de ambos esqueletos. El retroceso angular se aplica en el eje de elevación en vez de copiar el Z local de MP5 como giro lateral de Hive Hand. Modelo regenerado e instalado; revisión visual pendiente.
+
+## RPG con sonidos UT2004 y carga secundaria
+
+Sonidos originales de WeaponSounds.uax exportados con UCC: BRocketLauncherFire,
+BRocketLauncherAltFire, BRocketLauncherLoad, RocketLauncherPlunger,
+RocketLauncherProjectile y SwitchToRocketLauncher. WAV mono PCM16 a 22050 Hz;
+solo la carga original PCM8 requiere conversión de profundidad. Procedencia,
+duración y hashes en ut2004-rpg-assets.json. Instalador reproducible:
+tools/install_ut2004_rpg_sounds.py.
+
+Primario: un misil. Mantener secundario carga un misil cada segundo (1/2/3 s).
+Soltar lanza lo cargado; antes de 1 s cancela. Patrón horizontal con 8 grados
+entre misiles: 0, -4/+4, -8/0/+8. Al llegar a tres se pueden retener 1,5 s;
+a los 4,5 s desde el inicio salen automáticamente. Requiere soltar el botón
+antes de iniciar otra carga tras disparo automático. La carga respeta la
+munición real (cargador y reserva), y solo la consume al lanzar. Cambiar de arma
+o morir cancela sin consumirla. HUD muestra misiles cargados durante la carga.
+Los misiles vuelan rectos a 1500 u/s y conservan la explosión/daño nativos de
+Ravenholm; no siguen el punto láser. Se conserva el modelo de RPG instalado.
+Los proyectiles en vuelo no se reanudan al restaurar una partida, como los otros
+proyectiles propios del mod; las cargas pendientes también se cancelan.
+DLL compilada e instalada. Sin prueba interactiva de audio o combate realizada.
+
+RPG: munición unificada sin cargador ni recarga. HUD oculta el cargador (CurWeapon clip=255) y anuncia máximo 30 en WeaponList. Toda la munición queda en la reserva nativa guardable; m_iClip=-1 desactiva recarga automática. Migra el misil del cargador antiguo a la reserva. Al entrar en partida se inicializan 5 misiles al recibir el RPG; recoge ammo_rpgclip y RPG duplicados hasta máximo 30. La carga secundaria no divide el contador ni consume antes del lanzamiento. DLL compilada e instalada; comprobación en juego pendiente.
+
+Sonidos UT2004: Flak usa disparos primario/secundario, impactos y despliegue de Flak Cannon de WeaponSounds.uax. Nailgun usa BLinkGunFire para ambos disparos; el secundario es la misma grabación bajada dos tonos completos (4 semitonos, factor 0,7937005), mediante remuestreo, que también alarga la reproducción. Despliegue Link Gun. Archivos mono PCM16/22050 Hz bajo sound/weapons/ut2004, con nombres independientes; procedencia en ut2004-flak-link-assets.json y generación en tools/install_ut2004_flak_link_sounds.py. DLL compilada e instalada; escucha en juego pendiente.
+
+Perdigones Flak: cada impacto sólido, incluido impacto contra enemigos y último contacto antes de desaparecer, reproduce ricochet/bounce.wav, el mismo sonido del proyectil primario Ricochet. El sonido se emite en el punto de impacto. La granada secundaria conserva su impacto UT2004. DLL compilada e instalada; escucha en juego pendiente.
+
+Corrección de sonido Nailgun: el primario usa LinkGun.BLinkedFire de WeaponSounds.uax. El secundario deriva de esa misma grabación, bajada cuatro semitonos (dos tonos completos). Sustituye BLinkGunFire; rutas instaladas link_fire.wav y link_altfire.wav.
+
+## Sonidos UT2004 de desmembramiento y explosiones
+
+Sustituidas 20 rutas de sonido del mod por grabaciones de PlayerSounds.uax y
+WeaponSounds.uax: bodysplat usa NewGib1; bodydrop1-4 usan BodyHit1-4;
+flesh1-7 usan Giblets1-5 y bustflesh1-2 usan NewGib2-3. Explode3-5 usan
+BExplosion1-3; la explosión Ricochet usa BExplosion4, y mortarhit/energy_sing
+usan BExplosion5. Los disparos y los impactos de perdigones conservan sus
+asignaciones actuales. Todo instalado como mono PCM16/22050 Hz, sin cambios
+a daño o comportamiento. Backup en backups/before-ut2004-gib-explosion-sounds/.
+Procedencia y hashes en ut2004-gib-explosion-assets.json; reinstalación con
+tools/install_ut2004_gib_explosion_sounds.py después de instaladores antiguos
+que copien sonidos donantes. Sin escucha interactiva realizada.
