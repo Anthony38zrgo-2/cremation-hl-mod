@@ -17,6 +17,7 @@
 #include "entity_state.h"
 #include "raven_ammo.h"
 #include "weapon_config.h"
+#include "hecu_alliance.h"
 
 // GoldSrc's file-based export reader assumes that export names live in .rdata.
 // Reserve space there before linking; finalization never moves names elsewhere.
@@ -579,12 +580,23 @@ static int hookSpawn(edict_t* e) {
         bounce::precache();
     }
     int result=raven.pfnSpawn(e);
+    if(classname && !std::strcmp(classname,"monster_human_grunt")) {
+        startupTrace("HECUAlliance",cremationAllyHecu(e->pvPrivateData)?"zombie_faction=7":"FAILED");
+    }
     // CGlock::Spawn rewrites its classname to weapon_9mmhandgun. Restore the
     // HUD name so Ravenholm SelectItem can find the actual inventory entity.
     if(ricochetItem)e->v.classname=engine.pfnAllocString("weapon_ricochet");
     // The inherited crossbow spawn writes its own view/world models; replace
     // them once it has finished with our own copies.
     if(bounceItem) {e->v.classname=engine.pfnAllocString(bounce::WeaponName);bounce::weaponSpawned(e);}
+    if(classname && !std::strcmp(classname,"monster_human_grunt") && e->v.targetname &&
+       !std::strncmp(text(e->v.targetname),"cremation_hecu_",15)) {
+        int variant=std::atoi(text(e->v.targetname)+15)-1;
+        // Preserve the native weapon bodygroup, select one of the four heads.
+        e->v.body=(e->v.body/4)*4+(variant%4);
+        char report[160];std::snprintf(report,sizeof report,"%s weapons=%d body=%d model=%s health=%.0f",text(e->v.targetname),e->v.weapons,e->v.body,text(e->v.model),e->v.health);
+        startupTrace("HECU",report);
+    }
     return result;
 }
 static void hookActivate(edict_t* list,int count,int maxClients) {
@@ -632,6 +644,7 @@ static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
 static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     int result=raven.pfnRestore(e,data,globalEntity);
     const char* restoredClass=text(e->v.classname);
+    if(restoredClass && !std::strcmp(restoredClass,"monster_human_grunt"))cremationAllyHecu(e->pvPrivateData);
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmhandgun")||!std::strcmp(restoredClass,"weapon_glock")))e->v.classname=engine.pfnAllocString("weapon_ricochet");
     if(auto s=getEffect(e))*s=Effect{};
     if(!std::strcmp(text(e->v.classname),"cremation_disc")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}

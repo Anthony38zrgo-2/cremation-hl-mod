@@ -1,4 +1,126 @@
 {
+  "hecu": [
+    {
+      "origin": [
+        -1408,
+        512,
+        -167
+      ],
+      "weapons": 1,
+      "head": 0,
+      "targetname": "cremation_hecu_01"
+    },
+    {
+      "origin": [
+        -1216,
+        512,
+        -167
+      ],
+      "weapons": 8,
+      "head": 1,
+      "targetname": "cremation_hecu_02"
+    },
+    {
+      "origin": [
+        -1120,
+        224,
+        -183
+      ],
+      "weapons": 3,
+      "head": 2,
+      "targetname": "cremation_hecu_03"
+    },
+    {
+      "origin": [
+        -928,
+        128,
+        -287
+      ],
+      "weapons": 10,
+      "head": 3,
+      "targetname": "cremation_hecu_04"
+    },
+    {
+      "origin": [
+        -928,
+        512,
+        -287
+      ],
+      "weapons": 5,
+      "head": 0,
+      "targetname": "cremation_hecu_05"
+    },
+    {
+      "origin": [
+        -736,
+        704,
+        -287
+      ],
+      "weapons": 12,
+      "head": 1,
+      "targetname": "cremation_hecu_06"
+    },
+    {
+      "origin": [
+        -544,
+        -1120,
+        -294.05
+      ],
+      "weapons": 1,
+      "head": 2,
+      "targetname": "cremation_hecu_07"
+    },
+    {
+      "origin": [
+        -544,
+        -928,
+        -319
+      ],
+      "weapons": 8,
+      "head": 3,
+      "targetname": "cremation_hecu_08"
+    },
+    {
+      "origin": [
+        -544,
+        -736,
+        -319
+      ],
+      "weapons": 3,
+      "head": 0,
+      "targetname": "cremation_hecu_09"
+    },
+    {
+      "origin": [
+        -544,
+        -544,
+        -319
+      ],
+      "weapons": 10,
+      "head": 1,
+      "targetname": "cremation_hecu_10"
+    },
+    {
+      "origin": [
+        -544,
+        -64,
+        -287
+      ],
+      "weapons": 5,
+      "head": 2,
+      "targetname": "cremation_hecu_11"
+    },
+    {
+      "origin": [
+        -448,
+        800,
+        -319
+      ],
+      "weapons": 12,
+      "head": 3,
+      "targetname": "cremation_hecu_12"
+    }
+  ],
   "shell_pickups": [
     [
       -160,

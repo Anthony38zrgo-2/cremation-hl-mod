@@ -18,6 +18,12 @@ with log.open('wb') as output:
     except subprocess.TimeoutExpired:
         phases=diagnostics.read_text() if diagnostics.exists() else ''
         assert 'Cremation DLL initialized' in phases and 'ServerActivate rapidcore' in phases,phases
+        assert phases.count('HECUAlliance zombie_faction=7')==12,phases
+        hecu=re.findall(r'HECU cremation_hecu_(\d+) weapons=(\d+) body=(\d+) model=models/hgrunt.mdl health=([\d.]+)',phases)
+        assert len(hecu)==12 and len({n for n,w,b,h in hecu})==12,phases
+        assert {int(w) for n,w,b,h in hecu}=={1,8,3,10,5,12},hecu
+        assert {int(b)%4 for n,w,b,h in hecu}=={0,1,2,3},hecu
+        assert all(float(h)>0 for n,w,b,h in hecu),hecu
         movement=re.findall(r'HordeMovement teleports=(\d+) near_spawn_256=(\d+)',phases)
         assert movement and all(int(jumps)==0 and int(near)==0 for jumps,near in movement),phases
         observed=[int(n) for n in re.findall(r'HordeProgress zombies=40 moved_over_32=(\d+)',phases)]

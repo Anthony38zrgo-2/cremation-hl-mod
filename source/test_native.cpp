@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include "raven_ammo.h"
+#include "hecu_alliance.h"
 
 static void* allocated=nullptr;
 static void* allocate(edict_t* e,int32 count) {allocated=std::calloc(1,count);e->pvPrivateData=allocated;return allocated;}
@@ -49,6 +50,14 @@ int main(int argc,char** argv) {
     auto killedAddress=reinterpret_cast<unsigned char*>(table[13]);
     assert(killedAddress>=base && killedAddress<base+nt->OptionalHeader.SizeOfImage);
     std::puts("PASS: zombie Killed virtual slot 13 resolves inside Ravenholm for native GIB_ALWAYS.");
+    std::free(allocated);
+    auto grunt=reinterpret_cast<void(*)(entvars_t*)>(GetProcAddress(module,"monster_human_grunt"));
+    assert(grunt);entity.pvPrivateData=nullptr;grunt(&entity.v);
+    table=*reinterpret_cast<void***>(entity.pvPrivateData);
+    assert(reinterpret_cast<Classify>(table[8])(entity.pvPrivateData)==4);
+    assert(cremationAllyHecu(entity.pvPrivateData));
+    assert(reinterpret_cast<Classify>(table[8])(entity.pvPrivateData)==7);
+    std::puts("PASS: native HECU classification changes from military 4 to zombie faction 7.");
     std::free(allocated);
     std::puts("PASS: actual Win32 DLL loads; API 140 and exports resolve; Ravenholm zombie constructor and base ABI match.");
     FreeLibrary(module);

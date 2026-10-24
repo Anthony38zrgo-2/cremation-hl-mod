@@ -66,6 +66,14 @@ assert entry['sha256']==hashlib.sha256(fast).hexdigest()
 for e in output.entities:
     if e.get('targetname','').startswith('cremation_metal_'):
         assert output.clear(tuple(map(float,e['origin'].split())),0)
+import zipfile
+with zipfile.ZipFile(MOD/'assets-source/bloodcultisthecu.zip') as archive:
+    hecu_assets={}
+    prefix='BloodCultistHECU/Cultists models/'
+    for name in archive.namelist():
+        if name.startswith(prefix) and name.endswith('.mdl'):hecu_assets['models/'+Path(name).name.lower()]=archive.read(name)
+        if name.startswith(prefix+'Cultist sounds/') and name.endswith('.wav'):hecu_assets['sound/hgrunt/'+Path(name).name]=archive.read(name)
+for relative,raw in hecu_assets.items():assert (MOD/relative).read_bytes()==raw,relative
 manifest={}
 ricochet_assets=json.loads((MOD/'ricochet-assets.json').read_text())
 ricochet_assets.update(json.loads((MOD/'tfc-assets.json').read_text()))
@@ -75,6 +83,7 @@ for folder in ('dlls','cl_dlls','models','sound','sprites','events'):
         relative=path.relative_to(DONOR)
         selected_source=ROOT/ricochet_assets[relative.as_posix()] if relative.as_posix() in ricochet_assets else path
         expected_bytes=add_walk_activity(selected_source.read_bytes()) if relative.as_posix()=='models/zombie_fast.mdl' else selected_source.read_bytes()
+        expected_bytes=hecu_assets.get(relative.as_posix().lower(),expected_bytes)
         source_hash=hashlib.sha256(expected_bytes).hexdigest()
         assert hashlib.sha256((MOD/relative).read_bytes()).hexdigest()==source_hash,relative
         manifest[relative.as_posix()]=source_hash
@@ -182,3 +191,12 @@ print('PASS: Bounce Shotgun models are private copies; HUD sprite and descriptor
 print('PASS: models with external textures have the matching <model-name>T.mdl companion.')
 print(f'PASS: {len(manifest)} file hashes recorded; launcher PE header present.')
 print('Manual gameplay validation remains pending.')
+
+hecu=[e for e in output.entities if e.get('targetname','').startswith('cremation_hecu_')]
+assert len(hecu)==12,len(hecu)
+assert {int(e['weapons']) for e in hecu}=={1,8,3,10,5,12}
+for e in hecu:
+    x,y,z=map(float,e['origin'].split())
+    assert output.clear((x,y,z+36),1)
+    assert math.dist((x,y),sp[:2])>=1050
+print('PASS: twelve Blood Cultist HECU with six native weapon loadouts.')

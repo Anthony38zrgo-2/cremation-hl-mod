@@ -5,6 +5,7 @@ from install_ricochet_assets import install as install_ricochet
 from install_bounce_assets import install as install_bounce
 from install_tfc_assets import install as install_tfc
 from install_horde_assets import install as install_horde
+from install_hecu_assets import install as install_hecu
 
 ROOT=Path(__file__).resolve().parents[2]
 MOD=ROOT/'Cremation'
@@ -27,6 +28,7 @@ def prepare():
     install_bounce()
     install_tfc()
     install_horde()
+    install_hecu()
     for file in ('config.cfg','default.cfg'):
         if not (MOD/file).exists(): shutil.copy2(ROOT/'valve'/file,MOD/file)
     # Preserve the user's existing controls, including their auxiliary configs.
@@ -158,6 +160,25 @@ def build():
         for mark,next_mark,point in ((first,second,patrol),(second,first,origin)):
             es.append(dict(classname='info_target',origin=vec(point),targetname=mark,target=next_mark,netname=target))
         placements.append(dict(patrol=[origin,patrol],id=i+1,classname=classname,origin=origin,distance_from_spawn=round(distance,1),direct_line_of_sight=False))
+    # Twelve armed cultists, with four supplied heads and native HECU weapons.
+    hecu=[]
+    occupied=[tuple(p['origin']) for p in placements]
+    for x in range(-1600,1185,96):
+        for y in range(-1408,1009,96):
+            if len(hecu)==12:break
+            z=bsp.floor(x,y,top=128)
+            if z is None or math.dist(SPAWN[:2],(x,y))<1050:continue
+            origin=(x,y,z+1)
+            if not bsp.clear((x,y,z+37),1):continue
+            if any(math.dist(origin,p)<144 for p in occupied):continue
+            if any(bsp.line_clear((SPAWN[0],SPAWN[1],SPAWN[2]+28),(x,y,z+h)) for h in (32,64)):continue
+            i=len(hecu)
+            weapons=(1,8,3,10,5,12)[i%6]
+            e=dict(classname='monster_human_grunt',origin=vec(origin),angles=f'0 {(i*137)%360} 0',
+                   targetname=f'cremation_hecu_{i+1:02}',weapons=str(weapons),spawnflags='32',netname=f'cultist_squad_{i//4}')
+            es.append(e);occupied.append(origin)
+            hecu.append(dict(origin=origin,weapons=weapons,head=i%4,targetname=e['targetname']))
+    assert len(hecu)==12,hecu
     # A ground-node network allows the inherited Ravenholm AI to route around corners.
     nodes=[]
     for x in range(-1760,1201,128):
@@ -172,7 +193,7 @@ def build():
             es.append(dict(classname='info_node',origin=vec(origin)))
             nodes.append(origin)
     bsp.write(MOD/'maps/rapidcore.bsp',es)
-    report=dict(shell_pickups=shell_pickups,name='Cremation',map='rapidcore',spawn=dict(origin=SPAWN,angles=(0,SPAWN_YAW,0)),loadout=loadout,zombies=placements,navigation_nodes=len(nodes),original_map_sha256=hashlib.sha256(bsp.data).hexdigest(),runtime_source=DONOR.name,validation='Static geometry and files only; manual gameplay validation pending.')
+    report=dict(hecu=hecu,shell_pickups=shell_pickups,name='Cremation',map='rapidcore',spawn=dict(origin=SPAWN,angles=(0,SPAWN_YAW,0)),loadout=loadout,zombies=placements,navigation_nodes=len(nodes),original_map_sha256=hashlib.sha256(bsp.data).hexdigest(),runtime_source=DONOR.name,validation='Static geometry and files only; manual gameplay validation pending.')
     (MOD/'placement.json').write_text(json.dumps(report,indent=2)+'\n')
     print('Built Cremation:',len(placements),'zombies;',len(nodes),'navigation nodes;',len(es),'entities')
     print('Closest zombie:',min(p['distance_from_spawn'] for p in placements),'units')
