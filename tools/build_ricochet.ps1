@@ -6,6 +6,12 @@ try {
     python ..\tools\generate_proxy_exports.py
     if ($LASTEXITCODE) { throw 'Export generation failed' }
     $compilerBase = 'cl /nologo /EHsc /std:c++17 /O2 /MT /DWIN32 /D_CRT_SECURE_NO_WARNINGS /I hlsdk\dlls /I hlsdk\engine /I hlsdk\common /I hlsdk\public /I hlsdk\pm_shared'
+    New-Item -ItemType Directory -Path build -Force | Out-Null
+    $configTestCommand = 'call "' + $sdkInit + '" >nul && ' + $compilerBase + ' /Fo:build\test_weapon_config.obj /Fe:build\test_weapon_config.exe test_weapon_config.cpp'
+    & cmd.exe /d /c $configTestCommand
+    if ($LASTEXITCODE) { throw 'Configuration test compilation failed' }
+    & .\build\test_weapon_config.exe
+    if ($LASTEXITCODE) { throw 'Configuration validation failed' }
     $testCommand = 'call "' + $sdkInit + '" >nul && ' + $compilerBase + ' /Fo:build\ /Fe:build\test_ricochet.exe test_ricochet.cpp bounce_shotgun.cpp'
     & cmd.exe /d /c $testCommand
     if ($LASTEXITCODE) { throw 'Test compilation failed' }

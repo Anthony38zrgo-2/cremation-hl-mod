@@ -20,6 +20,7 @@ extern const char* const WorldModel;  // models/cremation/w_bounce_shotgun.mdl
 struct Host {
     enginefuncs_t* engine = nullptr;
     globalvars_t* globals = nullptr;
+    int (*shells)(edict_t*, int spend) = nullptr; // shared native buckshot pool
     int (*spawn)(edict_t*) = nullptr;                    // Ravenholm pfnSpawn
     void (*sound)(edict_t*, const char*) = nullptr;
     void (*animation)(edict_t*, int sequence) = nullptr; // SVC_WEAPONANIM
@@ -30,6 +31,15 @@ struct Host {
 // Wiring. attach() is called once the engine/DLL pointers are known; every
 // other entry point is a safe no-op until then.
 void attach(const Host& host);
+bool isTfcPlayer(edict_t* player);
+void tfcPostThink(edict_t* player,int buttons);
+int tfcClip(edict_t* player);
+bool isSentry(edict_t* entity);
+bool engineerBuilding(edict_t* player);
+bool engineerOwnFreeze(edict_t* player);
+bool engineerCommand(edict_t* player,const char* command);
+bool engineerMetal(edict_t* pickup,edict_t* player);
+void setShellAmmoIndex(int index);
 void setMessageIds(int curWeapon, int ammoX);
 int carrierWeaponId();
 void precache();

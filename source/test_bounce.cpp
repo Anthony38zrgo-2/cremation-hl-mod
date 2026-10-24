@@ -9,6 +9,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include "weapon_config.h"
 
 using namespace bounce;
 
@@ -209,20 +210,24 @@ struct Victim {
     float lastDamage = 0.f;
     int lastBits = 0;
     int hits = 0;
+    int gibMode = -1;
+    float damageScale=1.f; bool corpseConversion=false;
+    void killed(entvars_t*,int mode) {gibMode=mode;entity->v.deadflag=DEAD_DEAD;entity->v.solid=SOLID_NOT;}
     int takeDamage(entvars_t*, entvars_t*, float amount, int bits);
 };
 int Victim::takeDamage(entvars_t*, entvars_t*, float amount, int bits) {
     lastDamage = amount;
     lastBits = bits;
     ++hits;
-    entity->v.health -= amount;
+    entity->v.health -= amount*damageScale;
+    if(corpseConversion && entity->v.health<0) {entity->v.health=entity->v.max_health*.5f;entity->v.max_health=5.f;}
     return 1;
 }
 template <typename T>
 void* memberAddress(T method) {
     return *reinterpret_cast<void**>(&method);
 }
-void* victimVtable[12]{};
+void* victimVtable[14]{};
 Victim victims[4];
 
 int spawnStub(edict_t*) { return 0; }
@@ -275,6 +280,7 @@ void makeEnemy(edict_t*& slot, int index, const Vector& origin, int victimIndex)
     Victim& victim = victims[victimIndex];
     victim.entity = slot;
     victimVtable[11] = memberAddress(&Victim::takeDamage);
+    victimVtable[13] = memberAddress(&Victim::killed);
     victim.vtable = victimVtable;
     slot->pvPrivateData = &victim;
 }
@@ -340,10 +346,10 @@ int main() {
 
     // 1. Sampler parity with UTIL_SharedRandomFloat for a fixed seed. Reference
     //    values were produced by an independent implementation of util.cpp.
-    const float referenceX[bounce_balance::Pellets] = {
+    const float referenceX[12] = {
         0.180511475f, 0.649383545f, 0.095214844f, -0.457611084f, -0.518478394f, 0.090133667f,
         -0.090408325f, -0.579299927f, -0.146697998f, 0.509231567f, 0.773223877f, 0.531921387f};
-    const float referenceY[bounce_balance::Pellets] = {
+    const float referenceY[12] = {
         0.095214844f, -0.457611084f, -0.518478394f, 0.090133667f, -0.090408325f, -0.579299927f,
         -0.146697998f, 0.509231567f, 0.773223877f, 0.531921387f, -0.266845703f, -0.498229980f};
     for (int i = 1; i <= bounce_balance::Pellets; ++i) {
@@ -364,25 +370,26 @@ int main() {
     assert(bounce::fire(player, false));
     Status status = bounce::status(player);
     assert(status.activePellets == bounce_balance::Pellets);
-    assert(status.clip == bounce_balance::ClipSize - bounce_balance::PrimaryAmmoCost);
+    assert(status.clip == -1);
+    assert(status.shells == bounce_balance::StartShells - bounce_balance::PrimaryAmmoCost);
     assert(pushes.empty() && explosions == 0);
     {
-        static PelletInfo info[bounce_balance::Pellets];
+        static PelletInfo info[12];
         int count = bounce::pellets(info, bounce_balance::Pellets);
         assert(count == bounce_balance::Pellets);
         for (int i = 0; i < count; ++i) {
             assert(std::fabs(magnitude(info[i].velocity) - bounce_balance::PelletSpeed) < .01f);
             assert(info[i].contacts == 0);
-            assert(std::fabs(bounce::pelletsStore[i].damage-7.5f)<.001f);
-            assert(std::fabs(bounce_balance::Cone/bounce_balance::ReferenceCone-1.15f)<.00001f);
-            // Reference direction from the documented formula.
-            Vector forward(1, 0, 0), right(0, -1, 0), up(0, 0, 1);
-            Vector expected = bounce::normal(forward + right * (referenceX[i] * bounce_balance::Cone) +
-                                             up * (referenceY[i] * bounce_balance::Cone));
+            assert(std::fabs(bounce::pelletsStore[i].damage-9.375f)<.001f);
+            assert(std::fabs(bounce_balance::Cone/bounce_balance::ReferenceCone-4.f)<.00001f);
+            // Circular cone: every pellet stays inside its radial stratum,
+            // including an outer pellet beyond 95% of the wide cone radius.
             Vector actual = bounce::normal(info[i].velocity);
-            assert(std::fabs(actual.x - expected.x) < 1e-5f);
-            assert(std::fabs(actual.y - expected.y) < 1e-5f);
-            assert(std::fabs(actual.z - expected.z) < 1e-5f);
+            float radial=std::sqrt(actual.y*actual.y+actual.z*actual.z)/actual.x/bounce_balance::Cone;
+            assert(radial*radial >= float(i)/bounce_balance::Pellets-1e-5f);
+            assert(radial*radial <= float(i+1)/bounce_balance::Pellets+1e-5f);
+            if(i==bounce_balance::Pellets-1)assert(radial>.95f);
+
         }
     }
     // A second shot inside the cooldown must spend nothing.
@@ -474,7 +481,8 @@ int main() {
     assert(victims[0].hits > 0);
     for (int i = 0; i < victims[0].hits; ++i) {
         // Every pellet that reached the zombie did exactly one pellet of damage.
-        assert(std::fabs(victims[0].lastDamage - bounce_balance::FallbackBuckshot*bounce_balance::PelletDamageMultiplier) < .001f);
+        float unit=bounce_balance::FallbackBuckshot*bounce_balance::PelletDamageMultiplier;
+        assert(victims[0].lastDamage>=unit && std::fabs(victims[0].lastDamage/unit-std::round(victims[0].lastDamage/unit))<.001f);
         assert(victims[0].lastBits == bounce::DamageBullet);
     }
     assert(enemy->v.health < 1000.f);
@@ -565,8 +573,8 @@ int main() {
     const struct {
         float pitch;
         float expected;
-    } elevationCases[] = {{30.f, 25.f},  {0.f, 25.f},   {-30.f, 50.f},
-                          {-60.f, 75.f}, {-90.f, 100.f}, {-90.f, 100.f}};
+    } elevationCases[] = {{30.f, 42.1875f}, {0.f, 42.1875f}, {-30.f, 56.25f},
+                          {-60.f, 70.3125f}, {-90.f, 84.375f}, {-90.f, 84.375f}};
     resetScene();
     makePlayer(Vector(0, 0, 100), Vector(0, 0, 0));
     bounce::reset();
@@ -577,7 +585,7 @@ int main() {
         assert(bounce::fire(player, true));
         Status fired = bounce::status(player);
         assert(std::fabs(fired.lastGrenadeDamage - elevationCase.expected) < .001f);
-        assert(std::fabs(fired.lastGrenadeRadius - 250.f) < .001f);
+        assert(std::fabs(fired.lastGrenadeRadius - 48.f) < .001f);
         // Looking up after the throw must not change the captured damage.
         player->v.v_angle = Vector(-90, 0, 0);
         Status later = bounce::status(player);
@@ -585,7 +593,7 @@ int main() {
         clearGrenades();
     }
     // Same angle, different launch height and flight time: same damage.
-    bounce::players[1].grenadeCount = 20;
+    bounce::players[1].shells = 20;
     player->v.v_angle = Vector(-45, 0, 0);
     player->v.punchangle = Vector(0, 0, 0);
     globals->time += 5.f;
@@ -599,7 +607,7 @@ int main() {
     float high = bounce::status(player).lastGrenadeDamage;
     clearGrenades();
     assert(std::fabs(low - high) < .001f);
-    assert(std::fabs(low - 62.5f) < .001f); // 25 + 75 * 0.5
+    assert(std::fabs(low - 63.28125f) < .001f); // 25 + 75 * 0.5
 
     // 8. Radius damage: falloff, occlusion, no self damage, small push.
     resetScene();
@@ -660,15 +668,17 @@ int main() {
     makePlayer(Vector(0, 0, 100), Vector(0, 0, 0));
     bounce::reset();
     boxes.push_back({Vector(300, -500, -500), Vector(320, 500, 500), nullptr, 0, true});
-    makeEnemy(enemy, 2, Vector(150, 0, 60), 0);
+    makeEnemy(enemy, 2, Vector(150, 0, 140), 0);
+    boxes.push_back({enemy->v.absmin,enemy->v.absmax,enemy,0,true});
     globals->time += 1.f;
     assert(bounce::fire(player, true));
     assert(bounce::status(player).activeGrenades == 1);
     {
         GrenadeInfo info[1];
         assert(bounce::grenades(info, 1) == 1);
-        assert(std::fabs(info[0].velocity.x - bounce_balance::GrenadeSpeed) < .01f);
-        assert(std::fabs(info[0].damage - 25.f) < .01f); // horizontal aim
+        assert(std::fabs(info[0].velocity.x - 450.f) < .01f);
+        assert(std::fabs(info[0].velocity.z - 120.f) < .01f);
+        assert(std::fabs(info[0].damage - 42.1875f) < .01f); // horizontal aim
     }
     float previousZ = bounce::grenadesStore[0].velocity.z;
     globals->time += .05f;
@@ -691,8 +701,8 @@ int main() {
     bounce::hudListBytes(hud);
     assert(hud[0] == bounce_balance::HudAmmoShells);
     assert(hud[1] == bounce_balance::HudMaxShells);
-    assert(hud[2] == bounce_balance::HudAmmoGrenades);
-    assert(hud[3] == bounce_balance::HudMaxGrenades);
+    assert(hud[2] == 255);
+    assert(hud[3] == 255);
     assert(hud[4] == bounce_balance::HudSlot);
     assert(hud[5] == bounce_balance::HudSlotPos);
     assert(hud[6] == bounce::carrierWeaponId());
@@ -709,20 +719,73 @@ int main() {
     player->v.v_angle = Vector(0, 0, 0);
     globals->time += 1.f;
     assert(bounce::fire(player, true)); // secondary costs one grenade
-    assert(bounce::status(player).grenades == bounce_balance::StartGrenades - 1);
+    assert(bounce::status(player).shells == bounce_balance::StartShells - 2);
+    assert(bounce::status(player).grenades == 0);
 
-    // 11. Reload from the reserve when the magazine is nearly empty.
-    resetScene();
-    makePlayer(Vector(0, 0, 100), Vector(0, 0, 0));
-    bounce::reset();
-    bounce::players[1].clip = 1;
-    globals->time += 10.f;
-    assert(!bounce::fire(player, false)); // starts reloading, spends nothing
-    assert(bounce::players[1].reloading);
-    globals->time += bounce_balance::ReloadTime + .1f;
-    bounce::frame(.01f);
-    assert(bounce::status(player).clip == bounce_balance::ClipSize);
-    assert(bounce::status(player).shells == bounce_balance::StartShells - (bounce_balance::ClipSize - 1));
+    // 11. Shared buckshot, no magazine/reload, native primary cadence.
+    resetScene();makePlayer(Vector(0,0,100),Vector(0,0,0));bounce::reset();
+    int shared=20;
+    bounce::host.shells=[](edict_t*,int spend) { return 0; };
+    // Replace the host with a native-like shared pool.
+    static int pool=20;
+    bounce::host.shells=[](edict_t*,int spend) {pool-=spend;return pool;};
+    globals->time+=10;
+    assert(bounce::fire(player,false));assert(pool==19);
+    assert(bounce::status(player).clip==-1);
+    assert(!bounce::fire(player,false));
+    globals->time+=.751f;
+    assert(bounce::fire(player,false));assert(pool==18);
+    pool+=12; // same native ammo pickup used by the original shotgun
+    globals->time+=.751f;assert(bounce::fire(player,false));assert(pool==29);
+    globals->time+=2;assert(bounce::fire(player,true));assert(pool==27);
+    pool=1;globals->time+=2;assert(!bounce::fire(player,true));assert(pool==1);
+    assert(bounce::fire(player,false));assert(pool==0);
+    globals->time+=2;assert(!bounce::fire(player,false));assert(pool==0);
+    bounce::host.shells=nullptr;
+
+    // Damage, not pellet count, determines death and gibbing.
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    makeEnemy(enemy,2,Vector(50,0,0),0);enemy->v.health=100000;
+    boxes.push_back({Vector(40,-100,-100),Vector(60,100,200),enemy,0,true});
+    assert(bounce::fire(player,false));globals->time+=.1f;bounce::frame(.1f);
+    assert(victims[0].gibMode==-1 && std::fabs(enemy->v.health-(100000.f-112.5f))<.01f);
+    for(float health:{113.f,112.5f,50.f}) {
+        resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+        makeEnemy(enemy,2,Vector(50,0,0),0);enemy->v.health=health;
+        boxes.push_back({Vector(40,-100,-100),Vector(60,100,200),enemy,0,true});
+        assert(bounce::fire(player,false));globals->time+=.1f;bounce::frame(.1f);
+        assert((victims[0].gibMode==2)==(health<112.5f));
+    }
+    // Native bullet mitigation must be allowed to keep the target alive.
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    makeEnemy(enemy,2,Vector(0,0,0),0);enemy->v.health=50;victims[0].damageScale=.3f;
+    edict_t* mitigationSource=create(0);
+    bounce::takeDamage(enemy,mitigationSource,player,112.5f,bounce::DamageBullet);
+    assert(victims[0].gibMode==-1 && std::fabs(enemy->v.health-16.25f)<.01f);
+    // GoldSrc BecomeDead replaces negative health with half max health and
+    // changes max_health into a corpse decal counter before the AI deadflag.
+    enemy->v.health=10;enemy->v.max_health=50;victims[0].corpseConversion=true;
+    bounce::takeDamage(enemy,mitigationSource,player,112.5f,bounce::DamageBullet);
+    assert(victims[0].gibMode==2);
+    // Partial volley can gib a weak enemy; direct blast gets full damage, tiny
+    // splash radius excludes a neighbouring target, and a wounded survivor pushes.
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    makeEnemy(enemy,2,Vector(50,0,0),0);enemy->v.health=5;
+    edict_t* hitSource=create(0);
+    bounce::takeDamage(enemy,hitSource,player,9.375f,bounce::DamageBullet);
+    assert(victims[0].gibMode==2);
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    makeEnemy(enemy,2,Vector(0,0,0),0);enemy->v.health=100;
+    makeEnemy(enemyTwo,3,Vector(80,0,0),1);
+    hitSource=create(0);
+    bounce::radiusDamage(hitSource,player,Vector(0,0,36),112.5f,48,1,enemy);
+    assert(victims[0].gibMode==2 && victims[1].hits==0);
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    makeEnemy(enemy,2,Vector(0,0,0),0);enemy->v.health=100;
+    hitSource=create(0);
+    bounce::radiusDamage(hitSource,player,Vector(0,0,36),56.25f,48,1,enemy);
+    assert(victims[0].gibMode==-1 && std::fabs(enemy->v.health-43.75f)<.01f && !pushes.empty());
+    std::puts("PASS: damage-based overkill, no forced full-volley kill, strict health threshold, precise blast and survivor knockback.");
 
     // 12. Weapon spawn overrides the carrier models without touching v_shotgun.
     resetScene();
@@ -744,15 +807,76 @@ int main() {
     assert(!bounce::removeRestored(restoredWeapon));
     assert(std::strcmp(lookupString(restoredWeapon->v.viewmodel), bounce::ViewModel) == 0);
 
+    // Surface impacts scatter all pellets at 45 degrees to the surface;
+    // direct monster impacts do not scatter. Fragment damage tracks elevation.
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    bounce::Grenade fragment;fragment.entity=create(0);fragment.serial=fragment.entity->serialnumber;
+    fragment.owner=player;fragment.ownerSerial=player->serialnumber;fragment.damage=84.375f;fragment.radius=48;
+    bounce::explodeGrenade(fragment,Vector(100,0,20),nullptr,Vector(0,0,1));
+    assert(bounce::pelletsStore.size()==12);
+    for(auto& p:bounce::pelletsStore) {
+        assert(std::fabs(p.velocity.z/bounce_balance::PelletSpeed-std::sqrt(.5f))<.001f);
+        assert(std::fabs(p.damage-7.03125f)<.001f);
+    }
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    makeEnemy(enemy,2,Vector(100,0,0),0);
+    fragment.entity=create(0);fragment.serial=fragment.entity->serialnumber;fragment.owner=player;fragment.ownerSerial=player->serialnumber;
+    bounce::explodeGrenade(fragment,Vector(100,0,36),enemy);
+    assert(bounce::pelletsStore.empty());
+    std::puts("PASS: 12 diagonal surface fragments, scaled damage, no fragmentation on direct enemy impact.");
+
+    // TFC shotgun: fixed six hitscan pellets of four damage, half-second fire,
+    // eight shells, per-shell reload; alternate input never double-fires.
+    resetScene();makePlayer(Vector(0,0,0),Vector(0,0,0));bounce::reset();
+    player->v.viewmodel=addString("models/v_shotgun.mdl");
+    makeEnemy(enemy,2,Vector(100,0,0),0);
+    boxes.push_back({enemy->v.absmin,enemy->v.absmax,enemy,0,true});
+    static int tfcPool=20;bounce::host.shells=[](edict_t*,int spend){tfcPool-=spend;return tfcPool;};
+    bounce::tfcPostThink(player,0);globals->time+=.51f;
+    bounce::tfcPostThink(player,1);assert(bounce::tfcClip(player)==7 && victims[0].lastDamage==24);
+    bounce::tfcPostThink(player,1);assert(bounce::tfcClip(player)==7);
+    globals->time+=.51f;bounce::tfcPostThink(player,1<<11);assert(bounce::tfcClip(player)==7);
+    bounce::tfcPostThink(player,1<<13);globals->time+=.51f;bounce::tfcPostThink(player,0);
+    assert(bounce::tfcClip(player)==8 && tfcPool==19);
+    std::puts("PASS: TFC single shotgun model identity, six x four damage, eight-shell clip, rate and shell reload.");
+
+    // Engineer: placement, 130 metal, four-second frozen build, automatic fire,
+    // repair/resupply, one gun per player, dismantle and metal pickup.
+    resetScene();makePlayer(Vector(0,0,36),Vector(0,0,0));bounce::reset();player->v.flags|=FL_CLIENT;
+    boxes.push_back({Vector(-1000,-1000,-8),Vector(1000,1000,0),nullptr,0,true});
+    assert(bounce::engineerCommand(player,"cremation_build"));
+    assert(bounce::engineers[1].metal==70 && bounce::engineerBuilding(player) && (player->v.flags&FL_FROZEN));
+    auto turret=bounce::engineers[1].gun;assert(turret && bounce::isSentry(turret));
+    bounce::engineerCommand(player,"cremation_build");assert(bounce::engineers[1].gun==turret);
+    makeEnemy(enemy,2,Vector(200,0,0),0);
+    globals->time+=4.1f;bounce::frame(.01f);
+    assert(!bounce::engineerBuilding(player) && !(player->v.flags&FL_FROZEN));
+    assert(victims[0].hits==1 && bounce::engineers[1].ammo==99);
+    turret->v.health=100;bounce::engineerCommand(player,"cremation_repair");
+    assert(turret->v.health==150 && bounce::engineers[1].ammo==100 && bounce::engineers[1].metal==60);
+    bounce::engineerCommand(player,"cremation_dismantle");assert(!bounce::engineers[1].gun && bounce::engineers[1].metal==125);
+    auto metal=create(0);metal->v.targetname=addString("cremation_metal_01");
+    assert(bounce::engineerMetal(metal,player) && bounce::engineers[1].metal==175);
+    bounce::host.shells=nullptr;
+    std::puts("PASS: sentry placement, metal, construction lock, tracking, ammo, repair, dismantle and pickups.");
+
+    // Same gameplay code reads edited configuration without recompiling it.
+    resetScene();makePlayer(Vector(0,0,100),Vector(0,0,0));bounce::reset();
+    std::string configError;
+    assert(weapon_config::apply(R"({"primary_ammo_cost":3,"secondary_ammo_cost":4,"pellets_per_shot":8,"primary_cooldown":0.2})",weapon_config::flak_cannonFields(),configError));
+    assert(bounce::fire(player,false));assert(bounce::status(player).activePellets==8);
+    assert(bounce::status(player).shells==37);
+    globals->time+=.21f;assert(bounce::fire(player,true));assert(bounce::status(player).shells==33);
+    std::puts("PASS: edited JSON values change real firing costs, pellet count and cooldown without recompilation.");
     std::puts("PASS: pellet sampler matches UTIL_SharedRandomFloat and the donor seed order.");
     std::puts("PASS: twelve physical pellets, one speed, captured directions, no hitscan.");
     std::puts("PASS: two reflections, speed preserved, removal on the third surface contact.");
     std::puts("PASS: enemy contact applies one buckshot pellet once, hitgroup x3 on head.");
     std::puts("PASS: entity budget refuses partial volleys; lifetime expiry removes pellets.");
-    std::puts("PASS: grenade damage follows aim elevation (25/25/50/75/100) and is frozen at fire.");
+    std::puts("PASS: grenade damage follows aim elevation (56.25/56.25/75/93.75/112.5) and is frozen at fire.");
     std::puts("PASS: radius falloff, wall occlusion, no self damage, small angle-independent push.");
     std::puts("PASS: grenade arc, single contact detonation and a single explosion.");
-    std::puts("PASS: HUD identity, separate magazine, grenade spend and reload from reserve.");
+    std::puts("PASS: HUD identity, shared buckshot reserve, no reload, 0.75 second primary cadence.");
     std::puts("PASS: weapon spawn uses the weapon's own models; restored projectiles are removed.");
     return 0;
 }

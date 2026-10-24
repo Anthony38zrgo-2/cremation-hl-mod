@@ -1,4 +1,36 @@
 {
+  "shell_pickups": [
+    [
+      -160,
+      800,
+      -312
+    ],
+    [
+      -1450,
+      350,
+      -312
+    ],
+    [
+      -850,
+      300,
+      -280
+    ],
+    [
+      -240,
+      100,
+      -280
+    ],
+    [
+      960,
+      0,
+      -280
+    ],
+    [
+      480,
+      -300,
+      -312
+    ]
+  ],
   "name": "Cremation",
   "map": "rapidcore",
   "spawn": {
@@ -24,6 +56,18 @@
   ],
   "zombies": [
     {
+      "patrol": [
+        [
+          -160,
+          800,
+          -319
+        ],
+        [
+          -32.0,
+          800.0,
+          -319
+        ]
+      ],
       "id": 1,
       "classname": "monster_zombie",
       "origin": [
@@ -35,6 +79,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          200,
+          880,
+          -319
+        ],
+        [
+          86.98270811405735,
+          940.092360036594,
+          -319
+        ]
+      ],
       "id": 2,
       "classname": "monster_zombie",
       "origin": [
@@ -46,6 +102,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          500,
+          700,
+          -319
+        ],
+        [
+          606.1168092870454,
+          771.5766916442556,
+          -319
+        ]
+      ],
       "id": 3,
       "classname": "monster_zombie",
       "origin": [
@@ -57,6 +125,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -550,
+          700,
+          -287
+        ],
+        [
+          -649.4746830664923,
+          780.5530100543792,
+          -287
+        ]
+      ],
       "id": 4,
       "classname": "monster_zombie",
       "origin": [
@@ -68,6 +148,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -1450,
+          350,
+          -319
+        ],
+        [
+          -1402.0503560427633,
+          468.6795333845488,
+          -319
+        ]
+      ],
       "id": 5,
       "classname": "monster_zombie",
       "origin": [
@@ -79,6 +171,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -1450,
+          -150,
+          -319
+        ],
+        [
+          -1367.723185960123,
+          -248.0536887192292,
+          -319
+        ]
+      ],
       "id": 6,
       "classname": "monster_zombie",
       "origin": [
@@ -90,6 +194,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -1250,
+          0,
+          -319
+        ],
+        [
+          -1276.6126964246732,
+          125.20289289392713,
+          -319
+        ]
+      ],
       "id": 7,
       "classname": "monster_zombie",
       "origin": [
@@ -101,6 +217,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -1350,
+          200,
+          -319
+        ],
+        [
+          -1385.2815815445758,
+          76.95850291989517,
+          -319
+        ]
+      ],
       "id": 8,
       "classname": "monster_zombie",
       "origin": [
@@ -112,6 +240,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -850,
+          300,
+          -287
+        ],
+        [
+          -847.7660919760277,
+          172.01949501998192,
+          -287
+        ]
+      ],
       "id": 9,
       "classname": "monster_zombie",
       "origin": [
@@ -123,6 +263,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -850,
+          -200,
+          -287
+        ],
+        [
+          -792.9755824519444,
+          -229.055391983331,
+          -287
+        ]
+      ],
       "id": 10,
       "classname": "monster_zombie",
       "origin": [
@@ -134,6 +286,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -800,
+          -480,
+          -287
+        ],
+        [
+          -736.9723038072187,
+          -491.1134833706835,
+          -287
+        ]
+      ],
       "id": 11,
       "classname": "monster_zombie",
       "origin": [
@@ -145,6 +309,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -240,
+          100,
+          -287
+        ],
+        [
+          -318.80466884168425,
+          -0.865376461660432,
+          -287
+        ]
+      ],
       "id": 12,
       "classname": "monster_zombie",
       "origin": [
@@ -156,6 +332,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          180,
+          100,
+          -287
+        ],
+        [
+          134.1289024582015,
+          -19.49829459164181,
+          -287
+        ]
+      ],
       "id": 13,
       "classname": "monster_zombie",
       "origin": [
@@ -167,6 +355,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          -240,
+          -300,
+          -319
+        ],
+        [
+          -112.3118015667425,
+          -308.9288286392481,
+          -319
+        ]
+      ],
       "id": 14,
       "classname": "monster_zombie",
       "origin": [
@@ -178,6 +378,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          180,
+          -300,
+          -319
+        ],
+        [
+          55.28063170748989,
+          -328.7937349560147,
+          -319
+        ]
+      ],
       "id": 15,
       "classname": "monster_zombie",
       "origin": [
@@ -189,6 +401,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          960,
+          0,
+          -287
+        ],
+        [
+          926.8711622268773,
+          -123.63850576500074,
+          -287
+        ]
+      ],
       "id": 16,
       "classname": "monster_zombie",
       "origin": [
@@ -200,6 +424,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          1100,
+          -400,
+          -287
+        ],
+        [
+          1104.46713557792,
+          -527.9220258584443,
+          -287
+        ]
+      ],
       "id": 17,
       "classname": "monster_zombie",
       "origin": [
@@ -211,6 +447,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          900,
+          -650,
+          -287
+        ],
+        [
+          1015.0456379262934,
+          -706.111506789002,
+          -287
+        ]
+      ],
       "id": 18,
       "classname": "monster_zombie",
       "origin": [
@@ -222,6 +470,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          480,
+          -300,
+          -319
+        ],
+        [
+          500.0236115251496,
+          -173.57589240382237,
+          -319
+        ]
+      ],
       "id": 19,
       "classname": "monster_zombie",
       "origin": [
@@ -233,6 +493,18 @@
       "direct_line_of_sight": false
     },
     {
+      "patrol": [
+        [
+          480,
+          100,
+          -319
+        ],
+        [
+          557.0323229634622,
+          202.22534528605348,
+          -319
+        ]
+      ],
       "id": 20,
       "classname": "monster_zombie",
       "origin": [
@@ -242,9 +514,469 @@
       ],
       "distance_from_spawn": 1701.7,
       "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1520,
+          0,
+          -319
+        ],
+        [
+          -1479.4286468728928,
+          -87.00554755551843,
+          -319
+        ]
+      ],
+      "id": 21,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1520,
+        0,
+        -319
+      ],
+      "distance_from_spawn": 2524.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1520,
+          112,
+          45
+        ],
+        [
+          -1615.868435336439,
+          117.02425179932267,
+          45
+        ]
+      ],
+      "id": 22,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1520,
+        112,
+        45
+      ],
+      "distance_from_spawn": 2597.1,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1520,
+          224,
+          -319
+        ],
+        [
+          -1395.8021470366725,
+          254.96600263675742,
+          -319
+        ]
+      ],
+      "id": 23,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1520,
+        224,
+        -319
+      ],
+      "distance_from_spawn": 2672.3,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1408,
+          0,
+          -319
+        ],
+        [
+          -1298.2825855101296,
+          65.92487358848692,
+          -319
+        ]
+      ],
+      "id": 24,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1408,
+        0,
+        -319
+      ],
+      "distance_from_spawn": 2439.0,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1296,
+          -224,
+          -319
+        ],
+        [
+          -1391.1225376611064,
+          -138.35128238606606,
+          -319
+        ]
+      ],
+      "id": 25,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1296,
+        -224,
+        -319
+      ],
+      "distance_from_spawn": 2209.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1296,
+          -112,
+          -319
+        ],
+        [
+          -1339.7785783456854,
+          8.280655460596307,
+          -319
+        ]
+      ],
+      "id": 26,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1296,
+        -112,
+        -319
+      ],
+      "distance_from_spawn": 2281.0,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1296,
+          336,
+          -319
+        ],
+        [
+          -1373.0323229634623,
+          438.2253452860534,
+          -319
+        ]
+      ],
+      "id": 27,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1296,
+        336,
+        -319
+      ],
+      "distance_from_spawn": 2595.8,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1296,
+          448,
+          -319
+        ],
+        [
+          -1422.4241075961777,
+          427.9763884748504,
+          -319
+        ]
+      ],
+      "id": 28,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1296,
+        448,
+        -319
+      ],
+      "distance_from_spawn": 2680.4,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1184,
+          -224,
+          -319
+        ],
+        [
+          -1212.055753394501,
+          -166.47718103685332,
+          -319
+        ]
+      ],
+      "id": 29,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1184,
+        -224,
+        -319
+      ],
+      "distance_from_spawn": 2123.1,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1184,
+          -112,
+          -319
+        ],
+        [
+          -1179.53286442208,
+          15.922025858444258,
+          -319
+        ]
+      ],
+      "id": 30,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1184,
+        -112,
+        -319
+      ],
+      "distance_from_spawn": 2197.4,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1184,
+          112,
+          -319
+        ],
+        [
+          -1294.8512516844082,
+          175.99999999999997,
+          -319
+        ]
+      ],
+      "id": 31,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1184,
+        112,
+        -319
+      ],
+      "distance_from_spawn": 2355.0,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1184,
+          224,
+          -319
+        ],
+        [
+          -1308.7193682925101,
+          252.7937349560148,
+          -319
+        ]
+      ],
+      "id": 32,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1184,
+        224,
+        -319
+      ],
+      "distance_from_spawn": 2437.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1184,
+          336,
+          -319
+        ],
+        [
+          -1267.9755557107849,
+          239.39717373148522,
+          -319
+        ]
+      ],
+      "id": 33,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1184,
+        336,
+        -319
+      ],
+      "distance_from_spawn": 2522.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1184,
+          448,
+          -319
+        ],
+        [
+          -1243.7491472958209,
+          425.06445122910077,
+          -319
+        ]
+      ],
+      "id": 34,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1184,
+        448,
+        -319
+      ],
+      "distance_from_spawn": 2609.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1072,
+          -112,
+          -287
+        ],
+        [
+          -1012.8964983687368,
+          -187.64903234624535,
+          -287
+        ]
+      ],
+      "id": 35,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -1072,
+        -112,
+        -287
+      ],
+      "distance_from_spawn": 2116.4,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -1072,
+          336,
+          -287
+        ],
+        [
+          -1016.9366621102996,
+          414.63859625174325,
+          -287
+        ]
+      ],
+      "id": 36,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -1072,
+        336,
+        -287
+      ],
+      "distance_from_spawn": 2452.3,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -960,
+          -112,
+          -287
+        ],
+        [
+          -868.6985744356653,
+          -141.66563145999498,
+          -287
+        ]
+      ],
+      "id": 37,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -960,
+        -112,
+        -287
+      ],
+      "distance_from_spawn": 2038.3,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -960,
+          336,
+          -287
+        ],
+        [
+          -867.9245055566527,
+          424.91627141875165,
+          -287
+        ]
+      ],
+      "id": 38,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -960,
+        336,
+        -287
+      ],
+      "distance_from_spawn": 2385.3,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -848,
+          -336,
+          -287
+        ],
+        [
+          -865.6407907722879,
+          -274.4792514599476,
+          -287
+        ]
+      ],
+      "id": 39,
+      "classname": "monster_fastzombie",
+      "origin": [
+        -848,
+        -336,
+        -287
+      ],
+      "distance_from_spawn": 1799.6,
+      "direct_line_of_sight": false
+    },
+    {
+      "patrol": [
+        [
+          -848,
+          0,
+          -287
+        ],
+        [
+          -821.3873035753268,
+          125.20289289392713,
+          -287
+        ]
+      ],
+      "id": 40,
+      "classname": "monster_poisionzombie",
+      "origin": [
+        -848,
+        0,
+        -287
+      ],
+      "distance_from_spawn": 2049.8,
+      "direct_line_of_sight": false
     }
   ],
-  "navigation_nodes": 186,
+  "navigation_nodes": 198,
   "original_map_sha256": "c96d75b16d8507dc996c49294aeda8bb7d5279a5930576aa5b6494e89d07f9bc",
   "runtime_source": "Half-Life2Classic_Ravenholm",
   "validation": "Static geometry and files only; manual gameplay validation pending."

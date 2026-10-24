@@ -20,6 +20,8 @@ static edict_t* create(int classname) {
     for(int i=8;i<64;++i)if(entities[i].free) {auto e=&entities[i];std::memset(e,0,sizeof(*e));e->serialnumber=i+100;e->v.classname=classname;return e;}
     return nullptr;
 }
+static unsigned char modelHeader[244]{};
+static void* modelPtr(edict_t*) {return modelHeader;}
 static void remove(edict_t* e) {e->free=true;}
 static bool emulateGlockSpawn=false;
 static int spawn(edict_t* e) {
@@ -28,6 +30,7 @@ static int spawn(edict_t* e) {
 }
 static void trace(const float* a,const float* b,int,edict_t*,TraceResult* tr) {
     *tr=TraceResult{};tr->flFraction=1;tr->vecEndPos=Vector(b[0],b[1],b[2]);
+    if(traceMode==2){tr->flFraction=.5f;return;}
     if(traceMode==1 && a[0]<200 && b[0]>=200) {
         tr->flFraction=(200-a[0])/(b[0]-a[0]);tr->pHit=&entities[2];
         tr->vecEndPos=Vector(200,a[1]+(b[1]-a[1])*tr->flFraction,a[2]+(b[2]-a[2])*tr->flFraction);
@@ -80,8 +83,8 @@ int main() {
     auto enemy=&entities[2];std::memset(enemy,0,sizeof(*enemy));enemy->serialnumber=2;enemy->v.flags=FL_MONSTER;enemy->v.health=50;enemy->v.takedamage=1;
     enemy->v.absmin=Vector(200,-16,0);enemy->v.absmax=Vector(232,16,72);enemy->v.framerate=1;enemy->v.movetype=MOVETYPE_STEP;
     FakeMonster target{};target.entity=enemy;enemy->pvPrivateData=&target;
-    assert(fire(player,false));assert(discs.size()==1);assert(std::fabs(length(discs[0].velocity)-1000)<.1f);
-    traceMode=1;advanceDiscs(.25f);assert(discs.empty());assert(slowed(enemy));assert(enemy->v.health==50);
+    assert(fire(player,false));assert(discs.size()==1);assert(std::fabs(length(discs[0].velocity)-750)<.1f);
+    traceMode=1;advanceDiscs(.3f);assert(discs.empty());assert(slowed(enemy));assert(enemy->v.health==50);
     assert(enemy->v.rendermode==kRenderTransTexture && enemy->v.rendercolor.z==255 && enemy->v.renderamt==175);
     hookThink(enemy);assert(std::fabs(walked-25)<.01f && std::fabs(thinkRate-.25f)<.001f);
     hookThink(enemy);assert(std::fabs(enemy->v.framerate-.25f)<.001f); // No cumulative slowdown.
@@ -98,12 +101,44 @@ int main() {
     state.time=9;lastFrame=state.time;hookStartFrame();assert(!slowed(enemy));assert(enemy->v.rendermode==kRenderNormal && enemy->v.framerate==1 && enemy->v.movetype==MOVETYPE_STEP);
     for(auto& d:discs)removeDisc(d);discs.clear();
     msgWeaponList=10;hookMessageBegin(MSG_ONE,10,nullptr,player);hookWriteString("weapon_9mmhandgun");for(int i=0;i<8;++i)hookWriteByte(0);hookMessageEnd();
-    assert((bytes==std::vector<int>{255,255,255,255,1,0,2,7}));
+    assert((bytes==std::vector<int>{balance::HudAmmoCharges,3,255,255,1,0,2,0}));
     hookMessageBegin(MSG_ONE,10,nullptr,player);hookWriteString("weapon_ricochet");
     for(int i=0;i<8;++i)hookWriteByte(0);hookMessageEnd();
-    assert((bytes==std::vector<int>{255,255,255,255,1,0,2,7}));
+    assert((bytes==std::vector<int>{balance::HudAmmoCharges,3,255,255,1,0,2,0}));
     msgCurWeapon=11;hookMessageBegin(MSG_ONE,11,nullptr,player);hookWriteByte(1);hookWriteByte(2);hookWriteByte(17);hookMessageEnd();assert(bytes[2]==255);
     hookClientCommand(player);assert(commandsSeen==1);
+    // Native shared reserve adapter spends the exact same buckshot array.
+    {
+        int native[64]{};native[7]=24;
+        player->pvPrivateData=native;ammoOffset=0;shotgunAmmoIndex=7;
+        assert(sharedShells(player,0)==24);assert(sharedShells(player,2)==22);
+        native[7]+=12;assert(sharedShells(player,0)==34);
+        assert(sharedShells(player,35)==-1 && native[7]==34);
+        player->pvPrivateData=nullptr;ammoOffset=-1;shotgunAmmoIndex=-1;
+    }
+    // Fast-zombie unsupported activities must never reach the native event
+    // dispatcher with a negative sequence index.
+    engine.pfnGetModelPtr=modelPtr;*reinterpret_cast<int*>(modelHeader+164)=9;
+    enemy->v.classname=str("monster_fastzombie");enemy->v.sequence=-1;
+    assert(hookModelPtr(enemy)==modelHeader && enemy->v.sequence==0);
+    enemy->v.sequence=4;hookModelPtr(enemy);assert(enemy->v.sequence==4);
+    enemy->v.classname=str("monster_zombie");
+    // Both disc types follow the owner's current aim (no automatic lock-on),
+    // including after a bounce, while preserving the new 750-unit speed.
+    traceMode=0;player->v.v_angle=Vector(0,90,0);
+    Projectile guided;guided.entity=&entities[8];entities[8].free=false;guided.entity->v.origin=Vector(100,0,64);
+    guided.owner=player;guided.velocity=Vector(750,0,0);guided.explosive=true;guided.bounces=1;
+    steer(guided,.1f);assert(guided.velocity.y>0 && std::fabs(length(guided.velocity)-750)<.01f);
+    player->v.v_angle=Vector(0,-90,0);steer(guided,.2f);assert(guided.velocity.y<0);
+    entities[8].free=true;player->v.v_angle=Vector(0,0,0);
+    // Three charges, no fourth shot, recharge while holstered and cap at three.
+    players[1].charges=3;state.time=20;
+    assert(fire(player,false));assert(fire(player,true));assert(fire(player,false));
+    assert(players[1].charges==0 && !fire(player,false));
+    state.time+=1.49f;recharge(players[1]);assert(players[1].charges==0);
+    state.time+=.02f;recharge(players[1]);assert(players[1].charges==1);
+    state.time+=10;recharge(players[1]);assert(players[1].charges==3);
+    for(auto& d:discs)removeDisc(d);discs.clear();
     // Bounce Shotgun wiring: the inherited crossbow inventory is rewritten to
     // the new weapon's own HUD identity, ammo indices and bucket position.
     {
@@ -140,8 +175,24 @@ int main() {
     players.fill(PlayerState{});player->v.button=Attack;hookPreThink(player);hookPostThink(player);assert(seenButtons==0 && discs.empty());
     state.time+=.5f;player->v.button=Attack;hookPreThink(player);hookPostThink(player);assert(discs.size()==1 && seenButtons==0);
     state.time+=.1f;player->v.button=Attack;hookPreThink(player);hookPostThink(player);assert(discs.size()==1);
-    player->v.viewmodel=str("models/v_shotgun.mdl");player->v.button=Attack;hookPreThink(player);hookPostThink(player);assert(seenButtons==Attack);
+    player->v.viewmodel=str("models/v_shotgun.mdl");player->v.button=Attack;hookPreThink(player);hookPostThink(player);assert(seenButtons==0);
     while(discs.size()<24)launch(player,0,false);assert(!fire(player,true));
+    {
+        // Cinematic-free patrol must yield to visibility, proximity or damage,
+        // retain combat ownership after losing sight, and ignore dead clients.
+        HordeProbe probe{enemy,enemy->serialnumber,enemy->v.origin,enemy->v.origin,state.time};
+        enemy->v.health=50;probe.initialHealth=50;player->v.health=100;
+        player->v.flags=FL_CLIENT;player->v.deadflag=DEAD_NO;
+        enemy->v.origin=Vector(0,0,0);player->v.origin=Vector(1000,0,0);
+        traceMode=2;assert(!hordeAlert(probe));
+        traceMode=0;assert(hordeAlert(probe));
+        traceMode=2;player->v.origin=Vector(300,0,0);assert(hordeAlert(probe));
+        player->v.origin=Vector(1000,0,0);enemy->v.health=49;assert(hordeAlert(probe));
+        enemy->v.health=50;probe.combat=true;assert(hordeAlert(probe));
+        probe.combat=false;player->v.health=0;traceMode=0;assert(!hordeAlert(probe));
+        player->v.health=100;player->v.flags=0;
+        std::puts("PASS: patrol yields to visible/nearby player or damage; combat stays native after lost sight.");
+    }
     std::puts("PASS: primary, homing hit, 7s slow, movement/animation scaling and blue transparency.");
     std::puts("PASS: 3-disc +/-7deg volley, <=12 damage, strong capped knockback, restoration/save snapshot.");
     std::puts("PASS: slot-2 HUD/selection, pistol suppression, cooldown, projectile cap and shotgun input.");

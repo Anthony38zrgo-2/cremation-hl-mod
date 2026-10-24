@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib, json, math, struct
 from collections import Counter
 from bsp import BSP
+from install_horde_assets import add_walk_activity
 
 ROOT=Path(__file__).resolve().parents[2]
 MOD=ROOT/'Cremation'
@@ -12,18 +13,32 @@ output=BSP(MOD/'maps/rapidcore.bsp')
 report=json.loads((MOD/'placement.json').read_text())
 counts=Counter(e['classname'] for e in output.entities)
 assert counts['monster_zombie']==20
-assert not any(e['classname'].startswith('monster_') and e['classname']!='monster_zombie' for e in output.entities)
+assert counts['monster_fastzombie']==10 and counts['monster_poisionzombie']==10
+assert counts['aiscripted_sequence']==0
+assert not any(e['classname']=='trigger_auto' and e.get('target','').startswith('cremation_patrol_') for e in output.entities)
+assert sum(e.get('targetname','').startswith('cremation_metal_') for e in output.entities)==6
 assert counts['info_player_start']==1 and counts['info_player_deathmatch']==0
 assert counts['item_suit']==1 and counts['weapon_ricochet']==1 and counts['weapon_shotgun']==1
 assert counts['weapon_bounce_shotgun']==1
-assert counts['ammo_9mmclip']==0 and counts['ammo_buckshot']==3
+assert counts['ammo_9mmclip']==0 and counts['ammo_buckshot']==9
 assert {e['classname'] for e in output.entities if e['classname'].startswith('weapon_')}=={'weapon_ricochet','weapon_shotgun','weapon_bounce_shotgun'}
 for i in range(1,15): assert source.lump(i)==output.lump(i),f'Geometry lump {i} changed'
 spawn=next(e for e in output.entities if e['classname']=='info_player_start')
 sp=tuple(map(float,spawn['origin'].split()))
 assert output.clear(sp,1)
 assert abs(output.floor(*sp[:2])+36-sp[2])<.1
-zombies=[e for e in output.entities if e['classname']=='monster_zombie']
+zombies=[e for e in output.entities if e['classname'] in ('monster_zombie','monster_fastzombie','monster_poisionzombie')]
+for e in zombies:
+    goals=[g for g in output.entities if g.get('netname')==e['targetname']]
+    assert len(goals)==2
+    initial=tuple(map(float,e['origin'].split()))
+    for goal in goals:
+        point=tuple(map(float,goal['origin'].split()))
+        assert goal['classname']=='info_target' and 'm_iszEntity' not in goal
+        assert math.dist(point,initial)<140 and math.dist(point[:2],sp[:2])>800
+        assert goal['target'] in {g['targetname'] for g in goals}
+    assert any(tuple(map(float,g['origin'].split()))==initial for g in goals)
+
 positions=[]
 for e in zombies:
     p=tuple(map(float,e['origin'].split())); positions.append(p)
@@ -38,14 +53,29 @@ for e in output.entities:
         p=tuple(map(float,e['origin'].split()))
         assert p[:2]==sp[:2] and sp[2]-36<p[2]<sp[2],e
         assert output.clear(p,0),e
+# The fast-zombie fix changes one activity integer in place. No table relocation
+# after textures: dedicated GoldSrc may omit that part of the model cache.
+fast_original=(DONOR/'models/zombie_fast.mdl').read_bytes()
+fast=(MOD/'models/zombie_fast.mdl').read_bytes()
+assert fast==add_walk_activity(fast_original) and len(fast)==len(fast_original)
+assert sum(a!=b for a,b in zip(fast,fast_original))==1
+horde_assets=json.loads((MOD/'horde-assets.json').read_text())
+entry=horde_assets['models/zombie_fast.mdl']
+assert entry['source_sha256']==hashlib.sha256(fast_original).hexdigest()
+assert entry['sha256']==hashlib.sha256(fast).hexdigest()
+for e in output.entities:
+    if e.get('targetname','').startswith('cremation_metal_'):
+        assert output.clear(tuple(map(float,e['origin'].split())),0)
 manifest={}
 ricochet_assets=json.loads((MOD/'ricochet-assets.json').read_text())
+ricochet_assets.update(json.loads((MOD/'tfc-assets.json').read_text()))
 for folder in ('dlls','cl_dlls','models','sound','sprites','events'):
     for path in (DONOR/folder).rglob('*'):
         if not path.is_file(): continue
         relative=path.relative_to(DONOR)
         selected_source=ROOT/ricochet_assets[relative.as_posix()] if relative.as_posix() in ricochet_assets else path
-        source_hash=hashlib.sha256(selected_source.read_bytes()).hexdigest()
+        expected_bytes=add_walk_activity(selected_source.read_bytes()) if relative.as_posix()=='models/zombie_fast.mdl' else selected_source.read_bytes()
+        source_hash=hashlib.sha256(expected_bytes).hexdigest()
         assert hashlib.sha256((MOD/relative).read_bytes()).hexdigest()==source_hash,relative
         manifest[relative.as_posix()]=source_hash
 for relative,source in ricochet_assets.items():
@@ -90,7 +120,8 @@ frame_type,origin_x,origin_y,frame_w,frame_h=struct.unpack_from('<5i',bounce_spr
 assert frame_type==0 and (frame_w,frame_h)==(128,32)
 assert len(bounce_sprite)==42+256*3+20+frame_w*frame_h
 descriptor=(MOD/'sprites/weapon_bounce_shotgun.txt').read_text()
-assert descriptor.splitlines()[0].strip()=='12' and descriptor.count('cremation_bounce_shotgun')==4
+assert descriptor.splitlines()[0].strip()=='10' and descriptor.count('cremation_bounce_shotgun')==4
+assert not any(line.split()[0]=='ammo2' for line in descriptor.splitlines()[1:] if line.split())
 # The weapon must not claim the shotgun/crossbow HUD bucket position and must
 # keep its own native carrier id, otherwise the HUD/selection wiring breaks.
 balance=(MOD/'source/bounce_shotgun_balance.h').read_text()
@@ -112,7 +143,7 @@ original_dll=pefile.PE(str(MOD/'dlls/hl_ravenholm.dll'))
 original_names={e.name.decode() for e in original_dll.DIRECTORY_ENTRY_EXPORT.symbols if e.name}
 assert original_names.issubset(export_names)
 assert 'weapon_ricochet' in export_names and 'cremation_disc' in export_names
-for name in ('weapon_bounce_shotgun','cremation_pellet','cremation_grenade'):
+for name in ('weapon_bounce_shotgun','cremation_pellet','cremation_grenade','cremation_sentry','cremation_sentry_base'):
     assert name in export_names,name
 assert custom_dll.FILE_HEADER.Machine==0x14c
 # Reproduce hw.dll's legacy raw-file parser: it translates every name RVA with
@@ -141,7 +172,7 @@ export_data=(MOD/'dlls/hl.dll').read_bytes()
 for name in ('monster_zombie','item_suit','weapon_9mmhandgun','weapon_shotgun','weapon_crossbow','ammo_9mmclip','ammo_buckshot','info_node'):
     assert name.encode()+b'\0' in export_data,name
 (MOD/'file-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-print('PASS: 20 Ravenholm zombies; one clear spawn; suit + Ricochet + shotgun + Bounce Shotgun + buckshot.')
+print('PASS: 40 Ravenholm zombies (normal/fast/poison); one clear spawn; suit + Ricochet + shotgun + Bounce Shotgun + buckshot.')
 print('PASS: the three weapons are separate BSP entities with separate HUD slots.')
 print('PASS: standing hulls, floor contact, spacing >96, start distance >1000, no direct visibility.')
 print('PASS: all 14 non-entity BSP lumps unchanged; donor assets + overrides match their sources.')

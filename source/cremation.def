@@ -8,6 +8,8 @@ EXPORTS
     weapon_bounce_shotgun
     cremation_pellet
     cremation_grenade
+    cremation_sentry
+    cremation_sentry_base
     forward_0
     forward_1
     forward_2

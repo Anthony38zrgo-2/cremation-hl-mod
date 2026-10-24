@@ -48,7 +48,7 @@ def draw_icon() -> Image.Image:
         font = ImageFont.truetype('C:/Windows/Fonts/arialbd.ttf', 14)
     except OSError:  # pragma: no cover - font is present on this host
         font = ImageFont.load_default()
-    draw.text((82, 7), 'BNC', font=font, fill=255)
+    draw.text((78, 7), 'FLAK', font=font, fill=255)
     return image
 
 
@@ -63,7 +63,7 @@ def write_sprite(image: Image.Image) -> None:
 def write_descriptor() -> None:
     # Same layout the legacy client reads for every weapon (see ammo.cpp,
     # WeaponsResource::LoadWeaponSprites): one entry set per resolution.
-    lines = ['12']
+    lines = ['10']
     for resolution, ammo, ammo2 in (
         ('320', '320hud2 76 72 18 18', '320hud2 36 16 18 18'),
         ('640', '640hud7 24 96 24 24', '640hud7 48 72 24 24'),
@@ -71,7 +71,6 @@ def write_descriptor() -> None:
         lines.append(f'weapon\t\t\t{resolution} {SPRITE_NAME} 0 0 128 32')
         lines.append(f'weapon_s\t\t{resolution} {SPRITE_NAME} 0 0 128 32')
         lines.append(f'ammo\t\t\t{resolution} {ammo}')
-        lines.append(f'ammo2\t\t\t{resolution} {ammo2}')
         lines.append(f'crosshair\t\t{resolution} crosshairs 0 48 24 24')
         lines.append(f'autoaim\t\t\t{resolution} crosshairs 48 72 24 24')
     TEXT_PATH.write_text('\n'.join(lines) + '\n')

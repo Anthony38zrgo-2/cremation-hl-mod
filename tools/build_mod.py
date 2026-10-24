@@ -3,6 +3,8 @@ import shutil, json, hashlib, math, re
 from bsp import BSP
 from install_ricochet_assets import install as install_ricochet
 from install_bounce_assets import install as install_bounce
+from install_tfc_assets import install as install_tfc
+from install_horde_assets import install as install_horde
 
 ROOT=Path(__file__).resolve().parents[2]
 MOD=ROOT/'Cremation'
@@ -23,6 +25,8 @@ def prepare():
         shutil.copy2(DONOR/file,MOD/file)
     install_ricochet()
     install_bounce()
+    install_tfc()
+    install_horde()
     for file in ('config.cfg','default.cfg'):
         if not (MOD/file).exists(): shutil.copy2(ROOT/'valve'/file,MOD/file)
     # Preserve the user's existing controls, including their auxiliary configs.
@@ -33,7 +37,15 @@ def prepare():
     config_path=MOD/'config.cfg'
     config_text=config_path.read_text()
     config_text=re.sub(r'(?m)^cl_lw\s+[^\r\n]*','cl_lw "0"',config_text)
+    for key,command in [('b','cremation_build'),('n','cremation_dismantle'),('j','cremation_repair')]:
+        if not re.search(r'(?im)^bind\s+"?'+key+r'"?\s',config_text):config_text+=f'\nbind "{key}" "{command}"\n'
     config_path.write_text(config_text)
+    (MOD/'engineer.cfg').write_text('''// Run once to assign the engineer actions.\nbind b cremation_build\nbind n cremation_dismantle\nbind j cremation_repair\n''')
+    defaults=MOD/'default.cfg'
+    default_text=defaults.read_text()
+    for key,command in [('b','cremation_build'),('n','cremation_dismantle'),('j','cremation_repair')]:
+        if not re.search(r'(?im)^bind\s+"?'+key+r'"?\s',default_text):default_text+=f'\nbind "{key}" "{command}"\n'
+    defaults.write_text(default_text)
     (MOD/'maps').mkdir(exist_ok=True)
     (MOD/'liblist.gam').write_text('''game "Cremation"
 developer "Cremation"
@@ -76,8 +88,32 @@ def build():
     loadout=['item_suit','weapon_ricochet','weapon_shotgun','weapon_bounce_shotgun']+['ammo_buckshot']*3
     for i,classname in enumerate(loadout):
         es.append(dict(classname=classname,origin=gear_origin,angles=f'0 {SPAWN_YAW} 0',targetname=f'cremation_loadout_{i+1:02}'))
+    # Six shell boxes in separate safe standing areas across the map.
+    shell_pickups=[]
+    for n,(x,y) in enumerate([POSITIONS[i] for i in (0,4,8,11,15,18)]):
+        z=bsp.floor(x,y,top=128)
+        assert z is not None and bsp.clear((x,y,z+37),1)
+        origin=(x,y,z+8)
+        es.append(dict(classname='ammo_buckshot',origin=vec(origin),targetname=f'cremation_shells_{n+1:02}'))
+        shell_pickups.append(origin)
+        for dx,dy in ((32,0),(-32,0),(0,32),(0,-32),(0,0)):
+            if bsp.clear((x+dx,y+dy,z+8),0):
+                es.append(dict(classname='item_battery',origin=vec((x+dx,y+dy,z+8)),targetname=f'cremation_metal_{n+1:02}'))
+                break
+    positions=list(POSITIONS)
+    # Pick 20 extra reachable standing areas, preserving the original exclusion zone.
+    for x in range(-1632,1185,112):
+        for y in range(-1568,1009,112):
+            if len(positions)>=40:break
+            z=bsp.floor(x,y,top=128)
+            if z is None or math.dist(SPAWN[:2],(x,y))<=1000:continue
+            if any(math.dist((x,y),p)<112 for p in positions):continue
+            if not bsp.clear((x,y,z+37),1):continue
+            if any(bsp.line_clear((SPAWN[0],SPAWN[1],SPAWN[2]+28),(x,y,z+h)) for h in (1,33,65)):continue
+            positions.append((x,y))
+    assert len(positions)==40,len(positions)
     placements=[]
-    for i,(x,y) in enumerate(POSITIONS):
+    for i,(x,y) in enumerate(positions):
         floor_z=bsp.floor(x,y,top=128)
         assert floor_z is not None, (x,y,'no standing floor')
         origin=(x,y,floor_z+1)
@@ -87,8 +123,41 @@ def build():
         for eye in (32,64):
             assert not bsp.line_clear((SPAWN[0],SPAWN[1],SPAWN[2]+28),(x,y,floor_z+eye)),(origin,'visible from spawn')
         yaw=(i*137+35)%360
-        es.append(dict(classname='monster_zombie',origin=vec(origin),angles=f'0 {yaw} 0',targetname=f'cremation_zombie_{i+1:02}',spawnflags='0'))
-        placements.append(dict(id=i+1,classname='monster_zombie',origin=origin,distance_from_spawn=round(distance,1),direct_line_of_sight=False))
+        classname='monster_zombie' if i<20 else ('monster_fastzombie' if i%2==0 else 'monster_poisionzombie')
+        target=f'cremation_zombie_{i+1:02}'
+        es.append(dict(classname=classname,origin=vec(origin),angles=f'0 {yaw} 0',targetname=target,spawnflags='0'))
+        # Native route following toward the spawn starts one second after spawn.
+        # No NoInterrupt flag: seeing/being attacked by player/turret can break it.
+        patrol=None
+        for radius in ((64,96,128) if i in (9,10,38) else (128,96,64)):
+            for angle in (range(180,540,45) if i in (9,10,38) else range(0,360,45)):
+                a=math.radians(angle+i*17)
+                qx,qy=x+math.cos(a)*radius,y+math.sin(a)*radius
+                qz=bsp.floor(qx,qy,top=128)
+                if qz is None or abs(qz-floor_z)>8:continue
+                # Native route building includes other monster hulls. Do not
+                # start a patrol through another zombie's initial footprint.
+                blocked=False
+                for ox,oy in positions:
+                    if (ox,oy)==(x,y):continue
+                    t=max(0,min(1,((ox-x)*(qx-x)+(oy-y)*(qy-y))/(radius*radius)))
+                    if math.dist((ox,oy),(x+(qx-x)*t,y+(qy-y)*t))<56:
+                        blocked=True;break
+                if blocked:continue
+                goal=(qx,qy,qz+1)
+                steps=math.ceil(radius/8)
+                if all(bsp.clear((x+(qx-x)*t/steps,y+(qy-y)*t/steps,origin[2]+(goal[2]-origin[2])*t/steps+36),1)
+                       and not bsp.clear((x+(qx-x)*t/steps,y+(qy-y)*t/steps,origin[2]+(goal[2]-origin[2])*t/steps-3),0) for t in range(steps+1)):
+                    patrol=goal;break
+            if patrol:break
+        assert patrol,(i,origin,'no physical patrol')
+        if i==9:
+            es[-1]['angles']=f'0 {math.degrees(math.atan2(patrol[1]-y,patrol[0]-x)):g} 0'
+        # Passive waypoints never possess monsters or override native combat.
+        first=f'cremation_patrol_{i+1:02}_0';second=f'cremation_patrol_{i+1:02}_1'
+        for mark,next_mark,point in ((first,second,patrol),(second,first,origin)):
+            es.append(dict(classname='info_target',origin=vec(point),targetname=mark,target=next_mark,netname=target))
+        placements.append(dict(patrol=[origin,patrol],id=i+1,classname=classname,origin=origin,distance_from_spawn=round(distance,1),direct_line_of_sight=False))
     # A ground-node network allows the inherited Ravenholm AI to route around corners.
     nodes=[]
     for x in range(-1760,1201,128):
@@ -103,7 +172,7 @@ def build():
             es.append(dict(classname='info_node',origin=vec(origin)))
             nodes.append(origin)
     bsp.write(MOD/'maps/rapidcore.bsp',es)
-    report=dict(name='Cremation',map='rapidcore',spawn=dict(origin=SPAWN,angles=(0,SPAWN_YAW,0)),loadout=loadout,zombies=placements,navigation_nodes=len(nodes),original_map_sha256=hashlib.sha256(bsp.data).hexdigest(),runtime_source=DONOR.name,validation='Static geometry and files only; manual gameplay validation pending.')
+    report=dict(shell_pickups=shell_pickups,name='Cremation',map='rapidcore',spawn=dict(origin=SPAWN,angles=(0,SPAWN_YAW,0)),loadout=loadout,zombies=placements,navigation_nodes=len(nodes),original_map_sha256=hashlib.sha256(bsp.data).hexdigest(),runtime_source=DONOR.name,validation='Static geometry and files only; manual gameplay validation pending.')
     (MOD/'placement.json').write_text(json.dumps(report,indent=2)+'\n')
     print('Built Cremation:',len(placements),'zombies;',len(nodes),'navigation nodes;',len(es),'entities')
     print('Closest zombie:',min(p['distance_from_spawn'] for p in placements),'units')

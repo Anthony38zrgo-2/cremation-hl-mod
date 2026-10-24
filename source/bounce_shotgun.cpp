@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <memory>
 #include "bounce_shotgun_balance.h"
 #include "bounce_shotgun.h"
 
@@ -37,6 +38,7 @@ Host host{};
 enginefuncs_t* eng = nullptr;
 globalvars_t* globals = nullptr;
 int msgCurWeapon = 0, msgAmmoX = 0;
+int shellAmmoIndex = HudAmmoShells;
 int fireballSprite = 0, smokeSprite = 0, trailSprite = 0;
 int viewModelString = -1, playerModelString = -1;
 
@@ -142,7 +144,23 @@ void takeDamage(edict_t* victim, edict_t* inflictor, edict_t* attacker, float am
     if (!victim->v.takedamage || amount <= 0.f) return;
     auto table = *reinterpret_cast<void***>(victim->pvPrivateData);
     auto fn = reinterpret_cast<TakeDamageFn>(table[11]);
+    bool wasAlive=aliveEnemy(victim);
+    float healthBefore=victim->v.health;
+    float maxHealthBefore=victim->v.max_health;
+    int serial=victim->serialnumber;
     fn(victim->pvPrivateData, &inflictor->v, &attacker->v, amount, bits);
+    // Keep native damage mitigation (notably zombie bullet resistance). Only
+    // promote an actual lethal hit to gibs; never manufacture lethal damage.
+    // Native Killed may replace negative health with corpse health, so also
+    // recognize a real transition to DEAD_* after damage exceeding live health.
+    if(OverkillGib && wasAlive && valid(victim) && victim->serialnumber==serial &&
+       victim->pvPrivateData && amount>healthBefore &&
+       (victim->v.health<0 || victim->v.deadflag!=DEAD_NO ||
+        (maxHealthBefore!=5.f && victim->v.max_health==5.f && victim->v.health==maxHealthBefore*.5f))) {
+        using KilledFn=void(__thiscall*)(void*,entvars_t*,int);
+        auto deathTable=*reinterpret_cast<void***>(victim->pvPrivateData);
+        reinterpret_cast<KilledFn>(deathTable[13])(victim->pvPrivateData,&attacker->v,2);
+    }
 }
 float hitgroupScale(int hitgroup) {
     switch (hitgroup) {
@@ -189,7 +207,15 @@ bool isWorld(edict_t* e) { return !e || eng->pfnIndexOfEdict(e) == 0; }
 // ---------------------------------------------------------------------------
 // Pellets
 // ---------------------------------------------------------------------------
+struct Volley {}; // identity token; no pellet-count kill rule
+struct PendingHit {
+    edict_t* target; int serial; edict_t* owner; int ownerSerial;
+    float damage; std::shared_ptr<Volley> volley;
+};
+std::vector<PendingHit> pendingHits;
 struct Pellet {
+    std::shared_ptr<Volley> volley;
+
     edict_t* entity = nullptr;
     int serial = 0;
     edict_t* owner = nullptr;
@@ -206,8 +232,30 @@ std::vector<Pellet> pelletsStore;
 void damagePelletTarget(Pellet& pellet, edict_t* victim, const TraceResult& tr) {
     float amount = pellet.damage;
     if (aliveEnemy(victim)) amount *= hitgroupScale(tr.iHitgroup);
-    takeDamage(victim, pellet.entity, pellet.owner, amount, DamageBullet);
+    if((victim->v.flags&FL_MONSTER) && pellet.volley) {
+        pendingHits.push_back({victim,victim->serialnumber,pellet.owner,pellet.ownerSerial,amount,pellet.volley});
+    } else takeDamage(victim, pellet.entity, pellet.owner, amount, DamageBullet);
+
     pellet.consumed = true;
+}
+
+void flushPelletDamage() {
+    // Resolve after every pellet has traced this simulation step. A lethal early
+    // pellet must not remove the target hull before its volley companions trace.
+    for(size_t i=0;i<pendingHits.size();++i) {
+        auto& hit=pendingHits[i];
+        if(hit.damage<=0 || !valid(hit.target)||hit.target->serialnumber!=hit.serial ||
+           !valid(hit.owner)||hit.owner->serialnumber!=hit.ownerSerial)continue;
+        float total=hit.damage;
+        for(size_t j=i+1;j<pendingHits.size();++j) {
+            auto& other=pendingHits[j];
+            if(other.target==hit.target && other.serial==hit.serial && other.owner==hit.owner && other.volley==hit.volley) {
+                total+=other.damage;other.damage=0;
+            }
+        }
+        takeDamage(hit.target,hit.owner,hit.owner,total,DamageBullet);
+    }
+    pendingHits.clear();
 }
 
 void advancePellets(float dt) {
@@ -282,6 +330,7 @@ void advancePellets(float dt) {
         }
         if (pellet.entity && exhausted) destroy(pellet.entity, pellet.serial);
     }
+    flushPelletDamage();
     pelletsStore.erase(std::remove_if(pelletsStore.begin(), pelletsStore.end(),
                                       [](const Pellet& p) { return !p.entity; }),
                        pelletsStore.end());
@@ -381,7 +430,7 @@ void sendExplosionEffect(const Vector& at, int scale) {
 // and falloff. TraceAttack would need the DLL multi-damage flush, so damage is
 // applied with TakeDamage using the same adjusted amount.
 void radiusDamage(edict_t* inflictor, edict_t* owner, const Vector& at, float damage,
-                  float radius, float pushScale) {
+                  float radius, float pushScale, edict_t* directHit = nullptr) {
     if (!eng->pfnFindEntityInSphere) return;
     float falloff = radius > 0.f ? damage / radius : 1.f;
     Vector source = at;
@@ -407,7 +456,7 @@ void radiusDamage(edict_t* inflictor, edict_t* owner, const Vector& at, float da
         }
         Vector end(tr.vecEndPos);
         float distance = length(source - end);
-        float adjusted = damage - distance * falloff;
+        float adjusted = entity==directHit ? damage : damage - distance * falloff;
         if (adjusted <= 0.f) continue;
         takeDamage(entity, inflictor, owner, adjusted, DamageBlast);
         if (host.push && aliveEnemy(entity)) {
@@ -420,13 +469,30 @@ void radiusDamage(edict_t* inflictor, edict_t* owner, const Vector& at, float da
     }
 }
 
-void explodeGrenade(Grenade& grenade, const Vector& at) {
+void scatterShrapnel(const Grenade& grenade,const Vector& at,const Vector& plane) {
+    if(!SecondaryShrapnel || !hasEntityBudget(Pellets,int(pelletsStore.size())))return;
+    Vector n=normal(plane), tangent=normal(std::fabs(n.z)<.9f?Vector(-n.y,n.x,0):Vector(1,0,0));
+    Vector bitangent(n.y*tangent.z-n.z*tangent.y,n.z*tangent.x-n.x*tangent.z,n.x*tangent.y-n.y*tangent.x);
+    auto volley=std::make_shared<Volley>();size_t first=pelletsStore.size();
+    for(int i=0;i<Pellets;++i) {
+        float angle=2*Pi*i/float(Pellets);
+        Vector diagonal=normal(n+tangent*std::cos(angle)+bitangent*std::sin(angle));
+        if(spawnPellet(grenade.owner,at+n*2.f,diagonal,grenade.damage/float(Pellets)*SecondaryShrapnelDamage))pelletsStore.back().volley=volley;
+    }
+    if(pelletsStore.size()-first<size_t(Pellets)) {
+        for(size_t i=first;i<pelletsStore.size();++i)destroy(pelletsStore[i].entity,pelletsStore[i].serial);
+        pelletsStore.resize(first);
+    }
+}
+void explodeGrenade(Grenade& grenade, const Vector& at, edict_t* directHit = nullptr,Vector plane=Vector(0,0,1)) {
     if (!valid(grenade.entity)) {
         grenade.entity = nullptr;
         return;
     }
+    bool hitEnemy=valid(directHit) && (directHit->v.flags&FL_MONSTER);
     sendExplosionEffect(at, grenade.scale);
-    radiusDamage(grenade.entity, grenade.owner, at, grenade.damage, grenade.radius, 1.f);
+    radiusDamage(grenade.entity, grenade.owner, at, grenade.damage, grenade.radius, 1.f,directHit);
+    if(!hitEnemy)scatterShrapnel(grenade,at,plane);
     destroy(grenade.entity, grenade.serial);
 }
 
@@ -480,7 +546,7 @@ void advanceGrenades(float dt) {
             // radius test, so the explosion never starts inside the surface.
             Vector plane(tr.vecPlaneNormal);
             if (length(plane) > .1f) at = at + normal(plane) * ExplosionSurfaceOffset;
-            explodeGrenade(grenade, at);
+            explodeGrenade(grenade, at,valid(tr.pHit)&&tr.pHit->v.takedamage?tr.pHit:nullptr,length(plane)>.1f?normal(plane):Vector(0,0,1));
             break;
         }
         if (grenade.entity && exhausted) explodeGrenade(grenade, grenade.entity->v.origin);
@@ -495,19 +561,15 @@ void advanceGrenades(float dt) {
 // ---------------------------------------------------------------------------
 struct PlayerState {
     unsigned int seed = 0;
-    int clip = ClipSize;
+    int clip = -1;
     int shells = StartShells;
-    int grenadeCount = StartGrenades;
     float nextPrimary = 0;
     float nextSecondary = 0;
-    float reloadEnd = 0;
     float animUntil = 0;
-    bool reloading = false;
     bool owns = false;
     bool wasActive = false;
     int sentClip = -1;
     int sentShells = -1;
-    int sentGrenades = -1;
     float lastGrenadeDamage = 0;
     float lastGrenadeRadius = 0;
     float lastGrenadeElevation = -1;
@@ -523,6 +585,8 @@ void sendAmmo(edict_t* player, int index, int count) {
     eng->pfnMessageEnd();
 }
 
+int shellReserve(edict_t* player, PlayerState& state);
+
 void sendState(edict_t* player) {
     if (!ready() || !valid(player)) return;
     int i = playerIndex(player);
@@ -535,11 +599,9 @@ void sendState(edict_t* player) {
         eng->pfnWriteByte(state.clip);
         eng->pfnMessageEnd();
     }
-    sendAmmo(player, HudAmmoShells, state.shells);
-    sendAmmo(player, HudAmmoGrenades, state.grenadeCount);
+    sendAmmo(player, shellAmmoIndex, shellReserve(player,state));
     state.sentClip = state.clip;
     state.sentShells = state.shells;
-    state.sentGrenades = state.grenadeCount;
 }
 
 void overridePlayerModels(edict_t* player) {
@@ -551,27 +613,14 @@ void overridePlayerModels(edict_t* player) {
     if (player->v.weaponmodel != playerModelString) player->v.weaponmodel = playerModelString;
 }
 
-void startReload(edict_t* player, PlayerState& state) {
-    if (state.reloading || state.shells <= 0) return;
-    state.reloading = true;
-    state.reloadEnd = globals->time + ReloadTime;
-    state.nextPrimary = std::max(state.nextPrimary, state.reloadEnd);
-    host.animation(player, AnimStartReload);
-    if (host.sound) host.sound(player, "weapons/reload1.wav");
-    state.animUntil = globals->time + .5f;
+int shellReserve(edict_t* player, PlayerState& state) {
+    if(host.shells)state.shells=host.shells(player,0);
+    return state.shells;
 }
-
 bool firePellets(edict_t* player, PlayerState& state) {
-    if (state.reloading) return false;
-    if (state.clip < PrimaryAmmoCost) {
-        if (state.shells > 0) {
-            startReload(player, state);
-        } else {
-            // Dry magazine: same feedback as the donor's PlayEmptySound.
-            if (host.sound) host.sound(player, "weapons/357_cock1.wav");
-            state.nextPrimary = globals->time + .15f;
-        }
-        return false;
+    if(shellReserve(player,state)<PrimaryAmmoCost) {
+        if(host.sound)host.sound(player,"weapons/357_cock1.wav");
+        state.nextPrimary=globals->time+.15f;return false;
     }
     if (!hasEntityBudget(Pellets, int(pelletsStore.size()))) return false;
     float damage = skillValue(BuckshotSkill, FallbackBuckshot) * PelletDamageMultiplier;
@@ -584,11 +633,13 @@ bool firePellets(edict_t* player, PlayerState& state) {
     if (startTrace.flFraction < 1.f) muzzle = Vector(startTrace.vecEndPos) - forward;
     unsigned int seed = state.seed ? state.seed : (unsigned int)(globals->time * 1000.f);
     size_t firstPellet = pelletsStore.size();
+    auto volley=std::make_shared<Volley>();
     for (int i = 1; i <= Pellets; ++i) {
-        float x = sharedRandomFloat(seed + i, -.5f, .5f) + sharedRandomFloat(seed + 1 + i, -.5f, .5f);
-        float y = sharedRandomFloat(seed + 2 + i, -.5f, .5f) + sharedRandomFloat(seed + 3 + i, -.5f, .5f);
+        float radius=std::sqrt((i-1+sharedRandomFloat(seed+2*i,0.f,1.f))/float(Pellets));
+        float angle=2.f*Pi*sharedRandomFloat(seed+2*i+1,0.f,1.f);
+        float x=radius*std::cos(angle), y=radius*std::sin(angle);
         Vector direction = normal(forward + right * (x * Cone) + up * (y * Cone));
-        spawnPellet(player, muzzle, direction, damage);
+        if(spawnPellet(player, muzzle, direction, damage))pelletsStore.back().volley=volley;
     }
     // A volley is all or nothing: if the engine refused any entity, remove the
     // partial discharge and keep the ammunition.
@@ -598,7 +649,8 @@ bool firePellets(edict_t* player, PlayerState& state) {
         pelletsStore.erase(pelletsStore.begin() + std::ptrdiff_t(firstPellet), pelletsStore.end());
         return false;
     }
-    state.clip -= PrimaryAmmoCost;
+    if(host.shells)state.shells=host.shells(player,PrimaryAmmoCost);
+    else state.shells-=PrimaryAmmoCost;
     state.nextPrimary = globals->time + PrimaryCooldown;
     state.nextSecondary = std::max(state.nextSecondary, state.nextPrimary);
     state.animUntil = globals->time + .9f;
@@ -611,21 +663,21 @@ bool firePellets(edict_t* player, PlayerState& state) {
 }
 
 bool fireGrenade(edict_t* player, PlayerState& state) {
-    if (state.grenadeCount <= 0) {
+    if (shellReserve(player,state) < SecondaryAmmoCost) {
         if (host.sound) host.sound(player, "weapons/357_cock1.wav");
         state.nextSecondary = globals->time + .15f;
         return false;
     }
     if (int(grenadesStore.size()) >= MaxGrenades) return false;
     // Elevated aim is captured here, before this shot's recoil is applied.
-    float maxDamage = skillValue(M203Skill, FallbackM203);
+    float maxDamage = skillValue(BuckshotSkill,FallbackBuckshot) * PelletDamageMultiplier * Pellets * SecondaryDamageMultiplier;
     float elevation = -(player->v.v_angle.x + player->v.punchangle.x);
     elevation = elevation < 0.f ? 0.f : (elevation > 90.f ? 90.f : elevation);
     float t = elevation / 90.f;
     float minimum = ElevationMinFraction * maxDamage;
     float damage = minimum + (maxDamage - minimum) * t;
     damage = damage < minimum ? minimum : (damage > maxDamage ? maxDamage : damage);
-    float radius = M203RadiusFactor * maxDamage;
+    float radius = GrenadeRadius;
     int scale = int(ExplosionScaleMin + (ExplosionScaleMax - ExplosionScaleMin) * t + .5f);
     Vector forward, right, up;
     angleVectors(player->v.v_angle + player->v.punchangle, forward, right, up);
@@ -648,7 +700,7 @@ bool fireGrenade(edict_t* player, PlayerState& state) {
     grenade.serial = entity->serialnumber;
     grenade.owner = player;
     grenade.ownerSerial = player->serialnumber;
-    grenade.velocity = forward * GrenadeSpeed;
+    grenade.velocity = forward * GrenadeSpeed + Vector(0,0,GrenadeUpwardBoost);
     grenade.born = globals->time;
     grenade.expires = globals->time + GrenadeLifetime;
     grenade.damage = damage;
@@ -656,7 +708,8 @@ bool fireGrenade(edict_t* player, PlayerState& state) {
     grenade.elevation = elevation;
     grenade.scale = scale;
     grenadesStore.push_back(grenade);
-    state.grenadeCount -= SecondaryAmmoCost;
+    if(host.shells)state.shells=host.shells(player,SecondaryAmmoCost);
+    else state.shells-=SecondaryAmmoCost;
     state.nextSecondary = globals->time + SecondaryCooldown;
     state.nextPrimary = std::max(state.nextPrimary, state.nextSecondary);
     state.animUntil = globals->time + .5f;
@@ -670,11 +723,22 @@ bool fireGrenade(edict_t* player, PlayerState& state) {
     return true;
 }
 
+#include "tfc_gameplay.inc"
+
 } // namespace
 
 // ---------------------------------------------------------------------------
 // Public interface
 // ---------------------------------------------------------------------------
+bool isTfcPlayer(edict_t* p){return isTfcActive(p);}
+void tfcPostThink(edict_t* p,int buttons){tfcPostThinkImpl(p,buttons);}
+int tfcClip(edict_t* p){int i=playerIndex(p);return i>=0?tfcPlayers[i].clip:8;}
+bool isSentry(edict_t* e){return isSentryImpl(e);}
+bool engineerBuilding(edict_t* p){return engineerBuildingImpl(p);}
+bool engineerOwnFreeze(edict_t* p){int i=playerIndex(p);return i>=0 && engineers[i].froze;}
+bool engineerCommand(edict_t* p,const char* command){return engineerCommandImpl(p,command);}
+bool engineerMetal(edict_t* pickup,edict_t* p){return engineerMetalImpl(pickup,p);}
+
 void attach(const Host& incoming) {
     host = incoming;
     eng = incoming.engine;
@@ -682,6 +746,8 @@ void attach(const Host& incoming) {
     viewModelString = -1;
     playerModelString = -1;
 }
+
+void setShellAmmoIndex(int index) { shellAmmoIndex=index; }
 
 void setMessageIds(int curWeapon, int ammoX) {
     msgCurWeapon = curWeapon;
@@ -694,6 +760,7 @@ void sendWeaponState(edict_t* player) { sendState(player); }
 
 void precache() {
     if (!eng) return;
+    tfcPrecacheImpl();
     const char* models[] = {ViewModel, PlayerModel, WorldModel, "models/ricochet/disc.mdl",
                             "models/grenade.mdl"};
     for (const char* model : models) eng->pfnPrecacheModel(const_cast<char*>(model));
@@ -708,6 +775,8 @@ void precache() {
 }
 
 void reset() {
+    tfcResetImpl();
+    pendingHits.clear();
     for (auto& pellet : pelletsStore) destroy(pellet.entity, pellet.serial);
     pelletsStore.clear();
     for (auto& grenade : grenadesStore) destroy(grenade.entity, grenade.serial);
@@ -719,21 +788,8 @@ void frame(float dt) {
     if (!ready() || dt <= 0.f) return;
     advancePellets(dt);
     advanceGrenades(dt);
-    for (int i = 1; i < 33; ++i) {
-        PlayerState& state = players[i];
-        if (!state.reloading || globals->time < state.reloadEnd) continue;
-        int need = ClipSize - state.clip;
-        int take = need < state.shells ? need : state.shells;
-        state.clip += take;
-        state.shells -= take;
-        state.reloading = false;
-        edict_t* player = eng->pfnPEntityOfEntIndex(i);
-        if (valid(player) && isBouncePlayer(player)) {
-            state.animUntil = globals->time + .4f;
-            host.animation(player, AnimReload);
-            sendState(player);
-        }
-    }
+    engineerFrameImpl(dt);
+
 }
 
 void cmdStart(edict_t* player, unsigned int seed) {
@@ -754,10 +810,10 @@ bool isCarrierClass(const char* classname) {
 }
 
 void hudListBytes(int* out) {
-    out[0] = HudAmmoShells;
+    out[0] = shellAmmoIndex;
     out[1] = HudMaxShells;
-    out[2] = HudAmmoGrenades;
-    out[3] = HudMaxGrenades;
+    out[2] = 255;
+    out[3] = 255;
     out[4] = HudSlot;
     out[5] = HudSlotPos;
     out[6] = CarrierWeaponId;
@@ -786,10 +842,8 @@ void pickedUp(edict_t* player) {
     state.owns = true;
     // Only the ammo counters: CurWeapon would make the HUD believe this weapon
     // is already deployed.
-    sendAmmo(player, HudAmmoShells, state.shells);
-    sendAmmo(player, HudAmmoGrenades, state.grenadeCount);
+    sendAmmo(player, shellAmmoIndex, shellReserve(player,state));
     state.sentShells = state.shells;
-    state.sentGrenades = state.grenadeCount;
 }
 
 int remapAnimation(int) { return AnimIdle; }
@@ -798,7 +852,7 @@ bool removeRestored(edict_t* entity) {
     if (!ready() || !entity) return false;
     const char* classname = text(entity->v.classname);
     if (!classname) return false;
-    if (!std::strcmp(classname, "cremation_pellet") || !std::strcmp(classname, "cremation_grenade")) {
+    if (!std::strcmp(classname, "cremation_pellet") || !std::strcmp(classname, "cremation_grenade") || !std::strcmp(classname,"cremation_sentry") || !std::strcmp(classname,"cremation_sentry_base")) {
         entity->v.flags |= FL_KILLME;
         entity->v.effects |= EF_NODRAW;
         return true;
@@ -825,8 +879,8 @@ void playerPostThink(edict_t* player, int buttons) {
             sendState(player);
         }
         overridePlayerModels(player);
-        if (state.sentClip != state.clip || state.sentShells != state.shells ||
-            state.sentGrenades != state.grenadeCount) {
+        shellReserve(player,state);
+        if (state.sentClip != state.clip || state.sentShells != state.shells) {
             sendState(player);
         }
         bool attack = (buttons & ButtonAttack) != 0;
@@ -866,7 +920,7 @@ Status status(edict_t* player) {
         const PlayerState& state = players[i];
         result.clip = state.clip;
         result.shells = state.shells;
-        result.grenades = state.grenadeCount;
+        result.grenades = 0; // no separate grenade ammunition
         result.lastGrenadeDamage = state.lastGrenadeDamage;
         result.lastGrenadeRadius = state.lastGrenadeRadius;
         result.lastGrenadeElevation = state.lastGrenadeElevation;

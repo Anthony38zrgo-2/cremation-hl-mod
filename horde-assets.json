@@ -1,0 +1,8 @@
+{
+  "models/zombie_fast.mdl": {
+    "source": "Half-Life2Classic_Ravenholm/models/zombie_fast.mdl",
+    "source_sha256": "3719b5a6ef9e93cb9f30efd5d4a828e99db4490dccd531da6d31227044be605b",
+    "sha256": "899c39c3423e422a50aae773164ac7adcb35874cd18233f903f89334a48e58ec",
+    "transform": "map run animation activity from ACT_RUN to ACT_WALK for Ravenholm zombie AI; all geometry, offsets and animation data unchanged"
+  }
+}

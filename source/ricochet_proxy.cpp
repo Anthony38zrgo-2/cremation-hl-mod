@@ -15,6 +15,8 @@
 #include "ricochet_balance.h"
 #include "bounce_shotgun.h"
 #include "entity_state.h"
+#include "raven_ammo.h"
+#include "weapon_config.h"
 
 // GoldSrc's file-based export reader assumes that export names live in .rdata.
 // Reserve space there before linking; finalization never moves names elsewhere.
@@ -34,7 +36,14 @@ static int currentMsg=0,currentByte=0,curWeaponId=0;
 static bool customWeaponList=false,customBounceList=false,carrierCurWeapon=false;
 static edict_t* messagePlayer=nullptr;
 static bool ownAnimation=false;
+static int shotgunAmmoIndex=-1, ammoOffset=-1;
+static bool shotgunList=false;
 static float lastFrame=0;
+struct HordeProbe {edict_t* entity; int serial; Vector origin; Vector previous; float previousTime; bool jumped=false; float walked=0; Vector patrol{0,0,0}; bool fallback=false,returning=false,combat=false; float initialHealth=0;};
+static std::vector<HordeProbe> hordeProbes;
+static float hordeReportAt=0;
+static int hordeReportsRemaining=0;
+static float hordeStartedAt=0;
 static void startupTrace(const char* stage,const char* detail="") {
     if(FILE* file=std::fopen("Cremation/startup-diagnostics.txt","a")) {
         std::fprintf(file,"%s %s\n",stage,detail);std::fclose(file);
@@ -66,7 +75,7 @@ struct Effect {
     Vector color{0,0,0};
 };
 static std::vector<Effect> effects;
-struct PlayerState { int buttons=0; float nextFire=0,animUntil=0; bool wasActive=false; };
+struct PlayerState { int buttons=0; float nextFire=0,animUntil=0; bool wasActive=false,wasFlak=false; int charges=balance::MaxCharges; float rechargeAt=0; int sentCharges=-1; };
 static std::array<PlayerState,33> players{};
 struct Projectile {
     edict_t* entity=nullptr; int serial=0;
@@ -174,23 +183,31 @@ static void removeDisc(Projectile& d) {
     if(valid(d.entity) && d.entity->serialnumber==d.serial)engine.pfnRemoveEntity(d.entity);
     d.entity=nullptr;
 }
-static void steer(Projectile& d) {
-    if(d.explosive || d.bounces || globals->time<d.nextSteer)return;
-    d.nextSteer=globals->time+.1f;
-    edict_t* best=nullptr;float bestDistance=1024;
-    Vector forward=normal(d.velocity);
-    for(int i=globals->maxClients+1;i<globals->maxEntities;++i) {
-        auto e=engine.pfnPEntityOfEntIndex(i);if(!aliveEnemy(e))continue;
-        Vector delta=center(e)-d.entity->v.origin;float distance=length(delta);
-        if(distance<bestDistance && dot(forward,normal(delta))>.6f && canSee(d.entity->v.origin,e,d.owner)) {best=e;bestDistance=distance;}
-    }
-    if(best)d.velocity=normal(forward+normal(center(best)-d.entity->v.origin)*.25f)*balance::DiscSpeed;
+static void steer(Projectile& d,float dt) {
+    // RPG-style continuous guidance toward the point under the owner's aim.
+    // There is no laser sprite/entity and no automatic enemy selection.
+    Vector aim=d.owner->v.v_angle+d.owner->v.punchangle;
+    float yaw=aim.y*3.14159265359f/180,pitch=aim.x*3.14159265359f/180;
+    Vector direction(std::cos(pitch)*std::cos(yaw),std::cos(pitch)*std::sin(yaw),-std::sin(pitch));
+    Vector eye=d.owner->v.origin+d.owner->v.view_ofs,to=eye+direction*8192;
+    TraceResult tr{};engine.pfnTraceLine(&eye.x,&to.x,0,d.owner,&tr);
+    Vector target=tr.flFraction<1.f?Vector(tr.vecEndPos):to;
+    Vector desired=normal(target-d.entity->v.origin);
+    Vector current=normal(d.velocity);
+    float cosine=std::max(-1.f,std::min(1.f,dot(current,desired)));
+    float angle=std::acos(cosine),turn=std::min(angle,balance::GuidanceTurnRate*dt);
+    Vector axis(current.y*desired.z-current.z*desired.y,current.z*desired.x-current.x*desired.z,current.x*desired.y-current.y*desired.x);
+    if(length(axis)<.001f)axis=std::fabs(current.z)<.9f?Vector(current.y,-current.x,0):Vector(0,current.z,-current.y);
+    axis=normal(axis);
+    Vector cross(axis.y*current.z-axis.z*current.y,axis.z*current.x-axis.x*current.z,axis.x*current.y-axis.y*current.x);
+    Vector next=current*std::cos(turn)+cross*std::sin(turn)+axis*(dot(axis,current)*(1-std::cos(turn)));
+    if(length(next)>.5f)d.velocity=normal(next)*balance::DiscSpeed;
 }
 static void advanceDiscs(float dt) {
     for(auto& d:discs) {
         if(!valid(d.entity) || d.entity->serialnumber!=d.serial) {d.entity=nullptr;continue;}
         if(!valid(d.owner) || d.owner->serialnumber!=d.ownerSerial || d.owner->v.health<=0 || globals->time-d.born>balance::DiscLifetime) {removeDisc(d);continue;}
-        steer(d);
+        steer(d,dt);
         float remaining=dt;
         // Bound bounce iterations; trace the entire traveled segment to avoid tunneling.
         for(int sub=0;sub<4 && remaining>0 && d.entity;++sub) {
@@ -223,9 +240,17 @@ static void bounceAnimation(edict_t* p,int sequence) { animation(p,sequence); }
 static void bouncePush(edict_t* e,const Vector& dir,float horizontal,float vertical,float duration) {
     applyPush(e,dir,horizontal,vertical,duration);
 }
+static int sharedShells(edict_t* p,int spend) {
+    if(!p || !p->pvPrivateData || ammoOffset<0 || shotgunAmmoIndex<0 || shotgunAmmoIndex>=32)return 0;
+    int* ammo=reinterpret_cast<int*>(static_cast<char*>(p->pvPrivateData)+ammoOffset)+shotgunAmmoIndex;
+    if(*ammo<0 || *ammo>125)return 0;
+    if(spend>0) {if(*ammo<spend)return -1;*ammo-=spend;}
+    return *ammo;
+}
 static void attachBounce() {
     bounce::Host host{};
     host.engine=&engine;host.globals=globals;
+    host.shells=sharedShells;
     host.spawn=bounceSpawn;host.sound=sound;host.animation=bounceAnimation;host.push=bouncePush;
     bounce::attach(host);
 }
@@ -254,11 +279,21 @@ static void launch(edict_t* player,float spread,bool explosive) {
     engine.pfnWriteByte(explosive?255:60);engine.pfnWriteByte(explosive?150:145);engine.pfnWriteByte(explosive?40:255);
     engine.pfnWriteByte(190);engine.pfnMessageEnd();
 }
+static void recharge(PlayerState& s) {
+    while(s.charges<balance::MaxCharges && globals->time>=s.rechargeAt) {
+        ++s.charges;s.rechargeAt+=balance::RechargeTime;
+    }
+}
 static bool fire(edict_t* p,bool secondary) {
+    int index=engine.pfnIndexOfEdict(p);
+    if(index<=0 || index>=33)return false;
+    auto& state=players[index];recharge(state);
+    if(state.charges<=0)return false;
     int needed=secondary?3:1;
     if(discs.size()+needed>balance::MaxProjectiles)return false;
     if(secondary) {launch(p,0,true);launch(p,-balance::TripleSpread,true);launch(p,balance::TripleSpread,true);}
     else launch(p,0,false);
+    --state.charges;state.rechargeAt=globals->time+balance::RechargeTime;
     animation(p,secondary?5:3);
     sound(p,secondary?"ricochet/altfire.wav":"ricochet/throw.wav");
     p->v.punchangle.x-=secondary?2.f:1.f;
@@ -274,13 +309,56 @@ static void hookMoveToOrigin(edict_t* e,const float* goal,float distance,int mod
     else if(slowed(e))distance*=balance::SlowFactor;
     engine.pfnMoveToOrigin(e,goal,distance,mode);
 }
+static bool invalidFastSequenceLogged=false;
+static void* hookModelPtr(edict_t* e) {
+    void* model=engine.pfnGetModelPtr(e);
+    if(model && valid(e) && e->v.classname && !std::strcmp(text(e->v.classname),"monster_fastzombie")) {
+        int count=*reinterpret_cast<int*>(static_cast<unsigned char*>(model)+164);
+        if(e->v.sequence<0 || e->v.sequence>=count) {
+            // Ravenholm can request activities absent from its fast-zombie model.
+            // Its event dispatcher does not reject negative sequence indices.
+            if(!invalidFastSequenceLogged){startupTrace("AnimationFallback","fast zombie missing activity: using idle");invalidFastSequenceLogged=true;}
+            e->v.sequence=0;e->v.frame=0;e->v.animtime=globals->time;
+        }
+    }
+    return model;
+}
+// Passive patrol relinquishes control permanently after contact. No cinematic
+// state, relationship override or fabricated enemy pointer is installed.
+static bool hordeAlert(HordeProbe& probe) {
+    if(probe.combat)return true;
+    if(probe.initialHealth>0 && probe.entity->v.health<probe.initialHealth)return true;
+    for(int client=1;client<=globals->maxClients;++client) {
+        auto player=engine.pfnPEntityOfEntIndex(client);
+        if(!valid(player)||!(player->v.flags&FL_CLIENT)||player->v.health<=0||player->v.deadflag!=DEAD_NO)continue;
+        float distance=length(player->v.origin-probe.entity->v.origin);
+        if(distance<384)return true;
+        if(distance>2048)continue;
+        Vector eye=probe.entity->v.origin+Vector(0,0,48);
+        Vector target=player->v.origin+player->v.view_ofs;
+        TraceResult tr{};engine.pfnTraceLine(&eye.x,&target.x,1,probe.entity,&tr);
+        if(tr.flFraction>=1 || tr.pHit==player)return true;
+    }
+    return false;
+}
+static void hordeWalkAnimation(edict_t* e) {
+    if(!engine.pfnGetModelPtr)return;
+    auto data=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!data)return;
+    int count=*reinterpret_cast<int*>(data+164),offset=*reinterpret_cast<int*>(data+168);
+    for(int i=0;i<count;++i)if(*reinterpret_cast<int*>(data+offset+i*176+40)==3) {
+        if(e->v.sequence!=i){e->v.sequence=i;e->v.frame=0;e->v.animtime=globals->time;}
+        e->v.framerate=1;return;
+    }
+}
 static void hookThink(edict_t* e) {
+    if(bounce::isSentry(e)) {e->v.nextthink=globals->time+.1f;return;}
     auto s=getEffect(e);
     if(s && s->slowUntil && (!aliveEnemy(e)||globals->time>=s->slowUntil))restoreSlow(*s);
     bool active=slowed(e);
     float expected=active?s->baseFrame*balance::SlowFactor:0;
     if(active)e->v.framerate=expected;
     raven.pfnThink(e);
+    for(const auto& probe:hordeProbes)if(probe.entity==e && probe.fallback && !probe.combat && aliveEnemy(e))hordeWalkAnimation(e);
     if(active && aliveEnemy(e)) {
         if(std::fabs(e->v.framerate-expected)>.0001f)s->baseFrame=e->v.framerate;
         e->v.framerate=s->baseFrame*balance::SlowFactor;blue(e);
@@ -297,6 +375,52 @@ static void hookStartFrame() {
             bounce::frame(dt/steps);
         }
     }
+    for(auto& probe:hordeProbes) {
+        if(!valid(probe.entity)||probe.entity->serialnumber!=probe.serial)continue;
+        Vector displacement=probe.entity->v.origin-probe.previous;
+        float elapsed=std::max(.001f,globals->time-probe.previousTime);
+        if(length2d(displacement)>96.f+1200.f*elapsed)probe.jumped=true;
+        else probe.walked+=length2d(displacement);
+        probe.combat=hordeAlert(probe);
+        // Idle-only collision-checked patrol; native AI owns all combat thereafter.
+        if(!probe.fallback && globals->time-hordeStartedAt>3 && probe.walked<8 && length2d(probe.patrol-probe.origin)>32 && length2d(probe.patrol-probe.origin)<140)probe.fallback=true;
+        if(probe.fallback && aliveEnemy(probe.entity)) {
+            if(!probe.combat) {
+                Vector target=probe.returning?probe.origin:probe.patrol;
+                if(length2d(target-probe.entity->v.origin)<8){probe.returning=!probe.returning;target=probe.returning?probe.origin:probe.patrol;}
+                Vector direction=target-probe.entity->v.origin;
+                float yaw=std::atan2(direction.y,direction.x)*180.f/3.14159265f;
+                const char* name=text(probe.entity->v.classname);
+                float speed=std::strstr(name,"fast")?124.f:(std::strstr(name,"poision")?52.f:72.f);
+                float step=std::min(length2d(direction),speed*std::min(elapsed,.05f));
+                Vector beforeStep=probe.entity->v.origin;
+                if(hookWalkMove(probe.entity,yaw,step,0)) {probe.walked+=length2d(probe.entity->v.origin-beforeStep);probe.entity->v.angles.y=yaw;hordeWalkAnimation(probe.entity);}
+            }
+        }
+        probe.previous=probe.entity->v.origin;probe.previousTime=globals->time;
+    }
+    if(hordeReportAt && globals->time>=hordeReportAt) {
+        int moving=0,normalMoved=0,fastMoved=0,poisonMoved=0;for(const auto& probe:hordeProbes)if(valid(probe.entity)&&probe.entity->serialnumber==probe.serial&&probe.walked>32){++moving;const char* name=text(probe.entity->v.classname);if(std::strstr(name,"fast"))++fastMoved;else if(std::strstr(name,"poision"))++poisonMoved;else ++normalMoved;}
+        char report[160];std::snprintf(report,sizeof report,"zombies=%u moved_over_32=%d normal=%d fast=%d poison=%d",unsigned(hordeProbes.size()),moving,normalMoved,fastMoved,poisonMoved);
+        startupTrace("HordeProgress",report);
+        int jumped=0,nearSpawn=0;float closest=100000;
+        for(const auto& probe:hordeProbes)if(valid(probe.entity)) {
+            if(probe.jumped)++jumped;
+            float distance=length2d(probe.entity->v.origin-Vector(432,-1601,-256));
+            closest=std::min(closest,distance);if(distance<256)++nearSpawn;
+        }
+        std::snprintf(report,sizeof report,"teleports=%d near_spawn_256=%d closest=%.1f",jumped,nearSpawn,closest);
+        startupTrace("HordeMovement",report);
+        for(int index:{0,20,21})if(index<int(hordeProbes.size())) {
+            auto& probe=hordeProbes[index];auto e=probe.entity;
+            std::snprintf(report,sizeof report,"%s start=%.0f,%.0f now=%.0f,%.0f",text(e->v.targetname),probe.origin.x,probe.origin.y,e->v.origin.x,e->v.origin.y);startupTrace("HordeSample",report);
+        }
+        if(hordeReportsRemaining==3)for(const auto& probe:hordeProbes)if(probe.walked<=32 && valid(probe.entity)) {
+            auto e=probe.entity;
+            std::snprintf(report,sizeof report,"%s origin=%.0f,%.0f,%.0f mins=%.0f,%.0f,%.0f maxs=%.0f,%.0f,%.0f",text(e->v.targetname),e->v.origin.x,e->v.origin.y,e->v.origin.z,e->v.mins.x,e->v.mins.y,e->v.mins.z,e->v.maxs.x,e->v.maxs.y,e->v.maxs.z);startupTrace("HordeBlocked",report);
+        }
+        hordeReportAt=--hordeReportsRemaining>0?globals->time+5.f:0;
+    }
     for(auto& s:effects) {
         auto e=s.entity;if(!e)continue;
         if(!valid(e)||e->serialnumber!=s.serial) {s=Effect{};continue;}
@@ -309,19 +433,36 @@ static void hookStartFrame() {
 }
 static void hookPreThink(edict_t* p) {
     int i=engine.pfnIndexOfEdict(p);if(i>0 && i<33)players[i].buttons=p->v.button;
-    if(ricochet(p)||bounce::isBouncePlayer(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(ricochet(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPreThink(p);
 }
 static void hookPostThink(edict_t* p) {
     int i=engine.pfnIndexOfEdict(p);if(i<=0||i>=33) {raven.pfnPlayerPostThink(p);return;}
     auto& state=players[i];
     bool carrier=bounce::isBouncePlayer(p);
-    if(ricochet(p)||carrier)p->v.button&=~(Attack|Attack2|Reload);
+    if(ricochet(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPostThink(p);
     // The bounce shotgun keeps its own clip, so its input is resolved after the
     // inherited inventory logic, with the buttons the player actually pressed.
-    if(carrier)bounce::playerPostThink(p,state.buttons);
-    bool active=ricochet(p);
+    if(carrier && !state.wasFlak && msgWeaponList) {
+        // Native WeaponList order can announce crossbow before shotgun. Publish
+        // the final shared ammo index when deploying, after all native lists.
+        int fields[8];bounce::hudListBytes(fields);
+        engine.pfnMessageBegin(MSG_ONE,msgWeaponList,nullptr,p);
+        engine.pfnWriteString(bounce::WeaponName);
+        for(int field:fields)engine.pfnWriteByte(field);
+        engine.pfnMessageEnd();
+    }
+    state.wasFlak=carrier;
+    if(carrier)bounce::playerPostThink(p,bounce::engineerBuilding(p)?0:state.buttons);
+    bounce::tfcPostThink(p,bounce::engineerBuilding(p)?0:state.buttons);
+    recharge(state);
+    bool active=ricochet(p) && !bounce::engineerBuilding(p);
+    if(msgAmmoX && (state.sentCharges!=state.charges || (active&&!state.wasActive))) {
+        engine.pfnMessageBegin(MSG_ONE,msgAmmoX,nullptr,p);
+        engine.pfnWriteByte(balance::HudAmmoCharges);engine.pfnWriteByte(state.charges);engine.pfnMessageEnd();
+        state.sentCharges=state.charges;
+    }
     if(active && !state.wasActive) {animation(p,7);state.nextFire=std::max(state.nextFire,globals->time+.45f);state.animUntil=globals->time+.45f;}
     if(active && globals->time>=state.nextFire && (state.buttons&(Attack|Attack2))) {
         bool secondary=(state.buttons&Attack2)!=0;
@@ -347,7 +488,7 @@ static int hookRegisterMsg(const char* name,int size) {
     return id;
 }
 static void hookMessageBegin(int dest,int type,const float* origin,edict_t* player) {
-    currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
+    shotgunList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
     engine.pfnMessageBegin(dest,type,origin,player);
 }
 static void hookMessageEnd() {
@@ -358,6 +499,7 @@ static void hookMessageEnd() {
     if(bounceList && target)bounce::pickedUp(target);
 }
 static void hookWriteString(const char* value) {
+    if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_shotgun"))shotgunList=true;
     bool pistol=!std::strcmp(value,"weapon_ricochet")||!std::strcmp(value,"weapon_9mmhandgun")||!std::strcmp(value,"weapon_glock");
     bool carrier=bounce::isCarrierClass(value);
     if(currentMsg==msgWeaponList && pistol) {customWeaponList=true;value="weapon_ricochet";}
@@ -370,9 +512,10 @@ static void hookWriteString(const char* value) {
     engine.pfnWriteString(value);
 }
 static void hookWriteByte(int value) {
+    if(currentMsg==msgWeaponList && shotgunList && currentByte==0) {shotgunAmmoIndex=value;bounce::setShellAmmoIndex(value); }
     if(currentMsg==msgSetFov && currentByte==0 && bounce::isBouncePlayer(messagePlayer))value=0;
     if(currentMsg==msgWeaponList && customWeaponList) {
-        static const int fields[]={255,255,255,255,1,0,GlockId,7};
+        const int fields[]={balance::HudAmmoCharges,balance::MaxCharges,255,255,1,0,GlockId,0};
         if(currentByte<8)value=fields[currentByte];
     }
     if(currentMsg==msgWeaponList && customBounceList) {
@@ -383,18 +526,24 @@ static void hookWriteByte(int value) {
     if(currentMsg==msgCurWeapon) {
         if(currentByte==1) {curWeaponId=value;carrierCurWeapon=(value==bounce::carrierWeaponId());}
         if(currentByte==2 && curWeaponId==GlockId)value=255;
+        if(currentByte==2 && curWeaponId==7)value=bounce::tfcClip(messagePlayer);
         if(currentByte==2 && carrierCurWeapon && valid(messagePlayer))value=bounce::status(messagePlayer).clip;
     }
     if(currentMsg==SvcWeaponAnim && !ownAnimation && currentByte==0) {
         if(ricochet(messagePlayer))value=value==7?7:value==8?6:0;
-        else if(bounce::isBouncePlayer(messagePlayer))value=bounce::remapAnimation(value);
+        else if(bounce::isBouncePlayer(messagePlayer)||bounce::isTfcPlayer(messagePlayer))value=bounce::remapAnimation(value);
     }
     ++currentByte;engine.pfnWriteByte(value);
 }
 static void hookClientCommand(edict_t* p) {
+    if(engine.pfnCmd_Argv && bounce::engineerCommand(p,engine.pfnCmd_Argv(0)))return;
     // Weapon commands travel as the HUD name, which is the item classname, so
     // the inherited SelectItem resolves them without aliasing.
     raven.pfnClientCommand(p);
+}
+static void hookTouch(edict_t* a,edict_t* b) {
+    if(bounce::engineerMetal(a,b)||bounce::engineerMetal(b,a))return;
+    if(raven.pfnTouch)raven.pfnTouch(a,b);
 }
 static const char* hookDescription() {return "Cremation";}
 static int hookSpawn(edict_t* e) {
@@ -403,7 +552,25 @@ static int hookSpawn(edict_t* e) {
     bool bounceItem=classname && !std::strcmp(classname,bounce::WeaponName);
     bool world=classname && !std::strcmp(classname,"worldspawn");
     if(world) {
+        invalidFastSequenceLogged=false;
         startupTrace("worldspawn");
+        char modulePath[MAX_PATH]{};
+        GetModuleFileNameA(selfModule,modulePath,MAX_PATH);
+        std::string configRoot=modulePath;
+        auto slash=configRoot.find_last_of("/\\");
+        if(slash!=std::string::npos)configRoot.resize(slash);
+        slash=configRoot.find_last_of("/\\");
+        if(slash!=std::string::npos)configRoot.resize(slash);
+        auto reports=weapon_config::loadAll(configRoot+"/config/weapons");
+        for(const auto& report:reports) {
+            startupTrace("WeaponConfig",report.c_str());
+            if(engine.pfnAlertMessage)engine.pfnAlertMessage(at_console,"Cremation: %s\n",report.c_str());
+        }
+        char summary[256];
+        std::snprintf(summary,sizeof summary,"charges=%d recharge=%.3f flak_cost=%d/%d pellets=%d spread=%.3f gib=%d",
+            balance::MaxCharges,balance::RechargeTime,bounce_balance::PrimaryAmmoCost,bounce_balance::SecondaryAmmoCost,
+            bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
+        startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
         trailSprite=engine.pfnPrecacheModel(const_cast<char*>("sprites/ricochet/lgtning.spr"));
         flashSprite=engine.pfnPrecacheModel(const_cast<char*>("sprites/ricochet/discreturn.spr"));
@@ -426,8 +593,15 @@ static void hookActivate(edict_t* list,int count,int maxClients) {
     raven.pfnServerActivate(list,count,maxClients);
     startupTrace("ServerActivate",text(globals->mapname));
     int ricochetCount=0,bounceCount=0;
+    hordeProbes.clear();hordeReportAt=globals->time+5.f;hordeReportsRemaining=3;hordeStartedAt=globals->time;
     for(int i=0;i<count;++i)if(valid(&list[i])) {
         const char* name=text(list[i].v.classname);
+        if(list[i].v.targetname && !std::strncmp(text(list[i].v.targetname),"cremation_zombie_",17)) {
+            hordeProbes.push_back({&list[i],list[i].serialnumber,list[i].v.origin,list[i].v.origin,globals->time});
+            hordeProbes.back().initialHealth=list[i].v.health;
+            char marker[64];std::snprintf(marker,sizeof marker,"cremation_patrol_%02d_0",std::atoi(text(list[i].v.targetname)+17));
+            for(int j=0;j<count;++j)if(list[j].v.targetname && !std::strcmp(text(list[j].v.targetname),marker)){hordeProbes.back().patrol=list[j].v.origin;break;}
+        }
         if(name && !std::strcmp(name,"weapon_ricochet"))++ricochetCount;
         if(name && !std::strcmp(name,bounce::WeaponName))++bounceCount;
     }
@@ -449,7 +623,10 @@ static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
     int mode=e->v.rendermode,fx=e->v.renderfx,movement=e->v.movetype;float alpha=e->v.renderamt,frame=e->v.framerate;Vector color=e->v.rendercolor;
     if(slow) {e->v.rendermode=s->mode;e->v.renderfx=s->fx;e->v.renderamt=s->alpha;e->v.rendercolor=s->color;e->v.framerate=s->baseFrame;}
     if(push)e->v.movetype=s->movement;
+    bool constructionFreeze=bounce::engineerOwnFreeze(e);
+    if(constructionFreeze)e->v.flags&=~FL_FROZEN;
     raven.pfnSave(e,data);
+    if(constructionFreeze)e->v.flags|=FL_FROZEN;
     e->v.rendermode=mode;e->v.renderfx=fx;e->v.renderamt=alpha;e->v.rendercolor=color;e->v.framerate=frame;e->v.movetype=movement;
 }
 static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
@@ -508,16 +685,18 @@ extern "C" void __stdcall GiveFnptrsToDll(enginefuncs_t* incoming,globalvars_t* 
     }
     for(size_t i=0;i<sizeof(forwardTargets)/sizeof(forwardTargets[0]);++i)forwardTargets[i]=GetProcAddress(ravenModule,forwardNames[i]);
     hookedEngine.pfnWalkMove=hookWalkMove;hookedEngine.pfnMoveToOrigin=hookMoveToOrigin;
+    hookedEngine.pfnGetModelPtr=hookModelPtr;
     hookedEngine.pfnRegUserMsg=hookRegisterMsg;hookedEngine.pfnMessageBegin=hookMessageBegin;hookedEngine.pfnMessageEnd=hookMessageEnd;
     hookedEngine.pfnWriteString=hookWriteString;hookedEngine.pfnWriteByte=hookWriteByte;
     hookedEngine.pfnFunctionFromName=hookFunctionFromName;hookedEngine.pfnNameForFunction=hookNameForFunction;
     attachBounce();
+    ammoOffset=ravenAmmoOffset(ravenModule);
     auto give=reinterpret_cast<void(__stdcall*)(enginefuncs_t*,globalvars_t*)>(GetProcAddress(ravenModule,"GiveFnptrsToDll"));
     give(&hookedEngine,globals);
 }
 static void installHooks(DLL_FUNCTIONS* table) {
     raven=*table;
-    table->pfnSpawn=hookSpawn;table->pfnThink=hookThink;table->pfnStartFrame=hookStartFrame;
+    table->pfnTouch=hookTouch;table->pfnSpawn=hookSpawn;table->pfnThink=hookThink;table->pfnStartFrame=hookStartFrame;
     table->pfnPlayerPreThink=hookPreThink;table->pfnPlayerPostThink=hookPostThink;
     table->pfnClientCommand=hookClientCommand;table->pfnServerActivate=hookActivate;table->pfnServerDeactivate=hookDeactivate;
     table->pfnCmdStart=hookCmdStart;
@@ -552,3 +731,10 @@ extern "C" void cremation_grenade(entvars_t* vars) {
 #ifndef CREMATION_TEST
 BOOL WINAPI DllMain(HINSTANCE module,DWORD reason,LPVOID) {if(reason==DLL_PROCESS_ATTACH) {selfModule=module;DisableThreadLibraryCalls(module);}return TRUE;}
 #endif
+
+extern "C" void cremation_sentry(entvars_t* vars) {
+    auto create=reinterpret_cast<void(*)(entvars_t*)>(GetProcAddress(ravenModule,"monster_sentry"));create(vars);
+}
+extern "C" void cremation_sentry_base(entvars_t* vars) {
+    auto create=reinterpret_cast<void(*)(entvars_t*)>(GetProcAddress(ravenModule,"info_target"));create(vars);
+}

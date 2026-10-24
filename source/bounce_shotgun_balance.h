@@ -6,6 +6,12 @@
 // shotgun must be adjustable without touching each other. Section numbers refer
 // to the implementation specification.
 namespace bounce_balance {
+inline bool SecondaryShrapnel = true;
+inline float SecondaryShrapnelDamage = 1.f;
+inline float SecondaryDamageMultiplier = .75f;
+inline bool OverkillGib = true;
+inline float GrenadeRadius = 48.f;
+inline float GrenadeUpwardBoost = 120.f;
 
 // ---------------------------------------------------------------------------
 // Inventory and HUD identity (section 2)
@@ -17,63 +23,56 @@ namespace bounce_balance {
 constexpr int CarrierWeaponId = 6;   // WEAPON_CROSSBOW.
 constexpr int HudSlot = 2;           // 0-based bucket 3, the shotgun bucket.
 constexpr int HudSlotPos = 3;        // mp5=0, shotgun=1, crossbow=2; 3 is free.
-// Client-only ammo indices for this weapon. They are never used by the native
-// CBasePlayer::m_rgAmmo array, so the shotgun's real reserve is untouched.
+// Shell index is replaced at runtime by the native shotgun WeaponList index.
+// The fallback index is only used by the isolated module tests.
 constexpr int HudAmmoShells = 20;
-constexpr int HudAmmoGrenades = 21;
-constexpr int HudMaxShells = 100;
-constexpr int HudMaxGrenades = 10;
+constexpr int HudMaxShells = 125;
 
 // ---------------------------------------------------------------------------
 // Primary: bouncing buckshot (section 3 and 4)
 // ---------------------------------------------------------------------------
 constexpr float ReferenceCone = 0.08716f; // Original single-player double shot.
-constexpr float SpreadMultiplier = 1.15f; // Slightly wider: +15% in both axes.
-constexpr float Cone = ReferenceCone * SpreadMultiplier;
-constexpr float PelletDamageMultiplier = 1.5f;
-constexpr int Pellets = 12;           // CShotgun::SecondaryAttack, single player.
-constexpr float PelletSpeed = 1000.f; // Balance starting point (same as a disc).
-constexpr int MaxSurfaceContacts = 3; // 3rd contact removes; two bounces at most.
-constexpr float PelletLifetime = 4.f;
+inline float SpreadMultiplier = 4.f; // Wide circular cone, about 38 degrees across.
+inline float Cone = ReferenceCone * SpreadMultiplier;
+inline float PelletDamageMultiplier = 1.875f;
+inline int Pellets = 12;           // CShotgun::SecondaryAttack, single player.
+inline float PelletSpeed = 1000.f; // Balance starting point (same as a disc).
+inline int MaxSurfaceContacts = 3; // 3rd contact removes; two bounces at most.
+inline float PelletLifetime = 4.f;
 constexpr int MaxPellets = 96;        // This weapon only; Ricochet keeps its 24.
 constexpr int MaxStepsPerFrame = 8;   // Corner/overlap guard, per traced step.
-constexpr float PrimaryCooldown = 1.5f;
-constexpr int PrimaryAmmoCost = 2;
+inline float PrimaryCooldown = .75f; // Native shotgun primary cadence.
+inline int PrimaryAmmoCost = 1;
 constexpr float PelletScale = .35f;   // Reuses the Ricochet disc, much smaller.
 constexpr float PelletRadius = 1.5f;  // Presentation only; motion is continuous.
 constexpr float PelletMuzzleOffset = 6.f;
 constexpr float SurfaceOffset = 1.f;  // Push out of the surface after a bounce.
 
 // ---------------------------------------------------------------------------
-// Magazines (section 6)
+// Flak Cannon uses the native shared buckshot reserve, without a magazine.
+// Both attacks consume this same shell pool, with costs of 1 and 2.
 // ---------------------------------------------------------------------------
-// The legacy runtime offers no supported way to write CBasePlayer::m_rgAmmo, so
-// this weapon keeps its own magazine and reserve and shows them through AmmoX /
-// CurWeapon messages addressed to the client-only indices above.
-constexpr int ClipSize = 8;
 constexpr int StartShells = 40;
-constexpr int StartGrenades = 6;
-constexpr int SecondaryAmmoCost = 1;
-constexpr float ReloadTime = 1.2f;
-constexpr float DeployTime = .6f;
+inline int SecondaryAmmoCost = 2;
+inline float DeployTime = .6f;
 
 // ---------------------------------------------------------------------------
 // Secondary: contact grenade whose damage follows the aim elevation (section 5)
 // ---------------------------------------------------------------------------
-constexpr float GrenadeSpeed = 800.f;    // CMP5::SecondaryAttack.
-constexpr float GrenadeGravity = .5f;    // CGrenade::ShootContact.
-constexpr float GrenadeLifetime = 6.f;   // Safety fuse for a grenade in the void.
-constexpr float SecondaryCooldown = 1.f;
+inline float GrenadeSpeed = 450.f;    // CMP5::SecondaryAttack.
+inline float GrenadeGravity = .8f;    // CGrenade::ShootContact.
+inline float GrenadeLifetime = 6.f;   // Safety fuse for a grenade in the void.
+inline float SecondaryCooldown = 1.f;
 constexpr int MaxGrenades = 8;           // Concurrent grenades for this weapon.
 constexpr float ExplosionSurfaceOffset = 8.f; // Pull the blast out of the wall.
 constexpr float GrenadeMuzzleOffset = 16.f;
-constexpr float ElevationMinFraction = .25f; // Dmin = 25% of the M203 damage.
+inline float ElevationMinFraction = .5f; // Dmin = 25% of the M203 damage.
 constexpr float M203RadiusFactor = 2.5f;     // RadiusDamage: damage * 2.5.
-constexpr float GrenadePushHorizontal = 140.f;
-constexpr float GrenadePushVertical = 35.f;
-constexpr float GrenadePushDuration = .5f;
-constexpr float ExplosionScaleMin = 12.f;    // TE_EXPLOSION scale * 10.
-constexpr float ExplosionScaleMax = 30.f;
+inline float GrenadePushHorizontal = 140.f;
+inline float GrenadePushVertical = 35.f;
+inline float GrenadePushDuration = .5f;
+constexpr float ExplosionScaleMin = 5.f;    // TE_EXPLOSION scale * 10.
+constexpr float ExplosionScaleMax = 9.f;
 
 // ---------------------------------------------------------------------------
 // Damage configuration keys (section 4 and 5). Values live in skill.cfg:

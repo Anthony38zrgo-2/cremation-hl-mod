@@ -33,9 +33,10 @@ def install():
     palette=bytes(v for i in range(256) for v in (i,i,i))
     frame=struct.pack('<5i',0,-64,16,128,32)+image.tobytes()
     (MOD/'sprites/cremation_ricochet.spr').write_bytes(header+struct.pack('<H',256)+palette+frame)
-    sprite_text='8\n'
+    sprite_text='10\n'
     for resolution in (320,640):
         sprite_text+=f'weapon {resolution} cremation_ricochet 0 0 128 32\nweapon_s {resolution} cremation_ricochet 0 0 128 32\n'
+        sprite_text+=f'ammo {resolution} cremation_ricochet 2 7 28 20\n'
         sprite_text+=f'crosshair {resolution} crosshairs 24 0 24 24\nautoaim {resolution} crosshairs 0 72 24 24\n'
     for name in ('weapon_ricochet.txt','weapon_9mmhandgun.txt'):(MOD/'sprites'/name).write_text(sprite_text)
     print('Installed Ricochet models, sounds, HUD and Cremation DLL.')

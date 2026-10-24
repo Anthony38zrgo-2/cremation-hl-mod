@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include "raven_ammo.h"
 
 static void* allocated=nullptr;
 static void* allocate(edict_t* e,int32 count) {allocated=std::calloc(1,count);e->pvPrivateData=allocated;return allocated;}
@@ -38,11 +39,16 @@ int main(int argc,char** argv) {
     std::printf("Ravenholm zombie classification: %d\n",classification);
     assert(classification==7); // Valve CLASS_ALIEN_MONSTER.
     HMODULE donor=GetModuleHandleA("hl_ravenholm.dll");assert(donor);
+    assert(ravenAmmoOffset(donor)==1256);
+    std::puts("PASS: player ammo array located from Ravenholm save-field metadata.");
     auto base=reinterpret_cast<unsigned char*>(donor);
     auto dos=reinterpret_cast<IMAGE_DOS_HEADER*>(base);
     auto nt=reinterpret_cast<IMAGE_NT_HEADERS*>(base+dos->e_lfanew);
     auto damageAddress=reinterpret_cast<unsigned char*>(table[11]);
     assert(damageAddress>=base && damageAddress<base+nt->OptionalHeader.SizeOfImage);
+    auto killedAddress=reinterpret_cast<unsigned char*>(table[13]);
+    assert(killedAddress>=base && killedAddress<base+nt->OptionalHeader.SizeOfImage);
+    std::puts("PASS: zombie Killed virtual slot 13 resolves inside Ravenholm for native GIB_ALWAYS.");
     std::free(allocated);
     std::puts("PASS: actual Win32 DLL loads; API 140 and exports resolve; Ravenholm zombie constructor and base ABI match.");
     FreeLibrary(module);

@@ -1,349 +1,869 @@
 # Cremation — herramientas, incidencias y continuidad
 
+
+
 Fecha de actualización: 23 de octubre de 2026.
+
 Raíz de trabajo: D:\SteamLibrary\steamapps\common\Half-Life
+
 Este archivo se llama literalmente `.AGENTS`, según lo solicitado por el usuario.
+
+
 
 ## Alcance y estado actual
 
+
+
 Se creó el mod local Cremation y el lanzador `Cremation.exe`, que utiliza `hl.exe`
+
 de esta instalación. No es un motor ni un ejecutable de juego independiente.
 
+
+
 La copia de Rapidcore contiene un único inicio en la sala del pilar y la piscina
+
 de la imagen del usuario, en `432 -1601 -220`, orientación `0 155 0`. Incluye HEV,
+
 escopeta, Ricochet, Escopeta de rebote y cartuchos. Se conservaron 20 zombis
+
 normales de Ravenholm y 186 nodos de navegación. El zombi más cercano está a 1059.9
+
 unidades horizontales del inicio, sin línea de visión directa desde él según la
+
 geometría consultada.
 
+
+
 Hay tres armas recogibles: `weapon_shotgun`, `weapon_ricochet` y
+
 `weapon_bounce_shotgun`. La pistola convencional y su munición fueron retiradas del
+
 equipo del mapa.
 
+
+
 Ricochet ocupa el grupo 2 de pistolas. Su primario ralentiza movimiento y animación
+
 al 25% durante 7 segundos, con brillo azul y transparencia. Su secundario lanza tres
+
 discos explosivos simultáneos a 0°/-7°/+7°, con poco daño y empuje fuerte.
 
+
+
 La Escopeta de rebote (`weapon_bounce_shotgun`, icono «BNC») ocupa el grupo 3 junto a
+
 la escopeta normal, con portador nativo de ballesta (ID 6) y nombre, icono, modelos y
+
 cargador propios. Su primario lanza 12 perdigones físicos a 1000 u/s que rebotan dos
+
 veces y desaparecen en el tercer contacto con una superficie; contra un enemigo hacen
+
 el daño de un perdigón y desaparecen. Su secundario lanza una granada de contacto
+
 (800 u/s, gravedad 0.5) cuyo daño va del 25% al 100% del lanzagranadas según la
+
 elevación del apuntado al disparar, con radio fijo de 250 y empuje pequeño. Ver
+
 `Cremation/source/BOUNCE_SHOTGUN.md`.
 
+
+
 El usuario informó de un cierre al iniciar tras añadir Ricochet. Se corrigió una
+
 incompatibilidad entre la tabla de exportaciones de la DLL y el lector de GoldSrc.
+
 La versión corregida pasa pruebas de lógica, carga nativa y arranque de servidor.
+
 La comprobación gráfica y de combate sigue pendiente del usuario: no presentarla
+
 como una sesión jugable completamente validada.
+
+
 
 ## Herramientas realmente utilizadas
 
+
+
 | Herramienta | Uso concreto |
+
 |---|---|
+
 | PowerShell | Inventario local, copia de recursos, compilación, hashes, consulta de eventos de Windows y ejecución de verificaciones. |
+
 | ripgrep (`rg`) | Búsqueda de archivos, entidades FGD y comportamientos del SDK. |
+
 | Python 3.14 | Lectura de BSP y modelos, edición de entidades, instalación de recursos y verificaciones. |
+
 | Pillow | Plano diagnóstico de Rapidcore y generación del sprite HUD de Ricochet. |
+
 | pefile | Inspección de DLL Win32, exportaciones, procedencia y reconstrucción de los nombres exportados de la DLL propia. |
+
 | Capstone | Desensamblado del punto de fallo de `hw.dll` para identificar el lector antiguo de exportaciones. No se modificó `hw.dll`. |
+
 | Git | Obtención del código oficial de Valve en `Cremation/source/hlsdk`. |
+
 | Half-Life SDK oficial de Valve | Referencia de ABI, entidades y código de Freeze Shot y Triple Shot. Revisión `b1b5cf5892918535619b2937bb927e46cb097ba1`. |
+
 | Visual Studio 2022 Community / MSVC x86 | Compilación C++17 de `cremation.dll` y de las pruebas, con runtime estático `/MT`. |
+
 | .NET Framework C# (`csc.exe`) | Compilación del lanzador gráfico Win32 `Cremation.exe`. |
+
 | Blender 5.2 LTS en segundo plano | Reconstrucción y render de diagnóstico de la sala de inicio mediante `render_spawn.py`, sin controlar la interfaz de Blender. |
+
 | `hl.exe` | Primera inspección del mapa durante la preparación inicial, antes de la versión final con zombis y Ricochet. |
+
 | `hlds.exe` | Prueba acotada del servidor GoldSrc real, sin interfaz gráfica; confirmó `worldspawn` y `ServerActivate rapidcore`. El proceso de prueba se cerró al terminar. |
+
 | Computer Use (`@oai/sky`) | Inspección inicial de la ventana del juego. El usuario lo detuvo con Escape; se dejó de controlar el juego. No se utilizó para validar la versión final. |
+
 | Web / descarga HTTP | Consulta de fuentes oficiales y descarga de GoldSrc Model Helper. |
+
+
 
 ### Complemento instalado y herramientas disponibles
 
+
+
 GoldSrc Model Helper 2.2.0 quedó instalado y activado en Blender 5.2. Se comprobó
+
 su carga con Blender en segundo plano. El ZIP oficial tuvo SHA-256:
+
 `074531c7e337f1e88d36dfdec5ad2f698b8d18aa7e916008120c6105846b98df`.
+
 Este complemento no se necesitó para modificar los modelos del arma: se usaron
+
 los modelos existentes de Ricochet, sin reconstruirlos ni descompilarlos.
 
+
+
 Se inspeccionó el código local de GoldImporter, pero el render diagnóstico utilizó
+
 un lector BSP propio; no afirmar que se importó el mapa mediante GoldImporter.
 
+
+
 Featureful, Crowbar, Half-Life Asset Manager y WadMaker estaban disponibles como
+
 archivos de ejecución/desarrollo o repositorios locales, pero no se utilizaron
+
 para producir esta implementación. XBLAH's Modding Tool se detectó abierto y con
+
 ejecutable en AppData, pero tampoco se utilizó. La carpeta Steam `Half-Life SDK`
+
 contiene herramientas y ejemplos; el código C/C++ consultado se obtuvo aparte
+
 del repositorio oficial. No confundir disponibilidad con uso efectivo.
+
+
 
 Catálogo adicional: `modding-tools.md` en esta raíz.
 
+
+
 ## Fuentes de recursos y arquitectura
 
+
+
 - `valve/maps/rapidcore.bsp`: fuente del mapa. Sólo se sustituye el bloque de
+
   entidades de la copia; los otros 14 bloques se verifican byte a byte.
+
 - `Half-Life2Classic_Ravenholm`: origen de los modelos, sonidos y lógica de los
+
   zombis, además del cliente y la escopeta heredados.
+
 - `ricochet`: origen de `v_disc.mdl`, `p_disc.mdl`, `disc.mdl`, `disc_hard.mdl`
+
   y determinados sonidos/sprites. Algunos efectos son recursos de `valve`.
+
 - `Cremation/dlls/hl_ravenholm.dll`: copia exacta de la DLL del donante.
+
 - `Cremation/dlls/cremation.dll`: extensión propia que carga esa DLL y conserva
+
   sus 524 exportaciones. Añade `weapon_ricochet` y `cremation_disc`.
+
 - El inventario heredado de pistola conserva el identificador 2 internamente.
+
   El HUD y la selección muestran Ricochet, y sus ataques convencionales se filtran.
+
   Los modelos de disco se copian a los nombres que espera ese inventario.
+
 - `cl_lw 0` evita que el cliente heredado prediga balas de pistola. Se aplica en
+
   las configuraciones de Cremation; no cambiar la configuración global de Valve.
 
+
+
 No reemplazar el runtime de Ravenholm por otro SDK sin evaluar sus zombis y su
+
 cliente. No modificar los directorios de origen para corregir Cremation.
+
+
 
 ## Análisis confirmado de Ricochet
 
+
+
 Referencia: https://github.com/ValveSoftware/halflife/tree/master/ricochet
 
+
+
 - `ricochet/dlls/discwar.h`: disco a 1000 unidades/s, empuje original 1200,
+
   Freeze durante 7 segundos y velocidad máxima de jugador 50.
+
 - `ricochet/dlls/player.cpp`: Freeze aplica brillo azul y limita la velocidad.
+
 - `ricochet/dlls/wpn_shared/disc_weapon_disc.cpp`: corrección de trayectoria de
+
   Freeze antes del primer rebote; Triple Shot añade dos discos a ±7°.
+
 - Triple Shot original no produce una explosión radial por sí mismo. Las
+
   explosiones con daño bajo son una adaptación solicitada para Cremation.
+
 - El secundario original tiene decapitación; Cremation no incorpora esa muerte
+
   inmediata. Su daño bruto está limitado a 4 por disco y 12 por ráfaga completa.
 
+
+
 Para ralentizar monstruos no basta `pev->maxspeed`: se escalan las distancias de
+
 `WalkMove` y `MoveToOrigin`, además del avance de animación. Se conserva la IA.
+
 Durante el empuje se usa temporalmente física de caída y se impide que el avance
+
 de navegación anule el impulso. El límite horizontal acumulado es 1200.
+
+
 
 ## Problemas encontrados y resolución
 
+
+
 ### 1. Cierre real de `Cremation.exe` tras añadir Ricochet
 
+
+
 Síntoma reportado por el usuario: el lanzador arrancaba Half-Life y éste se cerraba.
+
 Windows registró `hl.exe`, excepción `0xc0000005`, en `hw.dll+0x1e13f0`.
 
+
+
 El desensamblado local identificó un bucle que recorre cadenas de exportaciones.
+
 El lector de GoldSrc asume que el array de nombres y sus cadenas están en `.rdata`
+
 y convierte sus direcciones usando exclusivamente esa sección. La primera DLL
+
 propia tenía los nombres largos en `.xnames`: Windows la cargaba, pero el motor
+
 calculaba una dirección inválida. Las pruebas nativas anteriores no cubrían esa
+
 restricción del motor; por eso no bastaban para establecer que el juego arrancaba.
 
+
+
 Corrección: reservar 32768 bytes en `.rdata` durante el enlace y colocar allí el
+
 array de nombres, ordinales y cadenas contiguas. No se parcheó el motor instalado.
 
+
+
 Regresión añadida: `verify_mod.py` reproduce la conversión de direcciones y el
+
 recorrido contiguo que hace ese lector. El motor real confirmó posteriormente el
+
 arranque del servidor y la activación de Rapidcore durante ocho segundos.
+
+
 
 ### 2. Exportaciones C++ heredadas y nombres decorados
 
+
+
 Los intentos iniciales de generar reenvíos mediante `.def` provocaron símbolos no
+
 resueltos, nombres truncados en `@` y comillas incluidas en las exportaciones.
+
 Esos nombres también importan para los callbacks de guardado de GoldSrc.
 
+
+
 Solución: generar saltos Win32 sin prólogo hacia los destinos originales, conservar
+
 sus convenciones de llamada y finalizar los nombres exactos con pefile. La
+
 finalización debe mantenerlos dentro de `.rdata`, como exige el problema anterior.
+
+
 
 ### 3. Escritura de un PE mientras pefile lo mantenía mapeado
 
+
+
 La finalización falló con `OSError: [Errno 22] Invalid argument` al sobrescribir la
+
 DLL. Se cerró el objeto PE con `pe.close()` antes de escribir el archivo.
+
+
 
 ### 4. Falsos fallos del motor simulado por vectores sin inicializar
 
+
+
 La primera prueba de proyectiles produjo coordenadas enormes y NaN. La clase
+
 Vector del SDK tiene un constructor por defecto que no inicializa sus componentes;
+
 asignar `edict_t{}` en el simulador no reproducía la memoria limpia del motor.
+
 Se inicializaron explícitamente los edicts del simulador con memoria a cero.
+
 No atribuir ese incidente al comportamiento observado dentro del juego.
+
+
 
 ### 5. Suposición incorrecta de una constante del SDK
 
+
+
 Una prueba nativa esperaba clasificación de zombi 4. El valor real y el definido
+
 por Valve para `CLASS_ALIEN_MONSTER` es 7. Se corrigió la aserción y se confirmó
+
 con el constructor de zombi real de Ravenholm.
+
+
 
 ### 6. Posiciones de zombis no válidas en escaleras
 
+
+
 Algunas posiciones candidatas, como `(-240,-250)`, no ofrecían apoyo de suelo
+
 válido para el volumen de un monstruo. Se descartaron y trasladaron a posiciones
+
 con suelo y espacio vertical comprobados. No colocar enemigos sólo por el plano
+
 superior o por una coordenada visual sin consultar colisión y suelo.
+
+
 
 ### 7. Rapidcore era un mapa multijugador
 
+
+
 Tenía varios puntos de aparición y armas de deathmatch. La copia del mod elimina
+
 esos puntos, instala un único inicio y define el equipo mediante recogidas que
+
 se superponen al jugador. Se añadieron nodos para la navegación de los zombis.
+
+
 
 ### 8. Ralentización y empuje anulados por la IA heredada
 
+
+
 Riesgo identificado en el modelo de movimiento: cambiar sólo velocidad o aspecto
+
 no ralentiza el avance de navegación de los monstruos. Se interceptan sus llamadas
+
 de movimiento. El avance de animación no se multiplica repetidamente por el factor,
+
 para evitar ralentización acumulativa. El empuje tiene límites y recuperación.
+
+
 
 ### 9. Discos y efectos temporales en guardados
 
+
+
 No se implementó persistencia de discos en vuelo. Se guardan aspecto y tipo de
+
 movimiento normales y se eliminan los discos restaurados para evitar estados
+
 congelados o entidades sin clase válida. La compatibilidad completa de guardados
+
 requiere una prueba manual; usar partida nueva al comprobar cambios del BSP.
+
+
 
 ### 10. Consulta A2S del servidor sin respuesta
 
+
+
 Un intento de comprobar el servidor por UDP no obtuvo respuesta; hubo además
+
 `WinError 10054` al consultar antes de que estuviera listo. No se tomó esto como
+
 prueba de un cierre del motor. La verificación final utiliza fases escritas por
+
 la DLL real (`worldspawn`, `ServerActivate rapidcore`) y la vida del proceso,
+
 sin depender de A2S ni abrir/controlar la interfaz gráfica del juego.
+
+
 
 ### 11. Incidencias de comandos y rutas de Windows
 
+
+
 La inicialización de MSVC requirió ejecutar `vcvars32.bat` con `call` dentro de
+
 `cmd.exe /d /c`, invocado desde PowerShell. Las variantes iniciales de comillas
+
 no ejecutaban correctamente el archivo por lotes.
 
+
+
 Una ruta relativa de `Tee-Object` falló porque el script de compilación cambia de
+
 directorio con `Push-Location`. Usar una ruta absoluta para el registro externo.
+
+
 
 ### 12. Herramientas de Blender y web
 
+
+
 El conector de Blender no pudo conectarse a una instancia activa. Para operaciones
+
 sin interfaz se utilizó Blender en segundo plano. La web de extensiones falló
+
 inicialmente desde el navegador de investigación y el endpoint individual probado
+
 de la API devolvió 404; la página y descarga oficial sí funcionaron mediante HTTP.
+
+
 
 ### 13. Advertencias heredadas del donante
 
+
+
 Un registro temprano de Ravenholm mostró sonidos no encontrados para AR2/energía
+
 (`ar2_fire.wav`, `ar2_altfire.wav`, `energy_sing_explosion2.wav`,
+
 `energy_bounce1.wav`, `energy_bounce2.wav`) y `Unknown command: VModEnable`.
+
 No se confirmó que causaran el cierre reportado. No inventar sustituciones ni
+
 atribuirles la causa: el fallo confirmado de arranque fue el lector de exportaciones.
+
+
 
 ## Archivos de trabajo y responsabilidades
 
+
+
 | Archivo | Responsabilidad |
+
 |---|---|
+
 | `Cremation/source/ricochet_proxy.cpp` | Integración con Ravenholm, proyectiles, ralentización, empuje, HUD, selección, guardados temporales y arranque de las dos armas. |
+
 | `Cremation/source/ricochet_balance.h` | Velocidad, cadencias, duración, factor de ralentización, daño, radio y empuje de Ricochet. |
+
 | `Cremation/source/bounce_shotgun.cpp` / `.h` | Módulo independiente de la Escopeta de rebote: perdigones, granada, daño, cargador y mensajes de munición. |
+
 | `Cremation/source/bounce_shotgun_balance.h` | Valores de la Escopeta de rebote, separados de Ricochet. |
+
 | `Cremation/tools/generate_proxy_exports.py` | Tabla de destinos y saltos Win32 para las exportaciones heredadas y las cinco entidades propias. |
+
 | `Cremation/tools/finalize_proxy_exports.py` | Nombres exactos y contiguos en la reserva de `.rdata`. |
+
 | `Cremation/tools/build_ricochet.ps1` | Compila, ejecuta ambas pruebas, instala y verifica. |
+
 | `Cremation/tools/build_mod.py` | Copia de recursos, entidades de Rapidcore, equipo, zombis y nodos. |
+
 | `Cremation/tools/bsp.py` | Lectura del BSP, consultas de colisión/suelo y sustitución de entidades. |
+
 | `Cremation/tools/install_ricochet_assets.py` | Modelos, sonidos y sprite HUD de Ricochet; registra su origen. |
+
 | `Cremation/tools/install_bounce_assets.py` | Copias propias de los modelos de escopeta, icono HUD y descriptor; `bounce-assets.json`. |
+
 | `Cremation/tools/Launcher.cs` | Lanzador que inicia `hl.exe -game Cremation -console +exec cremation.cfg`. |
+
 | `Cremation/source/test_ricochet.cpp` | Pruebas con motor simulado, incluida la integración HUD del arma nueva. |
+
 | `Cremation/source/test_bounce.cpp` | Pruebas del módulo de la Escopeta de rebote con motor simulado. |
+
 | `Cremation/source/test_native.cpp` | Carga Win32, API 140 y constructor de zombi real. |
+
 | `Cremation/tools/verify_mod.py` | Entidades, geometría, recursos, PE y lector antiguo de GoldSrc. |
+
 | `Cremation/tools/check_server_startup.py` | Arranque acotado del servidor real sin interfaz. |
+
 | `Cremation/source/RICOCHET_ANALYSIS.md` | Análisis de los comportamientos originales y sus adaptaciones. |
+
 | `Cremation/source/BOUNCE_SHOTGUN.md` | Implementación, valores, límites y pruebas de la Escopeta de rebote. |
+
 | `Cremation/LEEME.txt` | Inicio, controles, prueba manual y límites para el usuario. |
+
+
 
 ## Reconstrucción y evidencias
 
+
+
 Desde esta raíz, en PowerShell:
 
+
+
 ```powershell
+
 & .\Cremation\tools\build_ricochet.ps1
+
 python .\Cremation\tools\check_server_startup.py
+
 ```
+
+
 
 Para guardar la salida mientras el script cambia de directorio:
 
+
+
 ```powershell
+
 & .\Cremation\tools\build_ricochet.ps1 |
+
     Tee-Object -FilePath 'D:\SteamLibrary\steamapps\common\Half-Life\Cremation\validation-ricochet.txt'
+
 ```
+
+
 
 Evidencias actuales:
 
+
+
 - `Cremation/validation-bounce.txt`: compilación y verificaciones satisfactorias de
+
   las dos armas, incluido el lector `.rdata` de GoldSrc y 541 hashes registrados.
+
 - `Cremation/validation-ricochet.txt`: la validación anterior, conservada como
+
   referencia de la versión con una sola arma.
+
 - `Cremation/server-startup-result.json`: Rapidcore, DLL propia y ServerActivate
+
   confirmados; el servidor permaneció vivo ocho segundos.
+
 - `Cremation/startup-diagnostics.txt`: fases del último arranque de la DLL; se
+
   reescribe al inicializarla y no constituye un historial permanente.
+
 - `Cremation/server-startup-check.txt`: salida del servidor de prueba.
+
 - `Cremation/placement.json`: posiciones y separación de los 20 zombis.
+
 - `Cremation/ricochet-assets.json` y `Cremation/bounce-assets.json`: correspondencia
+
   y hashes de los recursos copiados o generados por cada arma.
+
 - `Cremation/file-manifest.json`: hashes de los recursos y binarios comprobados.
+
 - `Cremation/backups/before-ricochet` y `Cremation/backups/before-bounce-shotgun`:
+
   mapa y archivos previos a cada arma; no son copias completas de la instalación.
+
+
 
 ## Límites y reglas para continuar
 
+
+
 ### Incidencia adicional: texturas externas del modelo de mundo de la Escopeta de rebote
 
+
+
 El error gráfico aportado por el usuario fue:
+
 `Mod_NumForName: models/cremation/w_bounce_shotgunT.mdl not found`.
+
 El modelo fuente `valve/models/w_shotgun.mdl` declara cero texturas incrustadas
+
 y depende de `valve/models/w_shotgunt.mdl`. Se había copiado y renombrado sólo
+
 el archivo principal. El cliente GoldSrc busca el acompañante de texturas usando
+
 el nombre instalado del modelo, no el nombre de su archivo fuente.
 
+
+
 Corrección: `install_bounce_assets.py` copia también el archivo de texturas a
+
 `Cremation/models/cremation/w_bounce_shotgunT.mdl` y lo incluye en su manifiesto.
+
 `verify_mod.py` exige el acompañante válido y registrado para los modelos de
+
 esta arma que tengan `numtextures == 0`. Esta dependencia no quedaba cubierta
+
 por la prueba del servidor sin interfaz; no confundirla con el cierre antiguo
+
 del lector de exportaciones `.rdata`.
 
+
+
 1. Mantener el trabajo en Cremation y su lanzador. Preservar `valve`, `ricochet`
+
    y `Half-Life2Classic_Ravenholm` como fuentes sin editar.
+
 2. La DLL es Win32/x86. No compilar x64 ni eliminar la reserva/enlace de `.rdata`.
+
 3. La llamada de daño usa la interfaz virtual base del HLSDK, ranura 11 de
+
    `CBaseEntity::TakeDamage`. La carga nativa comprueba parte de esa interfaz;
+
    no considerar eso equivalente a haber probado todos los impactos en el juego.
+
 4. Separar pruebas simuladas, carga de DLL, arranque de servidor y validación
+
    gráfica/jugable. Las primeras tres están comprobadas; la última está pendiente.
+
 5. No afirmar todavía que animaciones, aspecto azul, empuje en escaleras/piscinas,
+
    combate, navegación y carga de guardados estén aceptados por el usuario.
+
 6. El usuario indicó que comprobará manualmente el juego. No retomar Computer Use
+
    sin nueva autorización; si lo detiene con Escape, cesar inmediatamente.
+
 7. Ante otro cierre, revisar primero el registro de eventos de Windows, el punto
+
    de fallo y `startup-diagnostics.txt`; no ajustar parámetros de juego al azar.
+
 8. La Escopeta de rebote no aplica autoaim al primario (`GetAutoaimVector` no está
+
    exportado) y su munición es propia: el runtime no permite escribir
+
    `CBasePlayer::m_rgAmmo`. Ambas cosas están razonadas en `BOUNCE_SHOTGUN.md`; no
+
    «arreglarlas» accediendo a campos privados sin revisarlo antes.
+
 9. El alias `weapon_ricochet` → `weapon_9mmhandgun` se retiró porque `SelectItem`
+
    compara el classname de la entidad. Si se vuelve a introducir, Ricochet deja de
+
    poder seleccionarse con las teclas del HUD.
+
 10. `CGlock::Spawn` sí puede sobrescribir el classname como `weapon_9mmhandgun`.
+
     El proxy debe restituir `weapon_ricochet` después del spawn y al migrar guardados.
+
     El mensaje `WeaponList` reconoce también el nombre canónico propio. La prueba
+
     real de servidor confirmó `MapWeapons ricochet=1 bounce_shotgun=1` tras corregirlo.
+
 11. El zoom del secundario procedía del portador de ballesta y de la predicción
+
     heredada. `config.cfg` tenía `cl_lw 1`; la instalación ahora normaliza sólo ese
+
     valor a 0 y el servidor lo reenvía al entrar. Mientras la escopeta modificada
+
     está activa, se bloquean `SetFOV` y FOV público/de red heredados, sin tocar
+
     `CBasePlayer::m_iFOV` privado. Mantener las pruebas específicas de FOV.
+
 12. Ajuste posterior solicitado: sólo la Escopeta de rebote hace 1.5 veces el daño
+
     base por perdigón (7.5 actualmente, antes de hitgroups) y usa una dispersión
+
     1.15 veces mayor por eje. La escopeta normal y el balance de Ricochet se conservan.
+
     Evidencias: `Cremation/validation-selection-fov.txt` y la última prueba del servidor.
+
+
 
 ## Publicación Git
 
+
+
 Repositorio inicializado dentro de Cremation. Se incluyen código, recursos y
+
 launcher/Cremation.exe (copiar junto a hl.exe); SDK de Valve como submódulo.
+
 Se excluyen configuración personal, guardados, backups y resultados temporales.
+
 .gitattributes conserva los bytes originales para no invalidar hashes de recursos.
+
 El SDK local presenta diferencias de fin de línea en proyectos DSP antiguos;
+
 no se modificaron ni se publicaron como cambios del SDK.
+
+
+
+## Ajuste Ricochet / Flak Cannon (23 octubre)
+
+Ricochet: máximo 3 cargas, coste 1 por disparo primario o triple secundario,
+
+regeneración de 1 cada 0,5 s, incluso guardada. Ritmo tomado de hornetgun.cpp.
+
+Flak Cannon es el nombre visible (icono FLAK); conserva weapon_bounce_shotgun
+
+para compatibilidad. Primario: reserva real de buckshot compartida con escopeta,
+
+2 cartuchos por descarga, sin cargador ni recarga, intervalo de 0,75 s como el
+
+primario de escopeta. Secundario mantiene granadas y comportamiento anteriores.
+
+Se añaden seis cajas ammo_buckshot por Rapidcore, además de las tres iniciales.
+
+El adaptador descubre m_rgAmmo por metadatos TYPEDESCRIPTION del propio donor
+
+(campo siguiente m_idrowndmg), sin asumir layout del SDK; índice aprendido de
+
+WeaponList de weapon_shotgun. Falla cerrado si no reconoce metadata.
+
+Pruebas: cargas/agotar/regenerar/tope, reserva compartida, ritmo y ausencia de
+
+recarga; prueba nativa valida metadata de Ravenholm. Validación jugable manual.
+
+
+
+## Balance vigente: carga lenta, Flak con munición única y gibbing
+
+Ricochet: 3 cargas, regeneración de una cada 2 segundos.
+
+Flak Cannon: una sola reserva nativa de buckshot; primario cuesta 1, secundario 2.
+
+Sin cargador/recarga. Se elimina la munición independiente de granadas del HUD.
+
+Dispersión circular de radio 0,34864 (aprox. 38,4 grados de apertura completa),
+
+con muestreo polar radial estratificado de los 12 perdigones. Daño unitario x1,5
+
+se conserva. Cada descarga identifica sus impactos por enemigo y serial;
+
+los 12 impactos en el mismo enemigo causan muerte y Killed(GIB_ALWAYS), slot 13.
+
+Los impactos se resuelven tras trazar toda la tanda del paso de simulación para
+
+que el daño de los primeros no quite la colisión antes de trazar sus compañeros.
+
+Los disparos distintos nunca acumulan impactos para esta regla. Pruebas cubren
+
+12/11 impactos, disparos separados, coste 1/2, munición insuficiente, cono circular,
+
+regeneración a los 2 s y ABI nativa del slot Killed. Confirmación visual manual.
+
+
+
+## Configuración de balance desde JSON
+
+Ricochet y Flak leen config/weapons/ricochet.json y flak_cannon.json al worldspawn,
+
+con rutas relativas a la DLL cargada (no al directorio actual del proceso).
+
+weapon_config.h valida objetos planos numéricos/booleanos, rangos y tipos, rechaza
+
+claves desconocidas/duplicadas y hace commit atómico por archivo. En error conserva
+
+el último balance válido; al primer arranque se usan los valores incorporados.
+
+weapon_config_bindings.inc define claves y rangos. No permitir recarga a mitad de
+
+mapa: cambian cargas/HUD/límites de descarga, por eso se reinicia el mapa.
+
+Las constantes estructurales (ABI/HUD/modelos) permanecen fijas. No sobrescribir
+
+JSON en build_mod.py. Guía y rangos: config/weapons/README.md.
+
+Pruebas de parser y disparo con parámetros alterados en test_weapon_config.cpp y
+
+test_bounce.cpp; incluye carga desde disco. El cargador no usa librerías externas.
+
+
+
+## Flak: arco lento, radio corto y gibbing por daño (vigente)
+
+Ricochet RechargeTime / recharge_seconds=1.5. Flak pellet_damage_multiplier=1.875:
+
+9.375 por perdigón y 112.5 por descarga nominal. Secundario usa daño total nominal
+
+como máximo y la mitad horizontal: 56.25..112.5, capturado al lanzar según 0..90°.
+
+Velocidad450, impulso vertical120, gravedad0.8, radio48 independiente del daño.
+
+Impacto directo recibe daño completo; splash conserva caída y oclusión.
+
+Se elimina la regla de 12 impactos y FullVolleyGib: no se establece health=-1000.
+
+Ahora se suma daño por descarga/objetivo/paso y se llama TakeDamage nativo antes
+
+de promover una muerte con exceso de daño a Killed(GIB_ALWAYS). Se mantiene
+
+DMG_BULLET sin añadir bits, preservando la mitigación nativa del zombi. La
+
+conversión BecomeDead puede reescribir health/max_health, por lo que se contempla
+
+su marcador de cadáver (max_health=5, health=mitad del max_health previo).
+
+JSON nuevo: gib_on_lethal_overkill, secondary_radius, secondary_upward_boost.
+
+Pruebas incluyen alta vida sin instakill, exceso/igualdad de daño, resistencia,
+
+conversión nativa de cadáver, precisión, empuje y curva/arco nuevos.
+
+Referencia de UT: manual oficial GOTY enlazado en source/BOUNCE_SHOTGUN.md.
+
+La comprobación visual de combate sigue siendo manual.
+
+
+## TFC, fragmentacion, guiado y horda (vigente)
+Flak secondary_damage_multiplier=0.75 (42.1875..84.375); impactos en superficies
+emiten 12 fragmentos a 45 grados sobre la normal; dano por elevacion. Impacto
+directo en enemigo no fragmenta. Ricochet750u/s, guiado por punteria continuo
+(ambos modos), sin punto rojo y sin auto-lock. Escopeta simple TFC:6x4,clip8,
+cadencia0.5,recarga0.1 preparacion+0.25 por cartucho, sin secundario. Valores
+inspeccionados en tfc.dll local con pefile/Capstone; fuente TFC preservada.
+tfc_gameplay.inc: sentry adaptada de nivel1; B construir(130metal/4s),N desmontar,
+J reparar/reabastecer; una por jugador. Metal inicial200 y seis recogidas50.
+No sobrescribir controles ya asignados. La construccion no deja bloqueo al guardar.
+40 zombis:20 normales+10 rapidos+10 venenosos;198 nodos;rutas automaticas al spawn.
+Modelo rapido: solo etiqueta ACT_RUN a ACT_WALK (un byte), sin cambiar offsets,
+geometria ni animaciones. Anadir secuencias al final fue descartado tras cierre en
+hl_ravenholm.dll+0x6dd0. Guardian de pfnGetModelPtr evita indices invalidos solo
+para el rapido. Prueba real20s estable, HordeProgress40/40 movidos mas32u a5s
+(20/10/10). Las sentries y el cargador TFC son estados de sesion, no persistentes.
+Guia/procedencia/incidencias: Cremation/source/TFC_AND_HORDE.md. Prueba visual y
+combate manual pendientes del usuario; no se utilizo GUI.
+
+## Correccion de aparicion y patrulla de zombis
+La orden cinematica RUN_TO_TARGET no era adecuada para los modelos, cuya actividad
+de locomocion es ACT_WALK. Cuando la actividad pedida no existe, esa tarea se da
+por completada y TASK_PLANT_ON_SCRIPT coloca al monstruo sobre la marca: por eso
+los40 terminaban en el spawn. La medicion antigua moved_over_32 contaba esos
+saltos y NO demostraba caminar. Se reprodujo con teleports=40,near_spawn_256=40.
+Ahora se conservan las40 posiciones iniciales y se sustituyen esas marcas lejanas
+por dos marcas locales repetibles por zombi (WALK,flags196), arrancadas por
+trigger_auto. Los recorridos de64-128u comprueban casco humano, suelo continuo y
+separacion de otros inicios; tres patrullas de zona estrecha usan recorridos cortos
+para evitar cruces. Ninguna marca de patrulla se situa en el spawn del jugador.
+La IA nativa conserva interrupcion por combate; ya no se fuerza la concentracion
+inicial en el jugador. Reiniciar mapa/partida para cargar estas entidades.
+HordeProgress mide ahora distancia fisica acumulada, no distancia entre dos puntos.
+HordeMovement detecta saltos por fotograma y cuenta invasiones del radio256 del
+spawn. check_server_startup.py falla si hay saltos, invasiones o nadie se mueve.
+La verificacion BSP comprueba dos rutas por actor y destinos cercanos al inicio.
+
+La recuperacion de rutas bloqueadas usa WalkMove con colision tras 3 segundos sin avance, sin SetOrigin, y cede al combate nativo si el jugador se acerca. La comprobacion de servidor de 20 segundos confirmo 40/40 zombis en movimiento, cero teletransportes y cero zombis dentro de 256 unidades del spawn.
+
+## Correccion vigente: la patrulla no controla el combate
+Se eliminan todas las aiscripted_sequence y sus trigger_auto de patrulla. Incluso
+con interrupcion permitida, la cadena repetible podia recuperar al actor y el
+estado cinematografico impedia su reaccion normal al jugador. Los 80 destinos
+son ahora info_target pasivos, sin posesion, animacion cinematica ni override.
+La patrulla usa pasos WalkMove con colision solo mientras no haya contacto:
+cede definitivamente a la IA nativa al recibir dano, detectar un jugador vivo
+visible a <=2048u o tenerlo a <384u. No altera relaciones ni punteros privados
+de enemigo. Se conserva la distribucion inicial; hace falta cargar una partida
+nueva, pues los guardados anteriores contienen las antiguas secuencias.
+Se anaden pruebas de visibilidad bloqueada/libre, proximidad, dano, cliente muerto
+y cesion persistente. La verificacion BSP exige cero secuencias cinematograficas
+y cero disparadores de patrulla. Combate visual pendiente de comprobacion manual.

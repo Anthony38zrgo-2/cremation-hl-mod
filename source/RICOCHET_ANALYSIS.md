@@ -1,3 +1,12 @@
+# Actualización vigente: guiado de puntería
+
+Velocidad 750 u/s (25% menos que 1000). Ambos disparos siguen continuamente el
+punto hacia el que apunta el dueño, como un RPG sin entidad/sprite de láser rojo.
+No elige automáticamente un enemigo. Giro limitado por guidance_turn_rate en
+radianes/segundo, incluso tras un rebote; mantiene la velocidad configurada.
+El algoritmo de giro resuelve también cambios de dirección de 180 grados.
+Regeneración: tres cargas, una cada 1,5 s. El resto inferior es análisis histórico.
+
 # Ricochet en Cremation
 
 Referencia primaria: [código oficial de Valve](https://github.com/ValveSoftware/halflife/tree/master/ricochet).

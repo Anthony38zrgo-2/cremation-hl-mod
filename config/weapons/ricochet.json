@@ -1,0 +1,19 @@
+{
+  "max_charges": 3,
+  "recharge_seconds": 1.5,
+  "disc_speed": 750,
+  "slow_seconds": 7.0,
+  "slow_speed_factor": 0.25,
+  "primary_cooldown": 0.5,
+  "secondary_cooldown": 1.25,
+  "secondary_spread_degrees": 7.0,
+  "blast_radius": 210.0,
+  "blast_damage_per_disc": 4.0,
+  "blast_push": 850.0,
+  "blast_lift": 190.0,
+  "push_seconds": 0.8,
+  "max_horizontal_push": 1200.0,
+  "disc_lifetime": 6.0,
+  "max_projectiles": 24,
+  "guidance_turn_rate": 6
+}

@@ -79,3 +79,5 @@ placement.json y file-manifest.json documentan posiciones y hashes.
 backups/before-ricochet y backups/before-bounce-shotgun conservan el estado previo.
 
 Requiere el Half-Life instalado. No se han modificado valve, Ricochet ni Ravenholm.
+
+CONTROLES: B construir sentry, N desmontar, J reparar/reabastecer. Si esas teclas ya estaban asignadas, exec engineer.cfg aplica explicitamente los enlaces. Ver source/TFC_AND_HORDE.md.

@@ -1,0 +1,9 @@
+{
+  "models/v_shotgun.mdl": "tfc/models/v_tfc_shotgun.mdl",
+  "models/p_shotgun.mdl": "tfc/models/p_smallshotgun.mdl",
+  "models/cremation/tfc_sentry.mdl": "tfc/models/sentry1.mdl",
+  "models/cremation/tfc_sentry_base.mdl": "tfc/models/base.mdl",
+  "sound/cremation/tfc_shotgun.wav": "tfc/sound/weapons/shotgn2.wav",
+  "sound/cremation/tfc_sentry_fire.wav": "tfc/sound/weapons/sgun1.wav",
+  "sound/cremation/tfc_build.wav": "tfc/sound/weapons/building.wav"
+}

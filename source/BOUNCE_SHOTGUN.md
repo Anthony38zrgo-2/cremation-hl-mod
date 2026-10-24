@@ -1,3 +1,50 @@
+# Actualización vigente: fragmentación de Flak
+
+Daño explosivo del secundario reducido 25% por secondary_damage_multiplier=0.75:
+42,1875 horizontal a 84,375 vertical, con el radio de 48 anterior.
+Al impactar superficies emite los 12 perdigones a 45 grados respecto a la normal,
+en un anillo de 360 grados. Cada fragmento hace daño explosivo de esa descarga
+entre el número de perdigones, por secondary_shrapnel_damage_multiplier=1:
+3,515625..7,03125 según elevación. Se capturan al lanzar el proyectil.
+Si impacta directamente un enemigo, aplica explosión/daño y no emite fragmentos.
+Se conservan los costes 1/2, daño primario 9,375 y gibbing por daño letal.
+La escopeta normal es ahora la simple de TFC; ver TFC_AND_HORDE.md.
+Los apartados siguientes son históricos y quedan sustituidos donde contradigan esto.
+
+# Balance vigente: Flak de precisión y gibbing por daño
+
+- Ricochet: una carga cada 1,5 segundos.
+- Flak: daño por perdigón 9,375 (base skill 5 x1,875), 12 perdigones =112,5 nominales.
+- Secundario: velocidad 450 u/s, impulso vertical inicial 120 u/s, gravedad x0,8.
+- Daño por elevación del apuntado: 56,25 horizontal a 112,5 vertical. Impacto
+  directo recibe el daño completo; radio de explosión fijo de 48 unidades con caída.
+- Primario cuesta 1 cartucho, secundario 2; siguen compartiendo la reserva nativa.
+- Se elimina la muerte por contar 12 impactos. El daño se agrupa por descarga y
+  enemigo dentro de cada paso, respetando hitgroups y mitigación nativa.
+- Gibbing solo al morir por daño que supera la vida. Se reconoce también la
+  transición nativa BecomeDead, que convierte health/max_health en estado del cadáver.
+- Clave JSON antigua full_volley_instakill_gib sustituida por gib_on_lethal_overkill.
+
+Referencia conceptual: manual oficial Unreal Tournament GOTY, secundario Flak
+como granada de metralla que se lanza en arco y explota al impacto:
+https://www.mogelpower.de/manuals/Unreal_Tournament_Game_of_the_Year_Edition_Manual_Englisch.pdf
+La curva de daño por elevación y el radio de 48 son decisiones para Cremation.
+Lo siguiente es documentación histórica y queda sustituido donde contradiga esto.
+
+# Flak Cannon — comportamiento vigente
+
+- Una reserva de cartuchos compartida con la escopeta original.
+- Primario: 1 cartucho; secundario: 2 cartuchos. Sin cargador ni recarga.
+- Primario cada 0,75 segundos, 12 proyectiles físicos con daño de perdigón x1,5.
+- Cono circular de unos 38,4 grados de apertura total, radio tangencial 0,34864.
+- Dos rebotes; desaparecen en el tercer contacto o al impactar un enemigo.
+- Si los doce perdigones de UNA descarga alcanzan al mismo enemigo, muerte
+  inmediata y llamada nativa Killed(GIB_ALWAYS). Otros impactos mantienen daño normal.
+- Secundario conserva trayectoria, explosión, empuje y daño según elevación.
+- Se mantiene weapon_bounce_shotgun para compatibilidad; icono visible FLAK.
+
+Los apartados históricos siguientes quedan sustituidos donde contradigan lo anterior.
+
 # Escopeta de rebote (`weapon_bounce_shotgun`)
 
 Arma independiente de Cremation. Reutiliza los modelos de la escopeta de Ravenholm
