@@ -114,6 +114,8 @@ struct Projectile {
     edict_t* owner=nullptr; int ownerSerial=0;
     Vector velocity{0,0,0}; float born=0,nextSteer=0; int bounces=0;
     bool explosive=false;
+    float nextParticles=0;
+    std::vector<std::pair<edict_t*,int>> slowedTargets;
 };
 static std::vector<Projectile> discs;
 struct NailProjectile {
@@ -241,7 +243,44 @@ static void steer(Projectile& d,float dt) {
     Vector next=current*std::cos(turn)+cross*std::sin(turn)+axis*(dot(axis,current)*(1-std::cos(turn)));
     if(length(next)>.5f)d.velocity=normal(next)*balance::DiscSpeed;
 }
+// Sweep the complete segment against enemy bounds independently of the world
+// trace: a primary disc can cross overlapping enemies without teleporting past
+// walls, changing its direction or spending a surface reflection.
+static bool crossesEnemy(const Vector& from,const Vector& to,edict_t* target) {
+    Vector delta=to-from;float enter=0,leave=1;
+    for(int axis=0;axis<3;++axis) {
+        float start=from[axis],speed=delta[axis];
+        float lo=target->v.absmin[axis],hi=target->v.absmax[axis];
+        if(std::fabs(speed)<.00001f) {if(start<lo || start>hi)return false;continue;}
+        float a=(lo-start)/speed,b=(hi-start)/speed;
+        if(a>b)std::swap(a,b);
+        enter=std::max(enter,a);leave=std::min(leave,b);
+        if(enter>leave)return false;
+    }
+    return true;
+}
+static void discParticles(Projectile& d) {
+    if(globals->time<d.nextParticles)return;
+    d.nextParticles=globals->time+.1f;
+    Vector at=d.entity->v.origin,back=normal(d.velocity)*-3.f;
+    for(int n=0;n<5;++n) {
+        float phase=globals->time*19.f+n*2.39996f+d.serial;
+        Vector offset(std::cos(phase)*6.f,std::sin(phase)*6.f,std::sin(phase*1.7f)*5.f);
+        Vector start=at+offset,end=start+back+offset*.35f;
+        engine.pfnMessageBegin(MSG_PVS,SvcTemp,&at.x,nullptr);
+        engine.pfnWriteByte(TE_BEAMPOINTS);coords(start);coords(end);
+        engine.pfnWriteShort(trailSprite);
+        engine.pfnWriteByte(0);engine.pfnWriteByte(0); // frame / frame rate
+        engine.pfnWriteByte(2);engine.pfnWriteByte(3);engine.pfnWriteByte(2); // life / width / noise
+        engine.pfnWriteByte(d.explosive?255:60);engine.pfnWriteByte(d.explosive?150:145);engine.pfnWriteByte(d.explosive?40:255);
+        engine.pfnWriteByte(220);engine.pfnWriteByte(0);engine.pfnMessageEnd();
+    }
+}
 static void advanceDiscs(float dt) {
+    std::vector<edict_t*> targets;
+    if(!discs.empty())for(int i=1;i<globals->maxEntities;++i) {
+        auto e=engine.pfnPEntityOfEntIndex(i);if(aliveEnemy(e))targets.push_back(e);
+    }
     for(auto& d:discs) {
         if(!valid(d.entity) || d.entity->serialnumber!=d.serial) {d.entity=nullptr;continue;}
         if(!valid(d.owner) || d.owner->serialnumber!=d.ownerSerial || d.owner->v.health<=0 || globals->time-d.born>balance::DiscLifetime) {removeDisc(d);continue;}
@@ -250,21 +289,29 @@ static void advanceDiscs(float dt) {
         // Bound bounce iterations; trace the entire traveled segment to avoid tunneling.
         for(int sub=0;sub<8 && remaining>0 && d.entity;++sub) {
             Vector from=d.entity->v.origin,to=from+d.velocity*remaining;
-            TraceResult tr{};engine.pfnTraceLine(from,to,0,d.owner,&tr);
-            if(tr.fStartSolid || tr.fAllSolid) {removeDisc(d);break;}
+            TraceResult tr{};engine.pfnTraceLine(from,to,d.explosive?0:1,d.owner,&tr);
+            if(!d.explosive && !tr.fStartSolid && !tr.fAllSolid) {
+                Vector stop=tr.flFraction<1?Vector(tr.vecEndPos):to;
+                for(auto target:targets)if(aliveEnemy(target) && crossesEnemy(from,stop,target)) {
+                    auto identity=std::make_pair(target,target->serialnumber);
+                    if(std::find(d.slowedTargets.begin(),d.slowedTargets.end(),identity)==d.slowedTargets.end()) {
+                        freeze(target);d.slowedTargets.push_back(identity);
+                    }
+                }
+            }
+            if(tr.fStartSolid || tr.fAllSolid) {if(d.explosive)burst(d,from);removeDisc(d);break;}
             if(tr.flFraction>=1) {engine.pfnSetOrigin(d.entity,to);break;}
             Vector at=tr.vecEndPos+tr.vecPlaneNormal*2.f;
             engine.pfnSetOrigin(d.entity,at);
-            if(aliveEnemy(tr.pHit)) {
-                freeze(tr.pHit);
-                if(!d.explosive) {removeDisc(d);break;}
-            }
-            if(++d.bounces>5) {if(d.explosive)burst(d,at);removeDisc(d);break;}
+            // Secondary guides but detonates on its first contact. Only the
+            // primary freezes targets and survives successive reflections.
+            if(d.explosive) {burst(d,at);removeDisc(d);break;}
+            if(++d.bounces>5) {removeDisc(d);break;}
             d.velocity=d.velocity-tr.vecPlaneNormal*(2.f*dot(d.velocity,tr.vecPlaneNormal));
             sound(d.entity,"ricochet/bounce.wav");
             remaining*=1.f-tr.flFraction;
         }
-        if(d.entity) {d.entity->v.angles.y+=dt*720;d.entity->v.velocity=Vector(0,0,0);}
+        if(d.entity) {discParticles(d);d.entity->v.angles.y+=dt*720;d.entity->v.velocity=Vector(0,0,0);}
     }
     discs.erase(std::remove_if(discs.begin(),discs.end(),[](const Projectile& d){return !d.entity;}),discs.end());
 }
@@ -338,7 +385,7 @@ static bool fireNailgun(edict_t* p,bool secondary) {
         engine.pfnWriteByte(nailAmmoIndex);engine.pfnWriteByte(remaining);engine.pfnMessageEnd();
     }
     sound(p,secondary?"weapons/spike2.wav":"weapons/spike1.wav");
-    animation(p,secondary?7:5);
+    animation(p,5);
     p->v.punchangle.x-=secondary?.55f:.2f;
     return true;
 }
@@ -376,7 +423,7 @@ static void launch(edict_t* player,float spread,bool explosive) {
     e->v.movetype=MOVETYPE_NONE;e->v.solid=SOLID_NOT;e->v.takedamage=0;
     e->v.owner=player;e->v.angles=Vector(0,aim.y,0);e->v.scale=1;
     e->v.rendermode=kRenderNormal;e->v.renderfx=kRenderFxGlowShell;e->v.renderamt=8;
-    e->v.rendercolor=explosive?Vector(255,125,35):Vector(50,145,255);
+    e->v.rendercolor=explosive?Vector(255,150,40):Vector(60,145,255);
     engine.pfnSetModel(e,explosive?"models/ricochet/disc_hard.mdl":"models/ricochet/disc.mdl");
     Vector mins(-4,-4,-4),maxs(4,4,4);engine.pfnSetSize(e,mins,maxs);engine.pfnSetOrigin(e,origin);
     discs.push_back({e,e->serialnumber,player,player->serialnumber,direction*balance::DiscSpeed,globals->time,0,0,explosive});
@@ -607,7 +654,7 @@ static void hookPostThink(edict_t* p) {
         bool secondary=(state.buttons&Attack2)!=0;
         if(fireNailgun(p,secondary)) {state.nailNextFire=globals->time+.1f;state.animUntil=globals->time+.2f;}
     }
-    if(activeNail&&globals->time>=state.animUntil&&p->v.weaponanim!=1)animation(p,1);
+    if(activeNail&&globals->time>=state.animUntil&&p->v.weaponanim!=0)animation(p,0);
     state.wasNailgun=activeNail;
     state.wasActive=active;
     if(bounce::isBouncePlayer(p))p->v.fov=0;

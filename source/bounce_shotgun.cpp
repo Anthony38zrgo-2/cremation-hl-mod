@@ -400,6 +400,7 @@ struct Grenade {
     float radius = 0;
     float elevation = 0;
     int scale = ExplosionScaleMin;
+    float nextParticles = 0;
 };
 std::vector<Grenade> grenadesStore;
 
@@ -496,6 +497,27 @@ void explodeGrenade(Grenade& grenade, const Vector& at, edict_t* directHit = nul
     destroy(grenade.entity, grenade.serial);
 }
 
+// Short additive orange sparks stay close to the secondary projectile.
+void grenadeParticles(Grenade& grenade) {
+    if(!trailSprite || !eng->pfnMessageBegin || globals->time<grenade.nextParticles)return;
+    grenade.nextParticles=globals->time+.1f;
+    Vector at=grenade.entity->v.origin,back=normal(grenade.velocity)*-3.f;
+    for(int n=0;n<5;++n) {
+        float phase=globals->time*19.f+n*2.39996f+grenade.serial;
+        Vector offset(std::cos(phase)*6.f,std::sin(phase)*6.f,std::sin(phase*1.7f)*5.f);
+        Vector start=at+offset,end=start+back+offset*.35f;
+        eng->pfnMessageBegin(MSG_PVS,SvcTempEntity,&at.x,nullptr);
+        eng->pfnWriteByte(TE_BEAMPOINTS);
+        eng->pfnWriteCoord(start.x);eng->pfnWriteCoord(start.y);eng->pfnWriteCoord(start.z);
+        eng->pfnWriteCoord(end.x);eng->pfnWriteCoord(end.y);eng->pfnWriteCoord(end.z);
+        eng->pfnWriteShort(trailSprite);
+        eng->pfnWriteByte(0);eng->pfnWriteByte(0);
+        eng->pfnWriteByte(2);eng->pfnWriteByte(3);eng->pfnWriteByte(2);
+        eng->pfnWriteByte(255);eng->pfnWriteByte(150);eng->pfnWriteByte(40);
+        eng->pfnWriteByte(220);eng->pfnWriteByte(0);eng->pfnMessageEnd();
+    }
+}
+
 void advanceGrenades(float dt) {
     cvar_t* gravityCvar = eng->pfnCVarGetPointer ? eng->pfnCVarGetPointer("sv_gravity") : nullptr;
     float gravity = gravityCvar ? gravityCvar->value : 800.f;
@@ -550,6 +572,7 @@ void advanceGrenades(float dt) {
             break;
         }
         if (grenade.entity && exhausted) explodeGrenade(grenade, grenade.entity->v.origin);
+        if (grenade.entity) grenadeParticles(grenade);
     }
     grenadesStore.erase(std::remove_if(grenadesStore.begin(), grenadesStore.end(),
                                        [](const Grenade& g) { return !g.entity; }),
@@ -708,6 +731,14 @@ bool fireGrenade(edict_t* player, PlayerState& state) {
     grenade.elevation = elevation;
     grenade.scale = scale;
     grenadesStore.push_back(grenade);
+    if(trailSprite && eng->pfnMessageBegin) {
+        eng->pfnMessageBegin(MSG_BROADCAST,SvcTempEntity,nullptr,nullptr);
+        eng->pfnWriteByte(TE_BEAMFOLLOW);
+        eng->pfnWriteShort(eng->pfnIndexOfEdict(entity));eng->pfnWriteShort(trailSprite);
+        eng->pfnWriteByte(9);eng->pfnWriteByte(10);
+        eng->pfnWriteByte(255);eng->pfnWriteByte(150);eng->pfnWriteByte(40);
+        eng->pfnWriteByte(210);eng->pfnMessageEnd();
+    }
     if(host.shells)state.shells=host.shells(player,SecondaryAmmoCost);
     else state.shells-=SecondaryAmmoCost;
     state.nextSecondary = globals->time + SecondaryCooldown;

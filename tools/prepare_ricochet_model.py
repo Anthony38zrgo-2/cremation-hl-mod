@@ -112,7 +112,20 @@ def build_assets():
         st.pack_into('<i', red, table_index + n*80 + 76, pixel_index)
     st.pack_into('<i', red, 72, len(red))
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / 'v_ricochet_blue.mdl').write_bytes(blue)
+    # Reuse the same safe envelope geometry for primary mode. Restore the
+    # source blue surface textures and color only its additive shell cyan.
+    cyan = bytearray(red)
+    for n in range(textures):
+        old_tex = texture_index + n * 80
+        w, h, old_pixels = st.unpack_from('<3i', blue, old_tex + 68)
+        new_pixels = integer(cyan, table_index + n * 80 + 76)
+        cyan[new_pixels:new_pixels + w*h + 768] = blue[old_pixels:old_pixels + w*h + 768]
+    shell_tex = table_index + textures * 80
+    cyan[shell_tex:shell_tex + 64] = b'cyan_envelope.bmp'.ljust(64, b'\0')
+    shell_pixels = integer(cyan, shell_tex + 76)
+    palette = shell_pixels + 32*32
+    cyan[palette:palette + 768] = bytes([3,65,90])*256
+    (OUT / 'v_ricochet_blue.mdl').write_bytes(cyan)
     (OUT / 'v_ricochet_red.mdl').write_bytes(red)
 
 

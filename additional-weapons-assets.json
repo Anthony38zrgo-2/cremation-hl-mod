@@ -48,9 +48,9 @@
     },
     "models/v_9mmhandgun.mdl": {
       "source": "assets-source/additional_weapons/ricochet_variants/v_ricochet_blue.mdl",
-      "source_sha256": "e497ed0c1a31bae0873a373dc3967d10087946a1be8f09928c86c9795ad73bd3",
-      "sha256": "e497ed0c1a31bae0873a373dc3967d10087946a1be8f09928c86c9795ad73bd3",
-      "bytes": 72908,
+      "source_sha256": "3f30080e69c450ff3aa7bbb2f3d3cac0f1deb4e7e2b450bde3f3d1b864fa4baf",
+      "sha256": "3f30080e69c450ff3aa7bbb2f3d3cac0f1deb4e7e2b450bde3f3d1b864fa4baf",
+      "bytes": 83540,
       "derived_from": "assets-source/additional_weapons/panthergun/v_HGun_blue.mdl",
       "generator": "tools/prepare_ricochet_model.py"
     },
@@ -202,11 +202,13 @@
       "backup": null
     },
     "models/cremation/v_nailgun.mdl": {
-      "source": "assets-source/additional_weapons/nailgun/v_nailgun.mdl",
-      "source_sha256": "b34778496cf0af4a31713939dbf91bc3593bb3137a19a8896b2dc32e8920f62a",
-      "sha256": "b34778496cf0af4a31713939dbf91bc3593bb3137a19a8896b2dc32e8920f62a",
-      "bytes": 87904,
-      "backup": null
+      "source": "assets-source/additional_weapons/unreal_hive_hand/v_hgun_mp5_anims.mdl",
+      "source_archive": "unreal_pack.zip:Unreal_pack/models/v_hgun.mdl",
+      "source_sha256": "04168ac0600c6e403e02457ba9da73b63225eceda75332f44e4eb27d14ba54b6",
+      "sha256": "04168ac0600c6e403e02457ba9da73b63225eceda75332f44e4eb27d14ba54b6",
+      "bytes": 88692,
+      "generator": "tools/prepare_nailgun_animation.py",
+      "animation_donor": "assets-source/additional_weapons/unreal_hive_hand/v_mp5_motion.mdl"
     },
     "models/cremation/p_nailgun.mdl": {
       "source": "assets-source/additional_weapons/nailgun/p_nailgun.mdl",
