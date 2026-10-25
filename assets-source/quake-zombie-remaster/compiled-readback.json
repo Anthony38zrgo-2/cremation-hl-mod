@@ -1,0 +1,156 @@
+{
+  "samples": [
+    {
+      "sequence": "idle",
+      "frame": 0,
+      "mean": 0.024139967416170822,
+      "maximum": 0.2874008934229066
+    },
+    {
+      "sequence": "idle",
+      "frame": 7,
+      "mean": 0.025280223509468677,
+      "maximum": 0.29780076753417334
+    },
+    {
+      "sequence": "idle",
+      "frame": 14,
+      "mean": 0.024755284768201106,
+      "maximum": 0.3649189706413389
+    },
+    {
+      "sequence": "walk",
+      "frame": 0,
+      "mean": 0.06533831270389816,
+      "maximum": 0.657468716268101
+    },
+    {
+      "sequence": "walk",
+      "frame": 9,
+      "mean": 0.03386540864007331,
+      "maximum": 0.5736231312854368
+    },
+    {
+      "sequence": "walk",
+      "frame": 18,
+      "mean": 0.06550398541073563,
+      "maximum": 0.6857317326275151
+    },
+    {
+      "sequence": "run",
+      "frame": 0,
+      "mean": 0.045688250308071145,
+      "maximum": 0.5994286495989525
+    },
+    {
+      "sequence": "run",
+      "frame": 9,
+      "mean": 0.04166037857707046,
+      "maximum": 0.7137292587032729
+    },
+    {
+      "sequence": "run",
+      "frame": 17,
+      "mean": 0.045864204834498726,
+      "maximum": 0.5994291345843688
+    },
+    {
+      "sequence": "attack",
+      "frame": 0,
+      "mean": 0.030286768389007627,
+      "maximum": 0.20606796644706987
+    },
+    {
+      "sequence": "attack",
+      "frame": 6,
+      "mean": 0.06353002551423534,
+      "maximum": 0.5213528388210011
+    },
+    {
+      "sequence": "attack",
+      "frame": 12,
+      "mean": 0.1138353241944968,
+      "maximum": 1.7507129373955428
+    },
+    {
+      "sequence": "painb",
+      "frame": 0,
+      "mean": 0.014439312363171452,
+      "maximum": 0.16577747694269793
+    },
+    {
+      "sequence": "painb",
+      "frame": 14,
+      "mean": 0.06185812789517076,
+      "maximum": 0.9359641430691568
+    },
+    {
+      "sequence": "painb",
+      "frame": 27,
+      "mean": 0.01440970217188875,
+      "maximum": 0.16577815298856655
+    },
+    {
+      "sequence": "paine",
+      "frame": 0,
+      "mean": 0.015338596034415643,
+      "maximum": 0.15873500055497855
+    },
+    {
+      "sequence": "paine",
+      "frame": 15,
+      "mean": 0.03429156461338387,
+      "maximum": 0.5222052607155442
+    },
+    {
+      "sequence": "paine",
+      "frame": 29,
+      "mean": 0.015319851453428202,
+      "maximum": 0.15871793402724807
+    },
+    {
+      "sequence": "attb",
+      "frame": 0,
+      "mean": 0.030784993849114584,
+      "maximum": 0.20606744365206972
+    },
+    {
+      "sequence": "attb",
+      "frame": 7,
+      "mean": 0.07921796585972285,
+      "maximum": 0.7697165658629753
+    },
+    {
+      "sequence": "attb",
+      "frame": 13,
+      "mean": 0.11450915196190438,
+      "maximum": 2.1324049551870026
+    },
+    {
+      "sequence": "attc",
+      "frame": 0,
+      "mean": 0.030486187187522242,
+      "maximum": 0.20615968573291488
+    },
+    {
+      "sequence": "attc",
+      "frame": 6,
+      "mean": 0.07701643004588479,
+      "maximum": 0.9377376958768632
+    },
+    {
+      "sequence": "attc",
+      "frame": 11,
+      "mean": 0.11354287093481892,
+      "maximum": 2.070312246521188
+    }
+  ],
+  "compiled_triangles": 1262,
+  "compiled_bones": 127,
+  "height": 103.3389521820748,
+  "attachment": [
+    -4.737072870715829,
+    -12.972254561023554,
+    54.06788618455633
+  ]
+}

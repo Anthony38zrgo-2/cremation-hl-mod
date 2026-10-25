@@ -12,6 +12,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include "ricochet_balance.h"
 #include "bounce_shotgun.h"
 #include "entity_state.h"
@@ -435,6 +436,8 @@ static int sharedShells(edict_t* p,int spend) {
 }
 #include "winchester1887.inc"
 #include "shockrifle.inc"
+#include "quake_zombie.inc"
+#include "quake_zombie_validation.inc"
 static bool disabledShotgunActive(edict_t* p){return !ShotgunsPlayable&&(winchester(p)||bounce::isTfcPlayer(p));}
 static void attachBounce() {
     bounce::Host host{};
@@ -542,6 +545,7 @@ static void hordeWalkAnimation(edict_t* e) {
     }
 }
 static void hookThink(edict_t* e) {
+    if(qzThink(e))return;
     if(bounce::isSentry(e)) {e->v.nextthink=globals->time+.1f;return;}
     bool incendiary=incendiaryBeforeThink(e);
     edict_t* grenadeOwner=incendiary?e->v.owner:nullptr;int grenadeOwnerSerial=valid(grenadeOwner)?grenadeOwner->serialnumber:0;
@@ -559,6 +563,7 @@ static void hookThink(edict_t* e) {
     }
 }
 static void hookStartFrame() {
+    qzProbeFrame();
     cultistFrame();
     rpgFrame();
     linkFrame();
@@ -586,7 +591,7 @@ static void hookStartFrame() {
         probe.combat=hordeAlert(probe);
         // Idle-only collision-checked patrol; native AI owns all combat thereafter.
         if(!probe.fallback && globals->time-hordeStartedAt>3 && probe.walked<8 && length2d(probe.patrol-probe.origin)>32 && length2d(probe.patrol-probe.origin)<140)probe.fallback=true;
-        if(probe.fallback && aliveEnemy(probe.entity)) {
+        if(probe.fallback && aliveEnemy(probe.entity) && !qzIs(probe.entity)) {
             if(!probe.combat) {
                 Vector target=probe.returning?probe.origin:probe.patrol;
                 if(length2d(target-probe.entity->v.origin)<8){probe.returning=!probe.returning;target=probe.returning?probe.origin:probe.patrol;}
@@ -828,6 +833,7 @@ static void hookClientCommand(edict_t* p) {
     }
 }
 static void hookTouch(edict_t* a,edict_t* b) {
+    if(qzTouch(a,b)||qzTouch(b,a))return;
     auto fullShockAmmo=[](edict_t* item,edict_t* player){return valid(item)&&valid(player)&&(player->v.flags&FL_CLIENT)&&(!std::strcmp(text(item->v.classname),"ammo_gaussclip")||!std::strcmp(text(item->v.classname),"ammo_shockcore"))&&shockAmmoIndex>=0&&sharedAmmo(player,shockAmmoIndex,0)>=50;};
     if(fullShockAmmo(a,b)||fullShockAmmo(b,a))return;
     if((valid(a)&&disabledShotgunClass(text(a->v.classname)))||(valid(b)&&disabledShotgunClass(text(b->v.classname))))return;
@@ -841,6 +847,7 @@ static void hookTouch(edict_t* a,edict_t* b) {
 }
 static const char* hookDescription() {return "Cremation";}
 static int hookSpawn(edict_t* e) {
+    if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);return result;}
     const char* classname=text(e->v.classname);
     bool ricochetItem=classname && (!std::strcmp(classname,"weapon_ricochet")||!std::strcmp(classname,"weapon_9mmhandgun")||!std::strcmp(classname,"weapon_glock"));
     bool bounceItem=bounce::isCarrierClass(classname);
@@ -891,6 +898,7 @@ static int hookSpawn(edict_t* e) {
         msgGibBlood=engine.pfnRegUserMsg("GibBlood",14);bloodStamps.clear();bloodHits.clear();
         for(auto path:{"sprites/bloodspray.spr","sprites/blood.spr"})engine.pfnPrecacheModel(const_cast<char*>(path));
         shockPrecache();
+        qzPrecache();
         winchesterPrecache();
         necroPrecache();
         cultistPrecache();
@@ -956,6 +964,7 @@ static void hookActivate(edict_t* list,int count,int maxClients) {
     char inventory[120];std::snprintf(inventory,sizeof(inventory),"ricochet=%d bounce_shotgun=%d nailgun=%d pipewrench=%d",ricochetCount,bounceCount,nailCount,wrenchCount);
     startupTrace("MapWeapons",inventory);
     engine.pfnAlertMessage(at_console,const_cast<char*>("Cremation loaded: Ricochet, Flak Cannon, Nailgun and Opposing Force Pipe Wrench.\n"));
+    qzProbeBegin(list,count);
 }
 static void hookDeactivate() {
     for(auto& s:effects) {
@@ -984,6 +993,8 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     incendiaryGrenades.erase(std::remove_if(incendiaryGrenades.begin(),incendiaryGrenades.end(),[e](const IncendiaryGrenade& g){return g.entity==e;}),incendiaryGrenades.end());
     int result=raven.pfnRestore(e,data,globalEntity);
     const char* restoredClass=text(e->v.classname);
+    if(qzIs(e)){qzInstall(e);weaponBloodInstall(e);Vector mins(-16,-16,0),maxs(16,16,QZHeight);engine.pfnSetSize(e,&mins.x,&maxs.x);e->v.view_ofs=Vector(0,0,QZEye);e->v.nextthink=globals->time+.1f;return result;}
+    if(qzGib(e)){e->v.nextthink=std::max(globals->time+.1f,e->v.dmgtime);return result;}
     if(restoredClass&&!std::strcmp(restoredClass,"monster_minion"))necroInstall(e);
     if(restoredClass&&!std::strcmp(restoredClass,"weapon_hornetgun"))e->v.classname=engine.pfnAllocString("weapon_necromancer");
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_necro_fx"))e->v.flags|=FL_KILLME;
@@ -1131,6 +1142,8 @@ extern "C" void cremation_sentry_base(entvars_t* vars) {
 
 extern "C" void weapon_necromancer(entvars_t* vars){spawnNativeAlias(vars,"weapon_hornetgun","weapon_necromancer");}
 extern "C" void monster_minion(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_minion");}
+extern "C" void monster_quake_zombie(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_quake_zombie");}
+extern "C" void quake_zombie_gib(entvars_t* vars){spawnNativeAlias(vars,"info_target","quake_zombie_gib");}
 
 extern "C" void weapon_winchester1887(entvars_t* vars){spawnNativeAlias(vars,"weapon_357","weapon_winchester1887");}
 

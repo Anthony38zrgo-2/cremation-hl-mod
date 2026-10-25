@@ -13,7 +13,7 @@ static int __fastcall weaponBloodDamage(void* object,void*,entvars_t* inflictor,
  bool eligible=valid(victim)&&victim->v.health>0&&amount>0&&attacker&&(attacker->flags&FL_CLIENT);float before=eligible?victim->v.health:0;int serial=eligible?victim->serialnumber:0,color=-1;Vector at(0,0,0),direction(0,0,1);
  if(eligible){color=reinterpret_cast<int(__thiscall*)(void*)>(table[14])(object);at=center(victim);Vector source=(inflictor&&inflictor!=attacker)?inflictor->origin:attacker->origin+attacker->view_ofs;direction=normal(source-at);at=at+direction*std::min(12.f,length(victim->v.maxs-victim->v.mins)*.15f);int index=engine.pfnIndexOfEdict(victim);if(index<int(bloodHits.size())){auto& hit=bloodHits[index];if(hit.serial==serial&&globals->time-hit.time<=.025f){at=hit.point;direction=hit.direction;}}}
  int result=original(object,inflictor,attacker,amount,bits);
- if(eligible&&color>=0&&victim&&!victim->free&&victim->serialnumber==serial&&victim->v.health<before&&msgGibBlood){
+ if(eligible&&color>=0&&victim&&!victim->free&&victim->serialnumber==serial&&(victim->v.health<before||(result>0&&!std::strcmp(text(victim->v.classname),"monster_quake_zombie")))&&msgGibBlood){
   int index=engine.pfnIndexOfEdict(victim);if(index>=int(bloodStamps.size()))bloodStamps.resize(globals->maxEntities);auto& stamp=bloodStamps[index];
   if(stamp.serial!=serial){stamp.serial=serial;stamp.next=0;}
   bool red=color==247;if(globals->time>=stamp.next&&engine.pfnCVarGetFloat(red?"violence_hblood":"violence_ablood")!=0){stamp.next=globals->time+.04f;engine.pfnMessageBegin(MSG_PVS,msgGibBlood,&at.x,nullptr);coords(at);coords(direction);engine.pfnWriteByte(red?2:3);engine.pfnWriteByte(2*std::min(5,std::max(2,int(amount/12)+2)));engine.pfnMessageEnd();}

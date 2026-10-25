@@ -12,7 +12,7 @@ source=BSP(ROOT/'valve/maps/rapidcore.bsp')
 output=BSP(MOD/'maps/rapidcore.bsp')
 report=json.loads((MOD/'placement.json').read_text())
 counts=Counter(e['classname'] for e in output.entities)
-assert counts['monster_zombie']==20
+assert counts['monster_quake_zombie']==20 and counts['monster_zombie']==0
 assert counts['monster_fastzombie']==10 and counts['monster_poisionzombie']==10
 assert counts['aiscripted_sequence']==0
 assert not any(e['classname']=='trigger_auto' and e.get('target','').startswith('cremation_patrol_') for e in output.entities)
@@ -27,7 +27,7 @@ spawn=next(e for e in output.entities if e['classname']=='info_player_start')
 sp=tuple(map(float,spawn['origin'].split()))
 assert output.clear(sp,1)
 assert abs(output.floor(*sp[:2])+36-sp[2])<.1
-zombies=[e for e in output.entities if e['classname'] in ('monster_zombie','monster_fastzombie','monster_poisionzombie')]
+zombies=[e for e in output.entities if e['classname'] in ('monster_quake_zombie','monster_fastzombie','monster_poisionzombie')]
 for e in zombies:
     goals=[g for g in output.entities if g.get('netname')==e['targetname']]
     assert len(goals)==2
@@ -75,6 +75,9 @@ with zipfile.ZipFile(MOD/'assets-source/bloodcultisthecu.zip') as archive:
         if name.startswith(prefix+'Cultist sounds/') and name.endswith('.wav'):hecu_assets['sound/hgrunt/'+Path(name).name]=archive.read(name)
 for relative,raw in hecu_assets.items():assert (MOD/relative).read_bytes()==raw,relative
 manifest={}
+for relative,entry in json.loads((MOD/'quake-zombie-assets.json').read_text()).items():
+    assert hashlib.sha256((MOD/relative).read_bytes()).hexdigest()==entry['sha256'],relative
+    manifest[relative]=entry['sha256']
 ricochet_assets=json.loads((MOD/'ricochet-assets.json').read_text())
 ricochet_assets.update(json.loads((MOD/'tfc-assets.json').read_text()))
 for folder in ('dlls','cl_dlls','models','sound','sprites','events'):
@@ -181,7 +184,7 @@ export_data=(MOD/'dlls/hl.dll').read_bytes()
 for name in ('monster_zombie','item_suit','weapon_9mmhandgun','weapon_shotgun','weapon_crossbow','ammo_9mmclip','ammo_buckshot','info_node'):
     assert name.encode()+b'\0' in export_data,name
 (MOD/'file-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-print('PASS: 40 Ravenholm zombies (normal/fast/poison); one clear spawn; suit + Ricochet + shotgun + Bounce Shotgun + buckshot.')
+print('PASS: 20 independent Quake zombies + 10 fast + 10 poison; one clear spawn; original native zombie model preserved.')
 print('PASS: the three weapons are separate BSP entities with separate HUD slots.')
 print('PASS: standing hulls, floor contact, spacing >96, start distance >1000, no direct visibility.')
 print('PASS: all 14 non-entity BSP lumps unchanged; donor assets + overrides match their sources.')

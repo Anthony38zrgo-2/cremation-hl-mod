@@ -1,0 +1,82 @@
+{
+  "models/cremation/quake/zombie.mdl": {
+    "source": "Quake/rerelease/id1/pak0.pak:progs/zombie.md5mesh + zombie.md5anim; scale=2.0",
+    "sha256": "67d4e20110641ddc355f71fe30d0a9a6ab22bda8c1f0b997da4921b38fb137cf",
+    "bytes": 394564
+  },
+  "models/cremation/quake/zom_gib.mdl": {
+    "source": "slipgateclassic_beta11.zip:SGClassic/models/zom_gib.mdl",
+    "sha256": "3bec0c448ccdf9d59276d80032e6c97068a9ad16b22844f45a5ad442da72ee76",
+    "bytes": 6456
+  },
+  "models/cremation/quake/h_zombie.mdl": {
+    "source": "slipgateclassic_beta11.zip:SGClassic/models/h_zombie.mdl",
+    "sha256": "5b47235da06d7cfc2c08b79c8bfea151014fa43992ebbdcdb9beff2e78b0ae1a",
+    "bytes": 4768
+  },
+  "models/cremation/quake/gib_1.mdl": {
+    "source": "slipgateclassic_beta11.zip:SGClassic/models/gib_1.mdl",
+    "sha256": "381bace9e3a4b66bdae9625b8933cb0ba77923b62c70fcb940dc3835cfbe55d0",
+    "bytes": 6456
+  },
+  "models/cremation/quake/gib_2.mdl": {
+    "source": "slipgateclassic_beta11.zip:SGClassic/models/gib_2.mdl",
+    "sha256": "ff89c39e0e5d0bc78484cdbfbb50e3b4d7d1c28e220e7a02dc49a2652f48478d",
+    "bytes": 21728
+  },
+  "models/cremation/quake/gib_3.mdl": {
+    "source": "slipgateclassic_beta11.zip:SGClassic/models/gib_3.mdl",
+    "sha256": "0b19869166816c7aef0367edd6a4ed61c4f0fdf355df253af77319c31a47fca4",
+    "bytes": 5080
+  },
+  "sound/cremation/quake/zombie/z_idle.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_idle.wav",
+    "sha256": "ca021c8a549717cd0a47b982ed8be6faa9ea43311f9c8866c8179a0fa13c243c",
+    "bytes": 16734
+  },
+  "sound/cremation/quake/zombie/z_idle1.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_idle1.wav",
+    "sha256": "89aca032cfd88c52b13e91e50b3b1fae68936fd133d4e56aa66c8326989c601a",
+    "bytes": 13244
+  },
+  "sound/cremation/quake/zombie/z_shot1.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_shot1.wav",
+    "sha256": "341e107da7104e6f7be9a0771b28d342cb9ada44a70803564e3f949962ce40b5",
+    "bytes": 3068
+  },
+  "sound/cremation/quake/zombie/z_gib.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_gib.wav",
+    "sha256": "0d7ac92106f50954044c3f7b48df087e2e678571c1e6c23f16cfead1d1b455a4",
+    "bytes": 16226
+  },
+  "sound/cremation/quake/zombie/z_pain.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_pain.wav",
+    "sha256": "3340c9c704e46745600075b7331bacf8dfd12412756400b8ef0e2b7016060cf5",
+    "bytes": 12218
+  },
+  "sound/cremation/quake/zombie/z_pain1.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_pain1.wav",
+    "sha256": "7dbf4797d16951ce8a25d8c467b291db01f674062a6f6841de2740dbc91a298c",
+    "bytes": 15374
+  },
+  "sound/cremation/quake/zombie/z_fall.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_fall.wav",
+    "sha256": "0ec168e08ca88f901f7fd02e58a8e981efe33d22be5e9768a7b4dcfffc49ce08",
+    "bytes": 3062
+  },
+  "sound/cremation/quake/zombie/z_miss.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_miss.wav",
+    "sha256": "010c17212ab6612d8f04a62c8884c9242ab3517e7919190041eed522ca90c481",
+    "bytes": 10734
+  },
+  "sound/cremation/quake/zombie/z_hit.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/z_hit.wav",
+    "sha256": "b8e00283b9622e349478f169f3eccc16c7b101221e9f89a354b6d1de51a44bfd",
+    "bytes": 6166
+  },
+  "sound/cremation/quake/zombie/idle_w2.wav": {
+    "source": "Quake/id1/PAK0.PAK:sound/zombie/idle_w2.wav",
+    "sha256": "ed9dc100255cc72c57505a4600875edf6668c2c7ced68854f7e83d8c0e1f6de0",
+    "bytes": 17192
+  }
+}

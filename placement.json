@@ -197,7 +197,7 @@
         ]
       ],
       "id": 1,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -160,
         800,
@@ -220,7 +220,7 @@
         ]
       ],
       "id": 2,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         200,
         880,
@@ -243,7 +243,7 @@
         ]
       ],
       "id": 3,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         500,
         700,
@@ -266,7 +266,7 @@
         ]
       ],
       "id": 4,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -550,
         700,
@@ -283,13 +283,13 @@
           -319
         ],
         [
-          -1402.0503560427633,
-          468.6795333845488,
-          -319
+          -1354.0,
+          350.0,
+          -319.0
         ]
       ],
       "id": 5,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -1450,
         350,
@@ -306,13 +306,13 @@
           -319
         ],
         [
-          -1367.723185960123,
-          -248.0536887192292,
-          -319
+          -1354.0,
+          -150.0,
+          -319.0
         ]
       ],
       "id": 6,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -1450,
         -150,
@@ -335,7 +335,7 @@
         ]
       ],
       "id": 7,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -1250,
         0,
@@ -358,7 +358,7 @@
         ]
       ],
       "id": 8,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -1350,
         200,
@@ -381,7 +381,7 @@
         ]
       ],
       "id": 9,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -850,
         300,
@@ -404,7 +404,7 @@
         ]
       ],
       "id": 10,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -850,
         -200,
@@ -427,7 +427,7 @@
         ]
       ],
       "id": 11,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -800,
         -480,
@@ -450,7 +450,7 @@
         ]
       ],
       "id": 12,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -240,
         100,
@@ -473,7 +473,7 @@
         ]
       ],
       "id": 13,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         180,
         100,
@@ -496,7 +496,7 @@
         ]
       ],
       "id": 14,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         -240,
         -300,
@@ -519,7 +519,7 @@
         ]
       ],
       "id": 15,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         180,
         -300,
@@ -542,7 +542,7 @@
         ]
       ],
       "id": 16,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         960,
         0,
@@ -565,7 +565,7 @@
         ]
       ],
       "id": 17,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         1100,
         -400,
@@ -588,7 +588,7 @@
         ]
       ],
       "id": 18,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         900,
         -650,
@@ -611,7 +611,7 @@
         ]
       ],
       "id": 19,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         480,
         -300,
@@ -628,13 +628,13 @@
           -319
         ],
         [
-          557.0323229634622,
-          202.22534528605348,
-          -319
+          528.0,
+          183.138,
+          -319.0
         ]
       ],
       "id": 20,
-      "classname": "monster_zombie",
+      "classname": "monster_quake_zombie",
       "origin": [
         480,
         100,

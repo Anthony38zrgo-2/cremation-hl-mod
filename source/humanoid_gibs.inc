@@ -21,11 +21,8 @@ static void anatomicalRest(AnatomicalGib& g,const Vector& ground){
             for(int i=0;i<vertices;++i){auto v=reinterpret_cast<float*>(h+index+i*12);minZ=std::min(minZ,-std::sin(pitch)*v[0]+std::cos(pitch)*v[2]);}}}}
     Vector at=ground+Vector(0,0,-minZ+.3f);engine.pfnSetOrigin(e,&at.x);g.velocity=Vector(0,0,0);e->v.velocity=Vector(0,0,0);e->v.avelocity=Vector(0,0,0);g.asleep=true;
 }
-static void humanGibFinish(){
-    if(humanNativeGibs.empty())return;
-    Vector origin(0,0,0),impulse(0,0,0);int count=0;
-    for(auto& g:humanNativeGibs)if(valid(g.first)&&g.first->serialnumber==g.second){origin=origin+g.first->v.origin;impulse=impulse+g.first->v.velocity;++count;g.first->v.flags|=FL_KILLME;g.first->v.effects|=EF_NODRAW;g.first->v.solid=SOLID_NOT;}
-    humanNativeGibs.clear();if(!count)return;origin=origin*(1.f/count);impulse=impulse*(1.f/count);if(length(impulse)>260)impulse=normal(impulse)*260;
+static void humanGibSpawn(Vector origin,Vector impulse){
+    if(length(impulse)>260)impulse=normal(impulse)*260;
     for(int body=0;body<6;++body){auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString("info_target"));if(!e)continue;raven.pfnSpawn(e);e->v.targetname=engine.pfnAllocString("cremation_anatomical_gib");engine.pfnSetModel(e,"models/hgibs.mdl");e->v.body=body;
         // One simulation owns movement. Decorative pieces cannot collide with one another.
         e->v.movetype=MOVETYPE_NONE;e->v.solid=SOLID_NOT;e->v.nextthink=0;e->v.takedamage=0;e->v.velocity=Vector(0,0,0);
@@ -33,6 +30,12 @@ static void humanGibFinish(){
         Vector at=origin+radial*16+Vector(0,0,6+body*2);TraceResult tr;engine.pfnTraceLine(&origin.x,&at.x,1,nullptr,&tr);if(tr.flFraction<1)at=tr.vecEndPos+tr.vecPlaneNormal*4;engine.pfnSetOrigin(e,&at.x);
         Vector velocity=impulse*.3f+radial*engine.pfnRandomFloat(85,150)+Vector(0,0,engine.pfnRandomFloat(100,180));e->v.angles=Vector(engine.pfnRandomFloat(0,360),engine.pfnRandomFloat(0,360),engine.pfnRandomFloat(0,360));
         anatomicalGibs.push_back({e,e->serialnumber,globals->time+25,globals->time,globals->time,velocity});}
+}
+static void humanGibFinish(){
+    if(humanNativeGibs.empty())return;
+    Vector origin(0,0,0),impulse(0,0,0);int count=0;
+    for(auto& g:humanNativeGibs)if(valid(g.first)&&g.first->serialnumber==g.second){origin=origin+g.first->v.origin;impulse=impulse+g.first->v.velocity;++count;g.first->v.flags|=FL_KILLME;g.first->v.effects|=EF_NODRAW;g.first->v.solid=SOLID_NOT;}
+    humanNativeGibs.clear();if(count)humanGibSpawn(origin*(1.f/count),impulse*(1.f/count));
 }
 static void anatomicalGibFrame(){
     for(auto it=anatomicalGibs.begin();it!=anatomicalGibs.end();){auto& g=*it;auto e=g.entity;if(!valid(e)||e->serialnumber!=g.serial){it=anatomicalGibs.erase(it);continue;}
