@@ -1,0 +1,23 @@
+{
+  "archive": "C:/Users/bill/Downloads/winchester_1887.rar",
+  "variant": "Default + Textures",
+  "weapon": "weapon_winchester1887",
+  "shared_ammo": "buckshot",
+  "magazine": false,
+  "resources": [
+    "dlls/cremation.dll",
+    "maps/rapidcore.bsp",
+    "sprites/weapon_winchester1887.txt",
+    "models/cremation/p_winchester1887.mdl",
+    "models/cremation/v_winchester1887.mdl",
+    "models/cremation/w_winchester1887.mdl",
+    "sound/weapons/m1887/dbarrel1.wav",
+    "sound/weapons/m1887/m1887_after.wav",
+    "sound/weapons/m1887/m1887_draw.wav",
+    "sound/weapons/m1887/m1887_insert.wav",
+    "sound/weapons/m1887/m1887_start.wav",
+    "sound/weapons/m1887/reload3.wav",
+    "sound/weapons/m1887/sbarrel1.wav",
+    "sound/weapons/m1887/scock1.wav"
+  ]
+}

@@ -7,7 +7,7 @@ names=[s.name.decode('ascii') for s in pe.DIRECTORY_ENTRY_EXPORT.symbols if s.na
 custom={'GiveFnptrsToDll','GetEntityAPI','GetEntityAPI2'}
 # Cremation's own entities. The engine resolves every BSP classname through the
 # export table, and save/restore recreates runtime entities the same way.
-project=['weapon_necromancer','monster_minion','weapon_ricochet','cremation_disc','weapon_bounce_shotgun','cremation_pellet','cremation_grenade','cremation_sentry','cremation_sentry_base','weapon_nailgun','weapon_pipewrench','cremation_nail']
+project=['weapon_winchester1887','weapon_necromancer','monster_minion','weapon_ricochet','cremation_disc','weapon_bounce_shotgun','cremation_pellet','cremation_grenade','cremation_sentry','cremation_sentry_base','weapon_nailgun','weapon_pipewrench','cremation_nail']
 lines=['LIBRARY cremation','EXPORTS','    GiveFnptrsToDll=_GiveFnptrsToDll@8','    GetEntityAPI','    GetEntityAPI2']+[f'    {name}' for name in project]
 forward=[name for name in names if name not in custom]
 code=['// Generated Win32 tail jumps preserve all original calling conventions.',f'static FARPROC forwardTargets[{len(forward)}];','static const char* forwardNames[]={']

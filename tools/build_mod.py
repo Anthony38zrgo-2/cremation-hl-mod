@@ -13,7 +13,7 @@ MOD=ROOT/'Cremation'
 DONOR=ROOT/'Half-Life2Classic_Ravenholm'
 SPAWN=(432,-1601,-220)
 SPAWN_YAW=155
-LOADOUT=['weapon_necromancer','item_suit','weapon_ricochet','weapon_shotgun','weapon_bounce_shotgun',
+LOADOUT=['weapon_winchester1887','weapon_necromancer','item_suit','weapon_ricochet','weapon_shotgun','weapon_bounce_shotgun',
          'weapon_pipewrench','weapon_nailgun','weapon_handgrenade','weapon_rpg',
          'ammo_9mmAR']+['ammo_buckshot']*3
 # All are regular Ravenholm zombies. No fast/poison variants or extra waves.

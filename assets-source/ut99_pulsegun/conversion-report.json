@@ -1,0 +1,26 @@
+{
+  "PulseGunR": {
+    "triangles": 842,
+    "vertices": 820,
+    "frames": 126,
+    "bones": 120,
+    "mean_pose_error_units": 0.07056205601709963,
+    "max_pose_error_units": 3.3719217366877077
+  },
+  "PulseGun3rd": {
+    "triangles": 126,
+    "vertices": 154,
+    "frames": 50,
+    "bones": 100,
+    "mean_pose_error_units": 3.1373819772563875e-16,
+    "max_pose_error_units": 3.580361673049448e-15
+  },
+  "PulsePickup": {
+    "triangles": 272,
+    "vertices": 317,
+    "frames": 1,
+    "bones": 1,
+    "mean_pose_error_units": 2.1539027133894992e-16,
+    "max_pose_error_units": 1.7763568394002505e-15
+  }
+}

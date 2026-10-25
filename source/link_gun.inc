@@ -73,6 +73,10 @@ static void linkGlowUpdate(LinkLock& state,edict_t* player,const Vector& from,co
     }
 }
 static void linkBeam(const Vector& from,const Vector& to,bool impactLight,const Vector& aim,LinkLock& state,edict_t* player) {
+    if(msgLinkMuzzle){
+        for(int i=1;i<=globals->maxClients;++i){auto viewer=engine.pfnPEntityOfEntIndex(i);if(!valid(viewer)||!(viewer->v.flags&FL_CLIENT))continue;engine.pfnMessageBegin(MSG_ONE_UNRELIABLE,msgLinkMuzzle,nullptr,viewer);engine.pfnWriteByte(engine.pfnIndexOfEdict(player));engine.pfnWriteByte(impactLight?1:0);coords(to);engine.pfnMessageEnd();}
+        linkClearGlows(state);return;
+    }
     Vector span=to-from;float distance=length(span);
     Vector toward=normal(span),side=normal(Vector(-toward.y,toward.x,0));
     if(length(side)<.1f)side=Vector(1,0,0);
@@ -269,7 +273,7 @@ static void linkHud(edict_t* p,int remaining) {
 static void linkPostThink(edict_t* p,bool active,bool held) {
     int i=engine.pfnIndexOfEdict(p);if(i<1||i>32)return;
     auto& state=linkLocks[i];
-    if(!active||!held||p->v.health<=0) {linkClearGlows(state);state=LinkLock{};return;}
+    if(!active||!held||p->v.health<=0) {if(active&&state.acquired){animation(p,8);players[i].animUntil=globals->time+.17f;}linkClearGlows(state);state=LinkLock{};return;}
     if(state.finished) {linkClearGlows(state);return;}
     if(!state.acquired) {
         auto e=acquireLink(p);if(!e)return;
@@ -300,7 +304,7 @@ static void linkPostThink(edict_t* p,bool active,bool held) {
     Vector up=normal(Vector(right.y*direction.z-right.z*direction.y,
                             right.z*direction.x-right.x*direction.z,
                             right.x*direction.y-right.y*direction.x));
-    Vector muzzle=eye+direction*18.f+right*6.f-up*6.f;
+    Vector muzzle=eye+direction*48.f+right*16.f-up*5.4f;
     if(!visible) {linkBeam(muzzle,beamEnd,false,direction,state,p);return;}
     if(globals->time>=state.nextAmmo) {
         if(sharedAmmo(p,nailAmmoIndex,0)<1) {linkClearGlows(state);state.finished=true;return;}
@@ -311,7 +315,7 @@ static void linkPostThink(edict_t* p,bool active,bool held) {
     linkBeam(muzzle,to,true,direction,state,p);
     if(globals->time>=state.nextSound) {
         sound(p,"weapons/ut2004/link_altfire.wav");state.nextSound=globals->time+.35f;
-        animation(p,5);
+        if(p->v.weaponanim!=2)animation(p,2);
     }
     players[i].animUntil=globals->time+.2f;
     float dps=std::min(48.f,12.f+state.connectedTime*6.f);

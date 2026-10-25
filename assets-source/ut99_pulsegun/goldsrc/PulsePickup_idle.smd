@@ -1,0 +1,8 @@
+version 1
+nodes
+0 "pulse_0" -1
+end
+skeleton
+time 0
+0 0.017224 -1.400442 -1.287382 0 0 0
+end
