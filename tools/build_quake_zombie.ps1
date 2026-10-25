@@ -4,6 +4,8 @@ $modPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $sdkInit = 'C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat'
 Push-Location (Join-Path $modPath 'source')
 try {
+    python ..\tools\install_purple_zombie.py
+    if ($LASTEXITCODE) { throw 'Purple normal zombie installation failed' }
     python ..\tools\install_quake_zombie.py
     if ($LASTEXITCODE) { throw 'Quake asset/map installation failed' }
     python ..\tools\generate_proxy_exports.py

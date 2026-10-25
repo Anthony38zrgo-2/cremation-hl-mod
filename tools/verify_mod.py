@@ -12,7 +12,7 @@ source=BSP(ROOT/'valve/maps/rapidcore.bsp')
 output=BSP(MOD/'maps/rapidcore.bsp')
 report=json.loads((MOD/'placement.json').read_text())
 counts=Counter(e['classname'] for e in output.entities)
-assert counts['monster_quake_zombie']==20 and counts['monster_zombie']==0
+assert counts['monster_quake_zombie']==10 and counts['monster_zombie']==10
 assert counts['monster_fastzombie']==10 and counts['monster_poisionzombie']==10
 assert counts['aiscripted_sequence']==0
 assert not any(e['classname']=='trigger_auto' and e.get('target','').startswith('cremation_patrol_') for e in output.entities)
@@ -27,7 +27,7 @@ spawn=next(e for e in output.entities if e['classname']=='info_player_start')
 sp=tuple(map(float,spawn['origin'].split()))
 assert output.clear(sp,1)
 assert abs(output.floor(*sp[:2])+36-sp[2])<.1
-zombies=[e for e in output.entities if e['classname'] in ('monster_quake_zombie','monster_fastzombie','monster_poisionzombie')]
+zombies=[e for e in output.entities if e['classname'] in ('monster_zombie','monster_quake_zombie','monster_fastzombie','monster_poisionzombie')]
 for e in zombies:
     goals=[g for g in output.entities if g.get('netname')==e['targetname']]
     assert len(goals)==2
@@ -75,6 +75,10 @@ with zipfile.ZipFile(MOD/'assets-source/bloodcultisthecu.zip') as archive:
         if name.startswith(prefix+'Cultist sounds/') and name.endswith('.wav'):hecu_assets['sound/hgrunt/'+Path(name).name]=archive.read(name)
 for relative,raw in hecu_assets.items():assert (MOD/relative).read_bytes()==raw,relative
 manifest={}
+purple_assets=json.loads((MOD/'purple-zombie-assets.json').read_text())
+for relative,entry in purple_assets.items():
+    assert hashlib.sha256((MOD/relative).read_bytes()).hexdigest()==entry['sha256'],relative
+    manifest[relative]=entry['sha256']
 for relative,entry in json.loads((MOD/'quake-zombie-assets.json').read_text()).items():
     assert hashlib.sha256((MOD/relative).read_bytes()).hexdigest()==entry['sha256'],relative
     manifest[relative]=entry['sha256']
@@ -87,6 +91,8 @@ for folder in ('dlls','cl_dlls','models','sound','sprites','events'):
         selected_source=ROOT/ricochet_assets[relative.as_posix()] if relative.as_posix() in ricochet_assets else path
         expected_bytes=add_walk_activity(selected_source.read_bytes()) if relative.as_posix()=='models/zombie_fast.mdl' else selected_source.read_bytes()
         expected_bytes=hecu_assets.get(relative.as_posix().lower(),expected_bytes)
+        if relative.as_posix() in purple_assets:
+            expected_bytes=(MOD/relative).read_bytes() # Independently checked against the purple asset manifest above.
         source_hash=hashlib.sha256(expected_bytes).hexdigest()
         assert hashlib.sha256((MOD/relative).read_bytes()).hexdigest()==source_hash,relative
         manifest[relative.as_posix()]=source_hash
@@ -184,7 +190,7 @@ export_data=(MOD/'dlls/hl.dll').read_bytes()
 for name in ('monster_zombie','item_suit','weapon_9mmhandgun','weapon_shotgun','weapon_crossbow','ammo_9mmclip','ammo_buckshot','info_node'):
     assert name.encode()+b'\0' in export_data,name
 (MOD/'file-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-print('PASS: 20 independent Quake zombies + 10 fast + 10 poison; one clear spawn; original native zombie model preserved.')
+print('PASS: 10 purple normal + 10 Quake + 10 fast + 10 poison zombies; one clear spawn.')
 print('PASS: the three weapons are separate BSP entities with separate HUD slots.')
 print('PASS: standing hulls, floor contact, spacing >96, start distance >1000, no direct visibility.')
 print('PASS: all 14 non-entity BSP lumps unchanged; donor assets + overrides match their sources.')

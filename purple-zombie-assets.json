@@ -1,0 +1,15 @@
+{
+  "models/zombie.mdl": {
+    "source": "assets-source/purple_zombie.rar:purple zombie/zombie.mdl",
+    "sha256": "2f2dbf0db66949754ae3895297de8a56c0f8a5eaf5657ded7e7add1bec2eeff0"
+  },
+  "models/cremation/charred/zombie.mdl": {
+    "source": "models/zombie.mdl",
+    "transform": "palette x 0.73; skeleton/animation unchanged",
+    "sha256": "3c91365b9a75bccfbd2ea9243c6945bcd76fe1aba8cf6b3a8947ba8c65c17a57"
+  },
+  "models/headcrab.mdl": {
+    "source": "assets-source/purple_zombie.rar:purple zombie/headcrab.mdl",
+    "sha256": "8d5c6763b3b85d36f01ceeb03123e5ae7bf24bc9d3d61cca30312489c40bd2e0"
+  }
+}

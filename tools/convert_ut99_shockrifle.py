@@ -13,7 +13,8 @@ def convert(mesh,target,mats,ref,scale,offset,sequences,bones=120):
  a=np.frombuffer(raw[4:],dtype='<u4').reshape(frames,nv);v=np.stack([a&2047,(a>>11)&2047,a>>22],-1).astype(float)
  for axis,bits in enumerate([11,11,10]):v[...,axis]=np.where(v[...,axis]>=2**(bits-1),v[...,axis]-2**bits,v[...,axis])
  v[...,2]*=2;v[...,1]*=-1;
- if mesh=="ASMD2M":v[...,0]*=4/3;v[...,2]*=4/3;v*=scale;v+=offset
+ if mesh=="ASMD2M":v[...,0]*=4/3;v[...,2]*=4/3
+ v*=scale;v+=offset
  delta=v-v[ref:ref+1];features=np.concatenate([delta.transpose(1,0,2).reshape(nv,-1),v[ref]*.2],axis=1);k=min(bones,nv)
  chosen=[0];dist=np.full(nv,np.inf)
  for i in range(1,k):dist=np.minimum(dist,((features-features[chosen[-1]])**2).sum(1));chosen.append(int(dist.argmax()))

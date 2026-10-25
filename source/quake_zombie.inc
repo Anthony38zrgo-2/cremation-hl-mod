@@ -186,7 +186,9 @@ static bool qzThink(edict_t* e){
                 bool moved=qzWalk(e,e->v.angles.y,distance);
                 if(!moved)for(float turn:{45.f,-45.f,90.f,-90.f,135.f,-135.f})if(qzWalk(e,e->v.angles.y+turn,distance))break;}
         }else{
-            if(e->v.sequence!=1)qzSequence(e,1,QZIdle);
+            bool mansionRoute=e->v.targetname&&!std::strncmp(text(e->v.targetname),"mansion_enemy_",14)&&e->v.target;
+            if(mansionRoute){if(e->v.sequence!=2)qzSequence(e,2,QZChase);}
+            else if(e->v.sequence!=1)qzSequence(e,1,QZIdle);
             auto goal=e->v.chain;
             if(!valid(goal))for(int i=1;i<globals->maxEntities;++i){auto g=engine.pfnPEntityOfEntIndex(i);
                 if(valid(g)&&g->v.netname&&e->v.targetname&&!std::strcmp(text(g->v.netname),text(e->v.targetname))){goal=g;e->v.chain=g;break;}}

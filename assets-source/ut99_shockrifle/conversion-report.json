@@ -12,15 +12,15 @@
     "vertices": 294,
     "frames": 12,
     "bones": 100,
-    "mean_pose_error_units": 0.0,
-    "max_pose_error_units": 0.0
+    "mean_pose_error_units": 1.0399515978578922e-15,
+    "max_pose_error_units": 7.32410687763558e-15
   },
   "ASMD2pick": {
     "triangles": 220,
     "vertices": 267,
     "frames": 1,
     "bones": 1,
-    "mean_pose_error_units": 2.4320589087435202e-15,
-    "max_pose_error_units": 1.4238583238573986e-14
+    "mean_pose_error_units": 2.3147994845381027e-16,
+    "max_pose_error_units": 8.95090418262362e-16
   }
 }

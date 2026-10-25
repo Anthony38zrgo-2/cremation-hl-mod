@@ -8,7 +8,8 @@ from install_horde_assets import install as install_horde
 from install_hecu_assets import install as install_hecu
 from install_additional_weapons import install as install_additional_weapons
 from install_quake_zombie import install as install_quake_zombie
-from install_quake_zombie import adjust_tall_patrols
+from install_quake_zombie import adjust_tall_patrols, main_zombie_class
+from install_purple_zombie import install as install_purple_zombie
 
 ROOT=Path(__file__).resolve().parents[2]
 MOD=ROOT/'Cremation'
@@ -37,6 +38,7 @@ def prepare():
     install_hecu()
     install_additional_weapons()
     install_quake_zombie()
+    install_purple_zombie()
     for file in ('config.cfg','default.cfg'):
         if not (MOD/file).exists(): shutil.copy2(ROOT/'valve'/file,MOD/file)
     # Preserve the user's existing controls, including their auxiliary configs.
@@ -59,8 +61,8 @@ def prepare():
     (MOD/'maps').mkdir(exist_ok=True)
     (MOD/'liblist.gam').write_text('''game "Cremation"
 developer "Cremation"
-startmap "rapidcore"
-trainmap "rapidcore"
+startmap "cs_mansion"
+trainmap "cs_mansion"
 gamedll "dlls/cremation.dll"
 type "singleplayer_only"
 secure "1"
@@ -73,7 +75,7 @@ skill 1
 sv_cheats 0
 hud_draw 1
 cl_lw 0
-map rapidcore
+map cs_mansion
 ''')
     # Server-authoritative disc attacks must not run the inherited pistol prediction.
     (MOD/'autoexec.cfg').write_text('// Cremation Ricochet runs on the local game server.\ncl_lw 0\n')
@@ -96,8 +98,7 @@ def build():
     # They work in single-player without console cheats or multiplayer equip hooks.
     gear_origin=vec((SPAWN[0],SPAWN[1],floor+8))
     loadout=LOADOUT
-    for i,classname in enumerate(loadout):
-        es.append(dict(classname=classname,origin=gear_origin,angles=f'0 {SPAWN_YAW} 0',targetname=f'cremation_loadout_{i+1:02}'))
+    # Initial equipment is granted directly by the server on player entry.
     # Six shell boxes in separate safe standing areas across the map.
     shell_pickups=[]
     for n,(x,y) in enumerate([POSITIONS[i] for i in (0,4,8,11,15,18)]):
@@ -133,7 +134,7 @@ def build():
         for eye in (32,64):
             assert not bsp.line_clear((SPAWN[0],SPAWN[1],SPAWN[2]+28),(x,y,floor_z+eye)),(origin,'visible from spawn')
         yaw=(i*137+35)%360
-        classname='monster_quake_zombie' if i<20 else ('monster_fastzombie' if i%2==0 else 'monster_poisionzombie')
+        classname=main_zombie_class(i) if i<20 else ('monster_fastzombie' if i%2==0 else 'monster_poisionzombie')
         target=f'cremation_zombie_{i+1:02}'
         es.append(dict(classname=classname,origin=vec(origin),angles=f'0 {yaw} 0',targetname=target,spawnflags='0'))
         # Native route following toward the spawn starts one second after spawn.

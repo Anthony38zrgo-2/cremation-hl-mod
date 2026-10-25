@@ -544,6 +544,11 @@ static void hordeWalkAnimation(edict_t* e) {
         e->v.framerate=1;return;
     }
 }
+static void mansionFrame(float dt);
+static void mansionActivate();
+static void mansionPrecache();
+static void startupInventoryPrecache();
+static void startupInventoryGive(edict_t* player);
 static void hookThink(edict_t* e) {
     if(qzThink(e))return;
     if(bounce::isSentry(e)) {e->v.nextthink=globals->time+.1f;return;}
@@ -570,7 +575,14 @@ static void hookStartFrame() {
     necroFrame();
     anatomicalGibFrame();
     if(raven.pfnStartFrame)raven.pfnStartFrame();
+    // Initial inventory is granted directly. Suppress native enemy/player
+    // weapon drops as well, keeping owned inventory entities intact.
+    for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(!valid(e))continue;
+        if(valid(e->v.aiment)&&(e->v.aiment->v.flags&FL_CLIENT))continue;
+        const char* name=text(e->v.classname);if(!std::strncmp(name,"weapon_",7)||!std::strcmp(name,"weaponbox"))engine.pfnRemoveEntity(e);
+    }
     float dt=std::max(0.f,globals->time-lastFrame);lastFrame=globals->time;
+    mansionFrame(dt);
     if(dt>0) {
         // Process long frames in bounded steps without changing disc travel speed.
         int steps=std::min(32,std::max(1,int(std::ceil(dt/.025f))));
@@ -906,6 +918,8 @@ static int hookSpawn(edict_t* e) {
         bounce::precache();
     }
     int result=raven.pfnSpawn(e);
+    if(world)mansionPrecache();
+    if(world)startupInventoryPrecache();
     if(shockItem){e->v.classname=engine.pfnAllocString("weapon_shockrifle");engine.pfnSetModel(e,"models/cremation/w_shockrifle.mdl");}
     if(winItem){e->v.classname=engine.pfnAllocString("weapon_winchester1887");engine.pfnSetModel(e,"models/cremation/w_winchester1887.mdl");}
     if(necroItem){e->v.classname=engine.pfnAllocString("weapon_necromancer");engine.pfnSetModel(e,"models/cremation/w_necromancer.mdl");}
@@ -936,6 +950,22 @@ static int hookSpawn(edict_t* e) {
     weaponBloodInstall(e);
     return result;
 }
+#include "mansion_waves.inc"
+static const char* startupInventory[]={"item_suit","weapon_shockrifle","weapon_bounce_shotgun","weapon_ricochet","weapon_necromancer","weapon_pipewrench","weapon_nailgun","weapon_handgrenade","weapon_rpg","ammo_9mmAR","ammo_buckshot","ammo_buckshot","ammo_buckshot"};
+static void startupInventoryPrecache(){
+    for(auto name:startupInventory){auto item=engine.pfnCreateNamedEntity(engine.pfnAllocString(name));if(!valid(item))continue;hookSpawn(item);engine.pfnRemoveEntity(item);}
+}
+static void startupInventoryGive(edict_t* player){
+    for(auto name:startupInventory){
+        auto item=engine.pfnCreateNamedEntity(engine.pfnAllocString(name));if(!valid(item))continue;
+        item->v.origin=player->v.origin;item->v.spawnflags|=1<<30;hookSpawn(item);item->v.effects|=EF_NODRAW;
+        if(raven.pfnTouch)raven.pfnTouch(item,player);
+        bool attached=valid(item)&&(item->v.owner==player||item->v.aiment==player);
+        bool consumed=!valid(item)||item->v.solid==SOLID_NOT;
+        char report[160];std::snprintf(report,sizeof report,"%s attached=%d consumed=%d",name,int(attached),int(consumed));startupTrace("StartupInventory",report);
+        if(valid(item)&&!attached)engine.pfnRemoveEntity(item);
+    }
+}
 static void hookActivate(edict_t* list,int count,int maxClients) {
     shockStates.fill(ShockState{});shockOrbs.clear();
     winchesterStates.fill(WinchesterState{});
@@ -946,6 +976,7 @@ static void hookActivate(edict_t* list,int count,int maxClients) {
     bounce::reset();
     raven.pfnServerActivate(list,count,maxClients);
     startupTrace("ServerActivate",text(globals->mapname));
+    mansionActivate();
     int ricochetCount=0,bounceCount=0,nailCount=0,wrenchCount=0;
     hordeProbes.clear();hordeReportAt=globals->time+5.f;hordeReportsRemaining=3;hordeStartedAt=globals->time;
     for(int i=0;i<count;++i)if(valid(&list[i])) {
@@ -1026,6 +1057,7 @@ static void hookCmdStart(const edict_t* player,const struct usercmd_s* cmd,unsig
 }
 static void hookPutInServer(edict_t* player) {
     if(raven.pfnClientPutInServer)raven.pfnClientPutInServer(player);
+    startupInventoryGive(player);
     int i=engine.pfnIndexOfEdict(player);if(i>0&&i<33) {rpgCharges[i]=RpgCharge{};rpgCharges[i].startPending=true;}
     startupTrace("ClientPutInServer","player entered map");
     if(engine.pfnClientCommand)engine.pfnClientCommand(player,const_cast<char*>("cl_lw 0\n"));

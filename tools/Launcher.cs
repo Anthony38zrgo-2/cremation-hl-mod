@@ -13,7 +13,7 @@ internal static class CremationLauncher
         string mod = Path.Combine(root, "Cremation");
         bool valid = File.Exists(engine)
             && File.Exists(Path.Combine(mod, "liblist.gam"))
-            && File.Exists(Path.Combine(mod, "maps", "rapidcore.bsp"))
+            && File.Exists(Path.Combine(mod, "maps", "cs_mansion.bsp"))
             && File.Exists(Path.Combine(mod, "dlls", "cremation.dll"))
             && File.Exists(Path.Combine(mod, "dlls", "hl_ravenholm.dll"))
             && File.Exists(Path.Combine(mod, "cl_dlls", "client.dll"));
@@ -32,7 +32,7 @@ internal static class CremationLauncher
         {
             Process.Start(new ProcessStartInfo {
                 FileName = engine,
-                Arguments = "-game Cremation -console +exec cremation.cfg",
+                Arguments = "-game Cremation -num_edicts 2048 -console +exec cremation.cfg",
                 WorkingDirectory = root,
                 UseShellExecute = false
             });

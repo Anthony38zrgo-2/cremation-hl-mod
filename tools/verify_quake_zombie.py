@@ -5,6 +5,7 @@ import hashlib, json, struct, zipfile
 import pefile
 from bsp import BSP
 from install_horde_assets import add_walk_activity
+from install_quake_zombie import main_zombie_class
 
 MOD = Path(__file__).resolve().parents[1]
 old = BSP(MOD / 'backups/before-quake-zombies/rapidcore.bsp')
@@ -13,7 +14,7 @@ expected = [dict(e) for e in old.entities]
 replacements = 0
 for e in expected:
     if e.get('classname') == 'monster_zombie':
-        e['classname'] = 'monster_quake_zombie'
+        e['classname'] = main_zombie_class(int(e['targetname'].rsplit('_',1)[1])-1)
         replacements += 1
 patrols=json.loads((MOD/'quake-zombie-patrols.json').read_text())
 for e in expected:
@@ -24,12 +25,19 @@ for e in expected:
 assert replacements == 20 and new.entities == expected
 for i in range(1, 15): assert new.lump(i) == old.lump(i), i
 counts = Counter(e['classname'] for e in new.entities)
-assert counts['monster_quake_zombie'] == 20 and counts['monster_zombie'] == 0
+assert counts['monster_quake_zombie'] == 10 and counts['monster_zombie'] == 10
 assert counts['monster_fastzombie'] == counts['monster_poisionzombie'] == 10
 donor = MOD.parent / 'Half-Life2Classic_Ravenholm/models'
-for filename in ('zombie.mdl', 'poison_zombie.mdl'):
+for filename in ('poison_zombie.mdl',):
     assert (MOD / 'models' / filename).read_bytes() == (donor / filename).read_bytes()
 assert (MOD / 'models/zombie_fast.mdl').read_bytes() == add_walk_activity((donor / 'zombie_fast.mdl').read_bytes())
+for relative,entry in json.loads((MOD/'purple-zombie-assets.json').read_text()).items():
+    assert hashlib.sha256((MOD/relative).read_bytes()).hexdigest()==entry['sha256'],relative
+assert (MOD/'models/zombie.mdl').read_bytes()==(MOD/'assets-source/purple-zombie/zombie.mdl').read_bytes()
+normal=(MOD/'models/zombie.mdl').read_bytes()
+n,offset=struct.unpack_from('<ii',normal,164)
+assert n==51
+assert {1,3,30,36}<={struct.unpack_from('<i',normal,offset+i*176+40)[0] for i in range(n)}
 for relative, entry in json.loads((MOD / 'quake-zombie-assets.json').read_text()).items():
     data = (MOD / relative).read_bytes()
     assert hashlib.sha256(data).hexdigest() == entry['sha256'] and len(data) == entry['bytes']
@@ -44,6 +52,6 @@ assert 102<conversion['idle_bounds'][1][2]<105 and len(conversion['hitboxes'])==
 pe = pefile.PE(str(MOD / 'dlls/cremation.dll'))
 exports = {s.name.decode() for s in pe.DIRECTORY_ENTRY_EXPORT.symbols if s.name}
 assert {'monster_quake_zombie', 'quake_zombie_gib', 'monster_zombie', 'monster_fastzombie', 'monster_poisionzombie', 'monster_minion'} <= exports
-print('PASS: exactly 20 classname replacements and documented tall-zombie patrol corrections; other entities and geometry preserved.')
-print('PASS: fast/poison and native zombie models unchanged; 16 private Quake assets verified.')
+print('PASS: main horde is 10 normal + 10 Quake; documented patrol corrections; other entities and geometry preserved.')
+print('PASS: fast/poison models unchanged; 16 private Quake assets verified.')
 print('PASS: both new entity exports and original zombie/minion exports available in installed Win32 DLL.')

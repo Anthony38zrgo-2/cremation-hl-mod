@@ -40,28 +40,31 @@ def install(archive=DEFAULT_ZIP, pak=DEFAULT_PAK):
     (MOD / 'quake-zombie-assets.json').write_text(json.dumps(manifest, indent=2) + '\n')
     print(f'Installed {len(MODELS)} Quake models and {len(SOUNDS)} sounds in private Cremation paths.')
 
+def main_zombie_class(index):
+    """Zero-based main horde slot: alternate Quake and normal, ten of each."""
+    assert 0 <= index < 20
+    return 'monster_quake_zombie' if index % 2 == 0 else 'monster_zombie'
+
 def replace_map():
     from bsp import BSP
-    path = MOD / 'maps/rapidcore.bsp'
-    bsp = BSP(path)
-    normal = [e for e in bsp.entities if e.get('classname') == 'monster_zombie']
-    if not normal:
-        assert sum(e.get('classname') == 'monster_quake_zombie' for e in bsp.entities) == 20
-        return
-    assert len(normal) == 20
-    backup = MOD / 'backups/before-quake-zombies'
-    backup.mkdir(parents=True, exist_ok=True)
-    for name in ('maps/rapidcore.bsp', 'placement.json', 'dlls/cremation.dll'):
-        dest = backup / Path(name).name
-        if not dest.exists(): shutil.copy2(MOD / name, dest)
-    for e in normal: e['classname'] = 'monster_quake_zombie'
-    bsp.write(path, bsp.entities)
-    report_path = MOD / 'placement.json'
-    report = json.loads(report_path.read_text())
+    path=MOD/'maps/rapidcore.bsp';bsp=BSP(path)
+    main=[e for e in bsp.entities if e.get('classname') in ('monster_zombie','monster_quake_zombie')]
+    assert len(main)==20
+    backup=MOD/'backups/before-purple-zombies';backup.mkdir(parents=True,exist_ok=True)
+    for name in ('maps/rapidcore.bsp','placement.json','models/zombie.mdl','models/cremation/charred/zombie.mdl'):
+        dest=backup/Path(name).as_posix().replace('/','_')
+        if not dest.exists():shutil.copy2(MOD/name,dest)
+    changes=0
+    for e in main:
+        index=int(e['targetname'].rsplit('_',1)[1])-1
+        desired=main_zombie_class(index)
+        if e['classname']!=desired:e['classname']=desired;changes+=1
+    if changes:bsp.write(path,bsp.entities)
+    report_path=MOD/'placement.json';report=json.loads(report_path.read_text())
     for e in report['zombies']:
-        if e['classname'] == 'monster_zombie': e['classname'] = 'monster_quake_zombie'
-    report_path.write_text(json.dumps(report, indent=2) + '\n')
-    print('Replaced exactly 20 normal zombie entities; all other map entities and geometry preserved.')
+        if e['id']<=20:e['classname']=main_zombie_class(e['id']-1)
+    report_path.write_text(json.dumps(report,indent=2)+'\n')
+    print(f'Main horde: 10 normal + 10 Quake zombies; {changes} entity replacements. Fast/poison unchanged.')
 
 def adjust_tall_patrols():
     from bsp import BSP

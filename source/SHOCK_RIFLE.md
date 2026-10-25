@@ -13,3 +13,9 @@ Sequences: idle0, primary1 (30-39), secondary2 (40-49), draw3 (0-14), holster4 (
 Narrow model/client/server compilation completed and installed. No gameplay tests were run. Restart the game completely and start a new Rapidcore game for the revised inventory. Interactive combo, visual origin, third-person grip and damage acceptance remain pending.
 
 View shifted forward8 units and secondary core speed reduced from1000 to500 units/s at user request. Firing cadence is unchanged. Model muzzle remains render-attached. Recompiled/installed; interactive appearance pending.
+
+World/third-person scale correction: a one-line Python conditional accidentally
+limited scale and offset application to ASMD2M. Scale/offset now apply to all
+three meshes; ASMD2pick uses 0.04 (51.76 units long), ASMD2hand uses 0.035.
+Both installed models were regenerated. Initial weapons are delivered directly
+to native player inventory, with no map weapon pickups or weapon drops.

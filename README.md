@@ -1,8 +1,12 @@
 # Cremation
 
-Mod para Half-Life / GoldSrc en Windows. Incluye Rapidcore con 20 zombis de
-Half-Life2Classic_Ravenholm y un equipo inicial con escopeta, Ricochet, Flak Cannon,
-Pipe Wrench de Opposing Force, Nailgun, granada de mano y RPG.
+Mod para Half-Life / GoldSrc en Windows. El mapa predeterminado es Mansion
+(`cs_mansion`), con la skybox City, inicios del jugador en TT y enemigos por
+oleadas desde los diez puntos CT. Las cuatro oleadas tienen 20, 20, 40 y 40
+enemigos; el HUD muestra la oleada y los enemigos vivos en el centro inferior.
+El equipo inicial incluye Shock Rifle, Flak Cannon, Ricochet, Necromancer,
+motosierra, Plasma Rifle, granadas y RPG. Rapidcore sigue incluido como mapa
+alternativo. Consulta [Mansion y oleadas](source/MANSION_WAVES.md).
 
 ## Instalar y ejecutar
 

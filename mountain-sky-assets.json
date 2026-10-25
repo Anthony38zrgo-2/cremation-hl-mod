@@ -1,0 +1,25 @@
+{
+  "sky": "cremation_mountains",
+  "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\Cremation\\assets-source\\skybox-mountains\\city-mountains-panorama.png",
+  "panorama_size": [
+    1774,
+    887
+  ],
+  "face_size": 256,
+  "max_cube_edge_difference": 0.0,
+  "source_wrap_max_difference": 15.0,
+  "source_wrap_mean_difference": 1.2953777313232422,
+  "source_zenith_range": 5.0,
+  "revision": "seam-repaired dark crimson mountains",
+  "generator": "built-in image_gen",
+  "original_city_preserved": true,
+  "files": {
+    "rt": "ef5fed05f624acb108f960c3fd932b19eb6adf44336b59f48ed2ea3d82c78a4b",
+    "lf": "80d2299a36838f21ce1b93d70303d203e0726c75da824f3429ccc81dcbf1b5db",
+    "bk": "c49c27873f2642af5f51839cc2b112053905719dc684705103da51eeb5c34675",
+    "ft": "78d163055bd787cdd5f964361e1f8d6db585953dc1a29a724f49ad0f932a6485",
+    "up": "cc0fcd7b76bacccc2f187c99ca111f983837ff19c343e05104c51655a580301b",
+    "dn": "2e8039263ea4f3e34aed8a605d2052727470f6528839f316398a846ebb180c8e"
+  },
+  "interactive_validation": false
+}
