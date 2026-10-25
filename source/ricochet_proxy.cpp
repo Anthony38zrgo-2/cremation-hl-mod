@@ -37,14 +37,14 @@ static constexpr const char* PipeWrenchViewModel="models/cremation/v_pipe_wrench
 static constexpr const char* PipeWrenchPlayerModel="models/cremation/p_pipe_wrench.mdl";
 static constexpr const char* RicochetRedModel="models/cremation/v_ricochet_red.mdl";
 static int trailSprite=0, flashSprite=0;
-static int msgLinkMuzzle=0,msgLinkShot=0;
+static int msgLinkMuzzle=0,msgLinkShot=0,msgFlakMuzzle=0;
 static int msgWeaponList=0,msgCurWeapon=0,msgItemPickup=0,msgAmmoX=0,msgSetFov=0;
 static int currentMsg=0,currentByte=0,curWeaponId=0;
 static bool customWeaponList=false,customBounceList=false,customNailWeaponList=false,carrierCurWeapon=false;
 static edict_t* messagePlayer=nullptr;
 static bool ownAnimation=false;
 static int shotgunAmmoIndex=-1,nailAmmoIndex=-1, ammoOffset=-1;
-static bool shotgunList=false,rpgList=false,necroList=false,winchesterList=false;
+static bool shotgunList=false,rpgList=false,necroList=false,winchesterList=false,shockList=false;
 static float lastFrame=0;
 struct HordeProbe {edict_t* entity; int serial; Vector origin; Vector previous; float previousTime; bool jumped=false; float walked=0; Vector patrol{0,0,0}; bool fallback=false,returning=false,combat=false; float initialHealth=0;};
 static std::vector<HordeProbe> hordeProbes;
@@ -75,6 +75,9 @@ static bool nailgun(edict_t* e) {
     const char* model=text(e->v.viewmodel);
     return !std::strcmp(model,"models/v_9mmAR.mdl")||!std::strcmp(model,NailViewModel);
 }
+// Temporary availability switch: keep implementations/assets for reactivation.
+static constexpr bool ShotgunsPlayable=false;
+static bool disabledShotgunClass(const char* n){return !ShotgunsPlayable&&n&&(!std::strcmp(n,"weapon_shotgun")||!std::strcmp(n,"weapon_winchester1887")||!std::strcmp(n,"weapon_357")||!std::strcmp(n,"weapon_python"));}
 static bool pipeWrench(edict_t* e) {
     if(!valid(e)||e->v.health<=0||!e->v.viewmodel)return false;
     const char* model=text(e->v.viewmodel);
@@ -411,11 +414,15 @@ static bool fireNailgun(edict_t* p,bool secondary) {
     return true;
 }
 #include "humanoid_gibs.inc"
+#include "weapon_blood.inc"
 #include "link_gun.inc"
 #include "ut2004_rpg.inc"
 #include "necromancer.inc"
 static int bounceSpawn(edict_t* e) { return raven.pfnSpawn ? raven.pfnSpawn(e) : 0; }
-static void bounceAnimation(edict_t* p,int sequence) { animation(p,sequence); }
+static void bounceAnimation(edict_t* p,int sequence) {
+ animation(p,sequence);
+ if(msgFlakMuzzle&&bounce::isBouncePlayer(p)&&(sequence==1||sequence==2)){engine.pfnMessageBegin(MSG_ONE,msgFlakMuzzle,nullptr,p);engine.pfnWriteByte(sequence);engine.pfnMessageEnd();}
+}
 static void bouncePush(edict_t* e,const Vector& dir,float horizontal,float vertical,float duration) {
     applyPush(e,dir,horizontal,vertical,duration);
 }
@@ -427,6 +434,8 @@ static int sharedShells(edict_t* p,int spend) {
     return *ammo;
 }
 #include "winchester1887.inc"
+#include "shockrifle.inc"
+static bool disabledShotgunActive(edict_t* p){return !ShotgunsPlayable&&(winchester(p)||bounce::isTfcPlayer(p));}
 static void attachBounce() {
     bounce::Host host{};
     host.engine=&engine;host.globals=globals;
@@ -561,6 +570,7 @@ static void hookStartFrame() {
         // Process long frames in bounded steps without changing disc travel speed.
         int steps=std::min(32,std::max(1,int(std::ceil(dt/.025f))));
         for(int i=0;i<steps;++i) {
+            shockStep(dt/steps);
             necroStep(dt/steps);
             advanceDiscs(dt/steps);
             advanceNails(dt/steps);
@@ -626,19 +636,21 @@ static void hookStartFrame() {
 static void hookPreThink(edict_t* p) {
     rpgNormalize(p);
     int i=engine.pfnIndexOfEdict(p);if(i>0 && i<33)players[i].buttons=p->v.button;
-    if(winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(shockRifle(p)||winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPreThink(p);
 }
 static void hookPostThink(edict_t* p) {
     int i=engine.pfnIndexOfEdict(p);if(i<=0||i>=33) {raven.pfnPlayerPostThink(p);return;}
     auto& state=players[i];
     bool carrier=bounce::isBouncePlayer(p);
-    if(winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(shockRifle(p)||winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPostThink(p);
     rpgNormalize(p);
     rpgPostThink(p,state.buttons);
     necroPostThink(p,state.buttons);
-    winchesterPostThink(p,state.buttons);
+    shockPostThink(p,state.buttons);
+    if(ShotgunsPlayable)winchesterPostThink(p,state.buttons);
+    if(disabledShotgunActive(p)&&engine.pfnClientCommand)engine.pfnClientCommand(p,const_cast<char*>("weapon_bounce_shotgun\n"));
     bool activeNail=nailgun(p);
     if(activeNail) {
         p->v.viewmodel=engine.pfnAllocString(NailViewModel);
@@ -671,7 +683,7 @@ static void hookPostThink(edict_t* p) {
             startupTrace("FlakAttack",report);
         }
     }
-    bounce::tfcPostThink(p,bounce::engineerBuilding(p)?0:state.buttons);
+    bounce::tfcPostThink(p,(!ShotgunsPlayable||bounce::engineerBuilding(p))?0:state.buttons);
     recharge(state);
     bool active=ricochet(p) && !bounce::engineerBuilding(p);
     if(active)p->v.viewmodel=engine.pfnAllocString(state.redMode?RicochetRedModel:"models/v_9mmhandgun.mdl");
@@ -712,7 +724,7 @@ static int hookRegisterMsg(const char* name,int size) {
     return id;
 }
 static void hookMessageBegin(int dest,int type,const float* origin,edict_t* player) {
-    shotgunList=false;rpgList=false;necroList=false;winchesterList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
+    shotgunList=false;rpgList=false;necroList=false;winchesterList=false;shockList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
     engine.pfnMessageBegin(dest,type,origin,player);
 }
 static void hookMessageEnd() {
@@ -738,6 +750,9 @@ static void hookMessageEnd() {
 static void hookWriteString(const char* value) {
     if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_rpg"))rpgList=true;
     if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_shotgun"))shotgunList=true;
+    bool shock=!std::strcmp(value,"weapon_gauss")||!std::strcmp(value,"weapon_shockrifle");
+    if(currentMsg==msgWeaponList&&shock){shockList=true;value="weapon_shockrifle";}
+    if(currentMsg==msgItemPickup&&shock)value="weapon_shockrifle";
     bool win=!std::strcmp(value,"weapon_357")||!std::strcmp(value,"weapon_python")||!std::strcmp(value,"weapon_winchester1887");
     if(currentMsg==msgWeaponList&&win){winchesterList=true;value="weapon_winchester1887";}
     if(currentMsg==msgItemPickup&&win)value="weapon_winchester1887";
@@ -762,7 +777,8 @@ static void hookWriteString(const char* value) {
     engine.pfnWriteString(value);
 }
 static void hookWriteByte(int value) {
-    if(currentMsg==msgWeaponList&&winchesterList){const int fields[]={shotgunAmmoIndex>=0?shotgunAmmoIndex:1,125,255,255,2,3,3,1};if(currentByte<8)value=fields[currentByte];}
+    if(currentMsg==msgWeaponList&&shockList){const int fields[]={-1,50,255,255,3,1,9,0};if(currentByte==0)shockAmmoIndex=value;else if(currentByte<8)value=fields[currentByte];}
+    if(currentMsg==msgWeaponList&&winchesterList){const int fields[]={shotgunAmmoIndex>=0?shotgunAmmoIndex:1,125,255,255,2,4,3,1};if(currentByte<8)value=fields[currentByte];}
     if(currentMsg==msgWeaponList&&necroList){const int fields[]={23,1,255,255,0,1,11,1};if(currentByte<8)value=fields[currentByte];}
     if(currentMsg==msgWeaponList && rpgList) {if(currentByte==0)rpgAmmoIndex=value;else if(currentByte==1)value=30;}
     if(currentMsg==msgWeaponList && shotgunList && currentByte==0) {shotgunAmmoIndex=value;bounce::setShellAmmoIndex(value); }
@@ -786,12 +802,13 @@ static void hookWriteByte(int value) {
         if(currentByte==1) {curWeaponId=value;carrierCurWeapon=(value==bounce::carrierWeaponId());}
         if(currentByte==2 && curWeaponId==GlockId)value=255;
         if(currentByte==2 && curWeaponId==Mp5Id)value=255;
-        if(currentByte==2 && (curWeaponId==8||curWeaponId==11||curWeaponId==3))value=255;
+        if(currentByte==2 && (curWeaponId==8||curWeaponId==11||curWeaponId==3||curWeaponId==9))value=255;
         if(currentByte==2 && curWeaponId==7)value=bounce::tfcClip(messagePlayer);
         if(currentByte==2 && carrierCurWeapon && valid(messagePlayer))value=bounce::status(messagePlayer).clip;
     }
     if(currentMsg==SvcWeaponAnim && !ownAnimation && currentByte==0) {
-        if(winchester(messagePlayer))value=0;
+        if(shockRifle(messagePlayer))value=0;
+        else if(winchester(messagePlayer))value=0;
         else if(necromancer(messagePlayer))value=0;
         else if(ricochet(messagePlayer))value=value==7?4:value==8?3:0;
         else if(pipeWrench(messagePlayer))value=pipeWrenchSequence(value);
@@ -800,6 +817,7 @@ static void hookWriteByte(int value) {
     ++currentByte;engine.pfnWriteByte(value);
 }
 static void hookClientCommand(edict_t* p) {
+    if(engine.pfnCmd_Argv&&disabledShotgunClass(engine.pfnCmd_Argv(0)))return;
     if(engine.pfnCmd_Argv && bounce::engineerCommand(p,engine.pfnCmd_Argv(0)))return;
     // Weapon commands travel as the HUD name, which is the item classname, so
     // the inherited SelectItem resolves them without aliasing.
@@ -810,6 +828,9 @@ static void hookClientCommand(edict_t* p) {
     }
 }
 static void hookTouch(edict_t* a,edict_t* b) {
+    auto fullShockAmmo=[](edict_t* item,edict_t* player){return valid(item)&&valid(player)&&(player->v.flags&FL_CLIENT)&&(!std::strcmp(text(item->v.classname),"ammo_gaussclip")||!std::strcmp(text(item->v.classname),"ammo_shockcore"))&&shockAmmoIndex>=0&&sharedAmmo(player,shockAmmoIndex,0)>=50;};
+    if(fullShockAmmo(a,b)||fullShockAmmo(b,a))return;
+    if((valid(a)&&disabledShotgunClass(text(a->v.classname)))||(valid(b)&&disabledShotgunClass(text(b->v.classname))))return;
     if(valid(a)&&a->v.targetname&&!std::strcmp(text(a->v.targetname),"cremation_anatomical_gib")){
         if(globals->time>=a->v.fuser1&&length(a->v.velocity)>40){static const char* clips[]={"debris/flesh1.wav","debris/flesh2.wav","debris/flesh3.wav"};engine.pfnEmitSound(a,CHAN_BODY,clips[a->v.body%3],.65f,ATTN_NORM,0,100);a->v.fuser1=globals->time+.2f;}return;
     }
@@ -825,6 +846,7 @@ static int hookSpawn(edict_t* e) {
     bool bounceItem=bounce::isCarrierClass(classname);
     bool nailItem=classname && (!std::strcmp(classname,"weapon_nailgun")||!std::strcmp(classname,"weapon_9mmAR")||!std::strcmp(classname,"weapon_mp5"));
     bool wrenchItem=classname && (!std::strcmp(classname,"weapon_pipewrench")||!std::strcmp(classname,"weapon_crowbar"));
+    bool shockItem=classname&&(!std::strcmp(classname,"weapon_shockrifle")||!std::strcmp(classname,"weapon_gauss"));
     bool winItem=classname&&(!std::strcmp(classname,"weapon_winchester1887")||!std::strcmp(classname,"weapon_357")||!std::strcmp(classname,"weapon_python"));
     bool necroItem=classname&&(!std::strcmp(classname,"weapon_necromancer")||!std::strcmp(classname,"weapon_hornetgun"));
     bool minionItem=classname&&!std::strcmp(classname,"monster_minion");
@@ -865,7 +887,10 @@ static int hookSpawn(edict_t* e) {
         engine.pfnPrecacheModel(const_cast<char*>(LinkSkeletonModel));
         for(auto path:{PlasmaBody,PlasmaCore,PlasmaHalo,LinkGlowSprite,LinkHotSprite})engine.pfnPrecacheModel(const_cast<char*>(path));
         linkBeamSprite=engine.pfnPrecacheModel(const_cast<char*>("sprites/xbeam1.spr"));
-        msgLinkMuzzle=engine.pfnRegUserMsg("LinkMuzzle",8);msgLinkShot=engine.pfnRegUserMsg("LinkShot",13);
+        msgLinkMuzzle=engine.pfnRegUserMsg("LinkMuzzle",8);msgLinkShot=engine.pfnRegUserMsg("LinkShot",13);msgFlakMuzzle=engine.pfnRegUserMsg("FlakMuz",1);engine.pfnPrecacheModel(const_cast<char*>("sprites/muzzleflash1.spr"));
+        msgGibBlood=engine.pfnRegUserMsg("GibBlood",14);bloodStamps.clear();bloodHits.clear();
+        for(auto path:{"sprites/bloodspray.spr","sprites/blood.spr"})engine.pfnPrecacheModel(const_cast<char*>(path));
+        shockPrecache();
         winchesterPrecache();
         necroPrecache();
         cultistPrecache();
@@ -873,6 +898,7 @@ static int hookSpawn(edict_t* e) {
         bounce::precache();
     }
     int result=raven.pfnSpawn(e);
+    if(shockItem){e->v.classname=engine.pfnAllocString("weapon_shockrifle");engine.pfnSetModel(e,"models/cremation/w_shockrifle.mdl");}
     if(winItem){e->v.classname=engine.pfnAllocString("weapon_winchester1887");engine.pfnSetModel(e,"models/cremation/w_winchester1887.mdl");}
     if(necroItem){e->v.classname=engine.pfnAllocString("weapon_necromancer");engine.pfnSetModel(e,"models/cremation/w_necromancer.mdl");}
     if(minionItem){e->v.classname=engine.pfnAllocString("monster_minion");engine.pfnSetModel(e,"models/cremation/minion.mdl");necroInstall(e);}
@@ -897,10 +923,13 @@ static int hookSpawn(edict_t* e) {
         char report[160];std::snprintf(report,sizeof report,"%s weapons=%d body=%d model=%s health=%.0f",text(e->v.targetname),e->v.weapons,e->v.body,text(e->v.model),e->v.health);
         startupTrace("HECU",report);
     }
+    if(disabledShotgunClass(text(e->v.classname))){e->v.flags|=FL_KILLME;e->v.solid=SOLID_NOT;e->v.effects|=EF_NODRAW;}
     humanGibInstall(e);
+    weaponBloodInstall(e);
     return result;
 }
 static void hookActivate(edict_t* list,int count,int maxClients) {
+    shockStates.fill(ShockState{});shockOrbs.clear();
     winchesterStates.fill(WinchesterState{});
     anatomicalGibs.clear();humanNativeGibs.clear();humanGibContext=false;
     necroStates.fill(NecroState{});necroFires.clear();incendiaryGrenades.clear();
@@ -965,7 +994,10 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(restoredClass && !std::strcmp(restoredClass,bounce::CarrierName))e->v.classname=engine.pfnAllocString(bounce::WeaponName);
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_anatomical_gib"))e->v.flags|=FL_KILLME;
     if(restoredClass&&(!std::strcmp(restoredClass,"weapon_357")||!std::strcmp(restoredClass,"weapon_python")))e->v.classname=engine.pfnAllocString("weapon_winchester1887");
+    if(restoredClass&&!std::strcmp(restoredClass,"weapon_gauss"))e->v.classname=engine.pfnAllocString("weapon_shockrifle");
+    if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_shock_core"))e->v.flags|=FL_KILLME;
     humanGibInstall(e);
+    weaponBloodInstall(e);
     if(auto s=getEffect(e))*s=Effect{};
     if(!std::strcmp(text(e->v.classname),"cremation_disc")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     if(!std::strcmp(text(e->v.classname),"cremation_nail")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
@@ -1024,6 +1056,7 @@ extern "C" void __stdcall GiveFnptrsToDll(enginefuncs_t* incoming,globalvars_t* 
     hookedEngine.pfnWalkMove=hookWalkMove;hookedEngine.pfnMoveToOrigin=hookMoveToOrigin;
     hookedEngine.pfnGetModelPtr=hookModelPtr;
     hookedEngine.pfnSetModel=hookGibSetModel;
+    originalBloodTrace=engine.pfnTraceLine;engine.pfnTraceLine=weaponBloodTrace;hookedEngine.pfnTraceLine=weaponBloodTrace;
     hookedEngine.pfnEmitSound=hookEmitSound;
     hookedEngine.pfnRegUserMsg=hookRegisterMsg;hookedEngine.pfnMessageBegin=hookMessageBegin;hookedEngine.pfnMessageEnd=hookMessageEnd;
     hookedEngine.pfnWriteString=hookWriteString;hookedEngine.pfnWriteByte=hookWriteByte;
@@ -1100,3 +1133,6 @@ extern "C" void weapon_necromancer(entvars_t* vars){spawnNativeAlias(vars,"weapo
 extern "C" void monster_minion(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_minion");}
 
 extern "C" void weapon_winchester1887(entvars_t* vars){spawnNativeAlias(vars,"weapon_357","weapon_winchester1887");}
+
+extern "C" void weapon_shockrifle(entvars_t* vars){spawnNativeAlias(vars,"weapon_gauss","weapon_shockrifle");}
+extern "C" void ammo_shockcore(entvars_t* vars){spawnNativeAlias(vars,"ammo_gaussclip","ammo_gaussclip");}

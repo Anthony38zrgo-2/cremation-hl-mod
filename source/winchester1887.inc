@@ -5,7 +5,7 @@ static bool winchester(edict_t* p){return valid(p)&&p->v.health>0&&p->v.viewmode
 static void winchesterPrecache(){for(auto p:{WinchesterView,"models/cremation/p_winchester1887.mdl","models/cremation/w_winchester1887.mdl"})engine.pfnPrecacheModel(const_cast<char*>(p));for(auto p:{"weapons/m1887/sbarrel1.wav","weapons/m1887/dbarrel1.wav","weapons/m1887/scock1.wav","weapons/m1887/m1887_after.wav","weapons/m1887/m1887_draw.wav","weapons/m1887/m1887_insert.wav","weapons/m1887/m1887_start.wav","weapons/m1887/reload3.wav"})engine.pfnPrecacheSound(const_cast<char*>(p));}
 static void winchesterPostThink(edict_t* p,int buttons){int index=engine.pfnIndexOfEdict(p);auto& s=winchesterStates[index];bool active=winchester(p);if(active){p->v.viewmodel=engine.pfnAllocString(WinchesterView);p->v.weaponmodel=engine.pfnAllocString("models/cremation/p_winchester1887.mdl");
  if(!s.active){
-  if(msgWeaponList){const int fields[]={shotgunAmmoIndex,125,255,255,2,3,3,1};engine.pfnMessageBegin(MSG_ONE,msgWeaponList,nullptr,p);engine.pfnWriteString("weapon_winchester1887");for(int v:fields)engine.pfnWriteByte(v);engine.pfnMessageEnd();}
+  if(msgWeaponList){const int fields[]={shotgunAmmoIndex,125,255,255,2,4,3,1};engine.pfnMessageBegin(MSG_ONE,msgWeaponList,nullptr,p);engine.pfnWriteString("weapon_winchester1887");for(int v:fields)engine.pfnWriteByte(v);engine.pfnMessageEnd();}
   animation(p,6);s.next=globals->time+1.03f;s.idle=s.next;}
  if((buttons&Attack)&&globals->time>=s.next&&sharedShells(p,0)>0&&sharedShells(p,1)>=0){
   animation(p,1);sound(p,"weapons/m1887/sbarrel1.wav");p->v.effects|=EF_MUZZLEFLASH;p->v.punchangle.x-=5;engine.pfnMakeVectors(&p->v.v_angle.x);Vector from=p->v.origin+p->v.view_ofs,forward=globals->v_forward,right=globals->v_right,up=globals->v_up;

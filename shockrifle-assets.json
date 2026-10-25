@@ -1,0 +1,26 @@
+{
+  "source_installation": "C:/UnrealTournament",
+  "packages": [
+    "System/Botpack.u",
+    "System/UnrealShare.u"
+  ],
+  "weapon": "weapon_shockrifle",
+  "ammo": "native gauss uranium pool; 20 initial / 50 maximum",
+  "color": "violet",
+  "resources": [
+    "dlls/cremation.dll",
+    "cl_dlls/client.dll",
+    "maps/rapidcore.bsp",
+    "sprites/weapon_shockrifle.txt",
+    "sprites/cremation/shock_core.spr",
+    "sprites/cremation/shock_hud.spr",
+    "models/cremation/p_shockrifle.mdl",
+    "models/cremation/v_shockrifle.mdl",
+    "models/cremation/w_shockrifle.mdl",
+    "sound/weapons/shockrifle/altfire.wav",
+    "sound/weapons/shockrifle/combo.wav",
+    "sound/weapons/shockrifle/equip.wav",
+    "sound/weapons/shockrifle/fire.wav",
+    "sound/weapons/shockrifle/impact.wav"
+  ]
+}

@@ -591,6 +591,7 @@ struct PlayerState {
     float nextPrimary = 0;
     float nextSecondary = 0;
     float animUntil = 0;
+    float mechanismAt = 0;
     bool owns = false;
     bool wasActive = false;
     int sentClip = -1;
@@ -680,6 +681,7 @@ bool firePellets(edict_t* player, PlayerState& state) {
     state.nextSecondary = std::max(state.nextSecondary, state.nextPrimary);
     state.animUntil = globals->time + .9f;
     host.animation(player, AnimFire2);
+    state.mechanismAt=globals->time+10.f/30.f;
     host.sound(player, "weapons/ut2004/flak_fire.wav");
     player->v.punchangle.x -= 2.f;
     player->v.effects = int(player->v.effects) | EF_MUZZLEFLASH;
@@ -750,6 +752,7 @@ bool fireGrenade(edict_t* player, PlayerState& state) {
     state.lastGrenadeRadius = radius;
     state.lastGrenadeElevation = elevation;
     host.animation(player, AnimFire);
+    state.mechanismAt=globals->time+10.f/24.f;
     host.sound(player, "weapons/ut2004/flak_altfire.wav");
     player->v.punchangle.x -= 1.f;
     sendState(player);
@@ -850,7 +853,7 @@ void hudListBytes(int* out) {
     out[4] = HudSlot;
     out[5] = HudSlotPos;
     out[6] = CarrierWeaponId;
-    out[7] = 0;
+    out[7] = 1; // ITEM_FLAG_SELECTONEMPTY: keep Flak selectable before ammo pickup.
 }
 
 void weaponSpawned(edict_t* weapon) {
@@ -905,6 +908,7 @@ void playerPostThink(edict_t* player, int buttons) {
     bool active = isBouncePlayer(player);
     if (active) {
         if (!state.wasActive) {
+            state.mechanismAt=0;
             state.nextPrimary = std::max(state.nextPrimary, globals->time + DeployTime);
             state.nextSecondary = std::max(state.nextSecondary, globals->time + DeployTime);
             state.animUntil = globals->time + DeployTime;
@@ -925,6 +929,7 @@ void playerPostThink(edict_t* player, int buttons) {
             else if (attack2 && globals->time >= state.nextSecondary)
                 fire(player, true);
         }
+        if(state.mechanismAt>0&&globals->time>=state.mechanismAt){state.mechanismAt=0;host.animation(player,AnimReload);state.animUntil=globals->time+.5f;}
         if (globals->time >= state.animUntil && player->v.weaponanim != AnimIdle)
             host.animation(player, AnimIdle);
     }

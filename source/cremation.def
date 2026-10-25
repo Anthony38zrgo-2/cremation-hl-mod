@@ -3,6 +3,8 @@ EXPORTS
     GiveFnptrsToDll=_GiveFnptrsToDll@8
     GetEntityAPI
     GetEntityAPI2
+    weapon_shockrifle
+    ammo_shockcore
     weapon_winchester1887
     weapon_necromancer
     monster_minion

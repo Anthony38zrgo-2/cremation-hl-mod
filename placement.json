@@ -168,12 +168,11 @@
     ]
   },
   "loadout": [
-    "weapon_winchester1887",
-    "weapon_necromancer",
+    "weapon_shockrifle",
     "item_suit",
-    "weapon_ricochet",
-    "weapon_shotgun",
     "weapon_bounce_shotgun",
+    "weapon_ricochet",
+    "weapon_necromancer",
     "weapon_pipewrench",
     "weapon_nailgun",
     "weapon_handgrenade",

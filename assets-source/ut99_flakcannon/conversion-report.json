@@ -1,0 +1,26 @@
+{
+  "flakm": {
+    "triangles": 563,
+    "vertices": 614,
+    "frames": 100,
+    "bones": 120,
+    "mean_pose_error_units": 0.24796931112802204,
+    "max_pose_error_units": 2.6694189186564983
+  },
+  "FlakHand": {
+    "triangles": 128,
+    "vertices": 220,
+    "frames": 10,
+    "bones": 100,
+    "mean_pose_error_units": 1.90896839247808e-15,
+    "max_pose_error_units": 7.944109290391274e-15
+  },
+  "Flak2Pick": {
+    "triangles": 320,
+    "vertices": 394,
+    "frames": 1,
+    "bones": 1,
+    "mean_pose_error_units": 5.568287527364593e-16,
+    "max_pose_error_units": 1.831026719408895e-15
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "ASMD2M": {
+    "triangles": 330,
+    "vertices": 320,
+    "frames": 52,
+    "bones": 120,
+    "mean_pose_error_units": 0.06329200123675519,
+    "max_pose_error_units": 0.857412531982124
+  },
+  "ASMD2hand": {
+    "triangles": 165,
+    "vertices": 294,
+    "frames": 12,
+    "bones": 100,
+    "mean_pose_error_units": 0.0,
+    "max_pose_error_units": 0.0
+  },
+  "ASMD2pick": {
+    "triangles": 220,
+    "vertices": 267,
+    "frames": 1,
+    "bones": 1,
+    "mean_pose_error_units": 2.4320589087435202e-15,
+    "max_pose_error_units": 1.4238583238573986e-14
+  }
+}
