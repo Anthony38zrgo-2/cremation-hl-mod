@@ -10,7 +10,7 @@ Compiled and installed. Interactive combat and visual validation remain pending.
 
 ## Fixed humanoid gibbing set
 
-After native zombie/HECU whole-body gibbing, collected native random fragments are retired and replaced once by six rigid pieces: head, torso, left arm, right arm, left leg, right leg. The mirrored limbs use original UT textures. Each leg combines the supplied UT thigh and foot geometry into one rigid fragment. No localized dismemberment is introduced. Normal deaths and Link Gun death effects do not trigger this replacement. Pieces bounce with varied impulses/rotation, play selected fragment impact sounds, cannot take damage, and expire after 25 seconds. Transient pieces are discarded on save restore.
+After native zombie/HECU whole-body gibbing, collected native random fragments are retired and replaced once by six rigid pieces: head, torso, left arm, right arm, left leg, right leg. The mirrored limbs use original UT textures. Each leg combines the supplied UT thigh and foot geometry into one rigid fragment. The shared replacement remains whole-body only; David now adds localized dismemberment through the same simulator (see DAVID_ZOMBIE.md). Normal deaths and Link Gun death effects do not trigger this replacement. Pieces bounce with varied impulses/rotation, play selected fragment impact sounds, cannot take damage, and expire after 25 seconds. Transient pieces are discarded on save restore.
 
 ## Gib physics correction
 

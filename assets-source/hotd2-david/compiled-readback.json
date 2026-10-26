@@ -1,0 +1,393 @@
+{
+  "compiled_bones": 16,
+  "compiled_triangles": 721,
+  "compiled_height": 71.98728006987416,
+  "compiled_textures": 28,
+  "pose_samples": [
+    {
+      "sequence": "idle",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "idle",
+      "frame": 22,
+      "max_bone_position_error": 0.004441283816321272,
+      "max_rotation_matrix_error": 0.0001079340403127016
+    },
+    {
+      "sequence": "idle",
+      "frame": 45,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "walk",
+      "frame": 0,
+      "max_bone_position_error": 0.004999339301347744,
+      "max_rotation_matrix_error": 0.0001397620249824899
+    },
+    {
+      "sequence": "walk",
+      "frame": 15,
+      "max_bone_position_error": 0.00347998414595763,
+      "max_rotation_matrix_error": 0.0001359448041537148
+    },
+    {
+      "sequence": "walk",
+      "frame": 30,
+      "max_bone_position_error": 0.004999339301347744,
+      "max_rotation_matrix_error": 0.0001397620249824899
+    },
+    {
+      "sequence": "run",
+      "frame": 0,
+      "max_bone_position_error": 0.006009151906809002,
+      "max_rotation_matrix_error": 0.0001385528511613776
+    },
+    {
+      "sequence": "run",
+      "frame": 15,
+      "max_bone_position_error": 0.0075036929695669,
+      "max_rotation_matrix_error": 0.00014867299637164044
+    },
+    {
+      "sequence": "run",
+      "frame": 30,
+      "max_bone_position_error": 0.006009151906809002,
+      "max_rotation_matrix_error": 0.0001385528511613776
+    },
+    {
+      "sequence": "attack_right",
+      "frame": 0,
+      "max_bone_position_error": 0.0026373850849350446,
+      "max_rotation_matrix_error": 0.0001095763477448608
+    },
+    {
+      "sequence": "attack_right",
+      "frame": 22,
+      "max_bone_position_error": 0.0032134268011820366,
+      "max_rotation_matrix_error": 0.00016559846908958953
+    },
+    {
+      "sequence": "attack_right",
+      "frame": 45,
+      "max_bone_position_error": 0.0034512123937128045,
+      "max_rotation_matrix_error": 0.0001349930504205843
+    },
+    {
+      "sequence": "attack_left",
+      "frame": 0,
+      "max_bone_position_error": 0.0028933339222271775,
+      "max_rotation_matrix_error": 0.00015664294259443157
+    },
+    {
+      "sequence": "attack_left",
+      "frame": 24,
+      "max_bone_position_error": 0.0036449386559750854,
+      "max_rotation_matrix_error": 0.00016415864803798197
+    },
+    {
+      "sequence": "attack_left",
+      "frame": 48,
+      "max_bone_position_error": 0.004176941816449569,
+      "max_rotation_matrix_error": 0.00012652482517816477
+    },
+    {
+      "sequence": "attack_both",
+      "frame": 0,
+      "max_bone_position_error": 0.0028933339222271775,
+      "max_rotation_matrix_error": 0.00015664294259443157
+    },
+    {
+      "sequence": "attack_both",
+      "frame": 24,
+      "max_bone_position_error": 0.0036449386559750854,
+      "max_rotation_matrix_error": 0.00016415864803798197
+    },
+    {
+      "sequence": "attack_both",
+      "frame": 48,
+      "max_bone_position_error": 0.004176941816449569,
+      "max_rotation_matrix_error": 0.00012652482517816477
+    },
+    {
+      "sequence": "pain_small",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001451813668935098
+    },
+    {
+      "sequence": "pain_small",
+      "frame": 7,
+      "max_bone_position_error": 0.0061044453897949056,
+      "max_rotation_matrix_error": 0.00024090386237940464
+    },
+    {
+      "sequence": "pain_small",
+      "frame": 15,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001451813668935098
+    },
+    {
+      "sequence": "pain_big",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.00020508018088183366
+    },
+    {
+      "sequence": "pain_big",
+      "frame": 7,
+      "max_bone_position_error": 0.005057889102315144,
+      "max_rotation_matrix_error": 0.00011097984813748102
+    },
+    {
+      "sequence": "pain_big",
+      "frame": 15,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.00020508018088183366
+    },
+    {
+      "sequence": "die_simple",
+      "frame": 0,
+      "max_bone_position_error": 0.005723974776749177,
+      "max_rotation_matrix_error": 0.00011457642962208955
+    },
+    {
+      "sequence": "die_simple",
+      "frame": 19,
+      "max_bone_position_error": 0.004792386580044448,
+      "max_rotation_matrix_error": 0.00013310037175950917
+    },
+    {
+      "sequence": "die_simple",
+      "frame": 39,
+      "max_bone_position_error": 0.00664523928113486,
+      "max_rotation_matrix_error": 0.00020638282734047886
+    },
+    {
+      "sequence": "die_back",
+      "frame": 0,
+      "max_bone_position_error": 0.006273795739627867,
+      "max_rotation_matrix_error": 0.00016967377654880655
+    },
+    {
+      "sequence": "die_back",
+      "frame": 24,
+      "max_bone_position_error": 0.004160621878225349,
+      "max_rotation_matrix_error": 0.00016569127187215926
+    },
+    {
+      "sequence": "die_back",
+      "frame": 49,
+      "max_bone_position_error": 0.007406923645562885,
+      "max_rotation_matrix_error": 0.00019576483210315132
+    },
+    {
+      "sequence": "die_forward",
+      "frame": 0,
+      "max_bone_position_error": 0.0031568264391133517,
+      "max_rotation_matrix_error": 0.0001550923110839042
+    },
+    {
+      "sequence": "die_forward",
+      "frame": 15,
+      "max_bone_position_error": 0.004747442762332088,
+      "max_rotation_matrix_error": 0.00017027002038429162
+    },
+    {
+      "sequence": "die_forward",
+      "frame": 30,
+      "max_bone_position_error": 0.005225318266333358,
+      "max_rotation_matrix_error": 0.00012067006903600935
+    },
+    {
+      "sequence": "die_violent",
+      "frame": 0,
+      "max_bone_position_error": 0.005566467318435679,
+      "max_rotation_matrix_error": 0.0001438187613841957
+    },
+    {
+      "sequence": "die_violent",
+      "frame": 40,
+      "max_bone_position_error": 0.0024216846703736016,
+      "max_rotation_matrix_error": 0.00012017497073157912
+    },
+    {
+      "sequence": "die_violent",
+      "frame": 81,
+      "max_bone_position_error": 0.005533856894993059,
+      "max_rotation_matrix_error": 0.00016275701087403727
+    },
+    {
+      "sequence": "die_head",
+      "frame": 0,
+      "max_bone_position_error": 0.0034192777163024276,
+      "max_rotation_matrix_error": 0.00012490032003636964
+    },
+    {
+      "sequence": "die_head",
+      "frame": 21,
+      "max_bone_position_error": 0.005420920981933603,
+      "max_rotation_matrix_error": 0.00016481587001171416
+    },
+    {
+      "sequence": "die_head",
+      "frame": 42,
+      "max_bone_position_error": 0.007638952770037671,
+      "max_rotation_matrix_error": 0.0001500230835495553
+    },
+    {
+      "sequence": "pain_head",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.00016784754677391656
+    },
+    {
+      "sequence": "pain_head",
+      "frame": 7,
+      "max_bone_position_error": 0.004611584531348348,
+      "max_rotation_matrix_error": 0.0002852097927385777
+    },
+    {
+      "sequence": "pain_head",
+      "frame": 15,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.00016784754677391656
+    },
+    {
+      "sequence": "pain_chest",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001451813668935098
+    },
+    {
+      "sequence": "pain_chest",
+      "frame": 7,
+      "max_bone_position_error": 0.0061044453897949056,
+      "max_rotation_matrix_error": 0.00024090386237940464
+    },
+    {
+      "sequence": "pain_chest",
+      "frame": 15,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001451813668935098
+    },
+    {
+      "sequence": "pain_stomach",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.00020508018088183366
+    },
+    {
+      "sequence": "pain_stomach",
+      "frame": 7,
+      "max_bone_position_error": 0.005057889102315144,
+      "max_rotation_matrix_error": 0.00011097984813748102
+    },
+    {
+      "sequence": "pain_stomach",
+      "frame": 15,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.00020508018088183366
+    },
+    {
+      "sequence": "pain_leftarm",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "pain_leftarm",
+      "frame": 7,
+      "max_bone_position_error": 0.003613914413519343,
+      "max_rotation_matrix_error": 0.0001469937009674835
+    },
+    {
+      "sequence": "pain_leftarm",
+      "frame": 15,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "pain_rightarm",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "pain_rightarm",
+      "frame": 7,
+      "max_bone_position_error": 0.0038121456814598454,
+      "max_rotation_matrix_error": 0.00018479990081923803
+    },
+    {
+      "sequence": "pain_rightarm",
+      "frame": 15,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "pain_leftleg",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "pain_leftleg",
+      "frame": 10,
+      "max_bone_position_error": 0.003788276473001831,
+      "max_rotation_matrix_error": 0.00024205371656788044
+    },
+    {
+      "sequence": "pain_leftleg",
+      "frame": 20,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "pain_rightleg",
+      "frame": 0,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "pain_rightleg",
+      "frame": 10,
+      "max_bone_position_error": 0.004701061565936444,
+      "max_rotation_matrix_error": 0.00021662903695768287
+    },
+    {
+      "sequence": "pain_rightleg",
+      "frame": 20,
+      "max_bone_position_error": 0.003285177055389532,
+      "max_rotation_matrix_error": 0.0001495590546143899
+    },
+    {
+      "sequence": "crawl",
+      "frame": 0,
+      "max_bone_position_error": 0.005327042331098442,
+      "max_rotation_matrix_error": 0.00010841850003057152
+    },
+    {
+      "sequence": "crawl",
+      "frame": 25,
+      "max_bone_position_error": 0.004714345810739818,
+      "max_rotation_matrix_error": 0.00012643411152120365
+    },
+    {
+      "sequence": "crawl",
+      "frame": 50,
+      "max_bone_position_error": 0.005327042331098442,
+      "max_rotation_matrix_error": 0.00010841850003057152
+    },
+    {
+      "sequence": "crawl_idle",
+      "frame": 0,
+      "max_bone_position_error": 0.005327042331098442,
+      "max_rotation_matrix_error": 0.00010841850003057152
+    }
+  ],
+  "clockwise_signed_volume": -6374.118680796266
+}

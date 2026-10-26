@@ -1,0 +1,796 @@
+{
+  "source": "HOTD2 PC original znsam2.bin/zom.bin",
+  "scale": 4.159275629140744,
+  "floor": 2.1967899332578975,
+  "bones": {
+    "Root": 0,
+    "Torso": 1,
+    "Head": 2,
+    "UpperArm_R": 3,
+    "Forearm_R": 4,
+    "Hand_R": 5,
+    "UpperArm_L": 6,
+    "Forearm_L": 7,
+    "Hand_L": 8,
+    "Pelvis": 9,
+    "Thigh_R": 10,
+    "Shin_R": 11,
+    "Foot_R": 12,
+    "Thigh_L": 13,
+    "Shin_L": 14,
+    "Foot_L": 15
+  },
+  "bodygroups": [
+    {
+      "node": 1,
+      "base": 1,
+      "count": 4,
+      "models": [
+        7993,
+        7994,
+        7995,
+        7996
+      ]
+    },
+    {
+      "node": 2,
+      "base": 4,
+      "count": 4,
+      "models": [
+        7945,
+        7976,
+        7977,
+        null
+      ]
+    },
+    {
+      "node": 3,
+      "base": 16,
+      "count": 4,
+      "models": [
+        7981,
+        7982,
+        7983,
+        null
+      ]
+    },
+    {
+      "node": 4,
+      "base": 64,
+      "count": 4,
+      "models": [
+        8006,
+        8007,
+        8008,
+        null
+      ]
+    },
+    {
+      "node": 5,
+      "base": 256,
+      "count": 4,
+      "models": [
+        8000,
+        8001,
+        8002,
+        null
+      ]
+    },
+    {
+      "node": 6,
+      "base": 1024,
+      "count": 4,
+      "models": [
+        7978,
+        7979,
+        7980,
+        null
+      ]
+    },
+    {
+      "node": 7,
+      "base": 4096,
+      "count": 4,
+      "models": [
+        8003,
+        8004,
+        8005,
+        null
+      ]
+    },
+    {
+      "node": 8,
+      "base": 16384,
+      "count": 4,
+      "models": [
+        7997,
+        7998,
+        7999,
+        null
+      ]
+    },
+    {
+      "node": 9,
+      "base": 65536,
+      "count": 1,
+      "models": [
+        7984
+      ]
+    },
+    {
+      "node": 10,
+      "base": 65536,
+      "count": 4,
+      "models": [
+        7990,
+        7991,
+        7992,
+        null
+      ]
+    },
+    {
+      "node": 11,
+      "base": 262144,
+      "count": 4,
+      "models": [
+        7942,
+        7943,
+        7944,
+        null
+      ]
+    },
+    {
+      "node": 12,
+      "base": 1048576,
+      "count": 2,
+      "models": [
+        7937,
+        null
+      ]
+    },
+    {
+      "node": 13,
+      "base": 2097152,
+      "count": 4,
+      "models": [
+        7987,
+        7988,
+        7989,
+        null
+      ]
+    },
+    {
+      "node": 14,
+      "base": 8388608,
+      "count": 4,
+      "models": [
+        7939,
+        7940,
+        7941,
+        null
+      ]
+    },
+    {
+      "node": 15,
+      "base": 33554432,
+      "count": 2,
+      "models": [
+        7936,
+        null
+      ]
+    }
+  ],
+  "hitboxes": [
+    {
+      "node": 1,
+      "group": 2,
+      "minimum": [
+        -5.629979431624178,
+        -9.840108783531225,
+        0.7999099112066376
+      ],
+      "maximum": [
+        5.382782759680809,
+        9.840104816936883,
+        19.1372119245343
+      ]
+    },
+    {
+      "node": 2,
+      "group": 1,
+      "minimum": [
+        -6.645737969277157,
+        -4.851175819322578,
+        -4.158822891152113
+      ],
+      "maximum": [
+        3.96820720838113,
+        4.834378283931244,
+        8.19846727448783
+      ]
+    },
+    {
+      "node": 3,
+      "group": 5,
+      "minimum": [
+        -2.5844416828114873,
+        -3.3823104829075223,
+        -13.023172820612377
+      ],
+      "maximum": [
+        3.4944019766041494,
+        2.8202951344964218,
+        3.2642311671389472
+      ]
+    },
+    {
+      "node": 4,
+      "group": 5,
+      "minimum": [
+        -1.679711591571381,
+        -2.1299900846112765,
+        -12.366973168663261
+      ],
+      "maximum": [
+        3.279741542666184,
+        2.513172146877173,
+        2.028112323434095
+      ]
+    },
+    {
+      "node": 5,
+      "group": 5,
+      "minimum": [
+        -2.9150007972783127,
+        -2.880110881355008,
+        -7.747645481979105
+      ],
+      "maximum": [
+        2.9766669603976124,
+        1.3796242886888672,
+        1.5305465717659765
+      ]
+    },
+    {
+      "node": 6,
+      "group": 4,
+      "minimum": [
+        -2.5839537917073763,
+        -2.9700360542179083,
+        -13.025634092401816
+      ],
+      "maximum": [
+        3.4917438625704715,
+        3.232571050658914,
+        3.263727409657467
+      ]
+    },
+    {
+      "node": 7,
+      "group": 4,
+      "minimum": [
+        -1.6797129550881862,
+        -2.6629066208828536,
+        -12.366981101851946
+      ],
+      "maximum": [
+        3.279739807281159,
+        1.9802558585177423,
+        2.0281045142014835
+      ]
+    },
+    {
+      "node": 8,
+      "group": 4,
+      "minimum": [
+        -2.9149980702447023,
+        -1.5293587007165113,
+        -7.7476444903305195
+      ],
+      "maximum": [
+        2.976673654025565,
+        2.7303764073493273,
+        1.5305459519856104
+      ]
+    },
+    {
+      "node": 9,
+      "group": 3,
+      "minimum": [
+        -5.125669106057232,
+        -7.1339548299485385,
+        -11.320581614552774
+      ],
+      "maximum": [
+        5.192588527558702,
+        7.1339548299485385,
+        7.410683292595116
+      ]
+    },
+    {
+      "node": 10,
+      "group": 7,
+      "minimum": [
+        -3.8803352439146965,
+        -3.723149522436882,
+        -19.220078046940664
+      ],
+      "maximum": [
+        4.857838210344874,
+        3.8609227312031575,
+        3.9142721855472478
+      ]
+    },
+    {
+      "node": 11,
+      "group": 7,
+      "minimum": [
+        -3.132213982587737,
+        -3.0093469874479264,
+        -22.614181761061644
+      ],
+      "maximum": [
+        4.984107799693996,
+        3.834083762234124,
+        2.3266487499067803
+      ]
+    },
+    {
+      "node": 12,
+      "group": 7,
+      "minimum": [
+        -10.798818769703711,
+        -3.0094124362545753,
+        -3.0465702524931277
+      ],
+      "maximum": [
+        3.925876705207986,
+        3.522402166066911,
+        2.098560898295613
+      ]
+    },
+    {
+      "node": 13,
+      "group": 6,
+      "minimum": [
+        -3.880483743290389,
+        -3.6446426872127744,
+        -19.220044330888754
+      ],
+      "maximum": [
+        4.857727145703288,
+        3.9394305580758506,
+        3.9142957372011558
+      ]
+    },
+    {
+      "node": 14,
+      "group": 6,
+      "minimum": [
+        -3.132214974236323,
+        -3.617800247473691,
+        -20.348173511315206
+      ],
+      "maximum": [
+        5.0556721031703775,
+        3.225630502208359,
+        2.3266527165011226
+      ]
+    },
+    {
+      "node": 15,
+      "group": 6,
+      "minimum": [
+        -10.798819761352297,
+        -3.306118651306478,
+        -3.0465662858987854
+      ],
+      "maximum": [
+        3.925875961471547,
+        3.225695951015008,
+        2.098565236758175
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "idle",
+      "source_id": 975,
+      "frames": 46,
+      "activity": 1,
+      "loop": true,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -0.14557463214519725,
+        -0.07528288495803995
+      ]
+    },
+    {
+      "name": "walk",
+      "source_id": 1022,
+      "frames": 31,
+      "activity": 3,
+      "loop": true,
+      "speed": 42,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        39.90200735275697,
+        0.0
+      ]
+    },
+    {
+      "name": "run",
+      "source_id": 968,
+      "frames": 31,
+      "activity": 4,
+      "loop": true,
+      "speed": 130,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        124.77826887422232,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_right",
+      "source_id": 1012,
+      "frames": 46,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 1,
+      "event_frame": 25,
+      "discarded_root_travel": [
+        2.30007931185019,
+        0.06904397436531852
+      ]
+    },
+    {
+      "name": "attack_left",
+      "source_id": 1013,
+      "frames": 49,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 2,
+      "event_frame": 28,
+      "discarded_root_travel": [
+        64.68921176566418,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_both",
+      "source_id": 1013,
+      "frames": 49,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 28,
+      "discarded_root_travel": [
+        64.68921176566418,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_small",
+      "source_id": 982,
+      "frames": 16,
+      "activity": 26,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_big",
+      "source_id": 974,
+      "frames": 16,
+      "activity": 27,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "die_simple",
+      "source_id": 987,
+      "frames": 40,
+      "activity": 36,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -34.088173991745506,
+        -0.3186004832939761
+      ]
+    },
+    {
+      "name": "die_back",
+      "source_id": 986,
+      "frames": 50,
+      "activity": 37,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        39.44947843720815,
+        0.3722551484793006
+      ]
+    },
+    {
+      "name": "die_forward",
+      "source_id": 972,
+      "frames": 31,
+      "activity": 38,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -96.61123652023231,
+        0.0
+      ]
+    },
+    {
+      "name": "die_violent",
+      "source_id": 988,
+      "frames": 82,
+      "activity": 39,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -10.510489308575755,
+        2.440246856126376
+      ]
+    },
+    {
+      "name": "die_head",
+      "source_id": 990,
+      "frames": 43,
+      "activity": 66,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        38.811447770644236,
+        0.900067235634582
+      ]
+    },
+    {
+      "name": "pain_head",
+      "source_id": 977,
+      "frames": 16,
+      "activity": 70,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_chest",
+      "source_id": 982,
+      "frames": 16,
+      "activity": 71,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_stomach",
+      "source_id": 974,
+      "frames": 16,
+      "activity": 72,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_leftarm",
+      "source_id": 979,
+      "frames": 16,
+      "activity": 73,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_rightarm",
+      "source_id": 981,
+      "frames": 16,
+      "activity": 74,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_leftleg",
+      "source_id": 960,
+      "frames": 21,
+      "activity": 75,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_rightleg",
+      "source_id": 961,
+      "frames": 21,
+      "activity": 76,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "crawl",
+      "source_id": 999,
+      "frames": 51,
+      "activity": 48,
+      "loop": true,
+      "speed": 16,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "crawl_idle",
+      "source_id": 999,
+      "frames": 1,
+      "activity": 18,
+      "loop": true,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "prone_attack_right",
+      "source_id": 1012,
+      "frames": 46,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 1,
+      "event_frame": 25,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "prone_attack_left",
+      "source_id": 1013,
+      "frames": 49,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 2,
+      "event_frame": 28,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "prone_attack_both",
+      "source_id": 1013,
+      "frames": 49,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 28,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "prone_die",
+      "source_id": 987,
+      "frames": 40,
+      "activity": 36,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "textures": 28,
+  "main_triangles": 721,
+  "sha256": {
+    "models/cremation/hotd2/david/david.mdl": "481e03bde166af6fbfc4159918a3fab1277ccf129ad37f210706d1456cdb3064",
+    "models/cremation/hotd2/david/david_charred.mdl": "55e831ff459edb245f33d5743a76663300ef954e173322778fb81a717b6a9049",
+    "models/cremation/hotd2/david/part_02.mdl": "c08335fa2cfa0e7de8da2f4c238eb14254851d778679df4f3373623143338207",
+    "models/cremation/hotd2/david/part_03.mdl": "776fbf58a579c66d860041ea65d1956d91413092921c29674df5a117d77cafed",
+    "models/cremation/hotd2/david/part_04.mdl": "5211384d269de10583d757e579f056aca9d0efe0960f1f4b7d1590da2ae45a22",
+    "models/cremation/hotd2/david/part_05.mdl": "8a2ef6fe2f5a305fad902b092b2b4c86f8713e0aedba04db3137dd8a824b2287",
+    "models/cremation/hotd2/david/part_06.mdl": "0d7a50a9a4e8f00699ba171dd7c321d158cdd5abaf8b93afc21890a38fa293f8",
+    "models/cremation/hotd2/david/part_07.mdl": "21aae6270b2542bcb52af0c3ef36463bb1c7a10728aca9e578065be71865635b",
+    "models/cremation/hotd2/david/part_08.mdl": "9d3b161a27975d9738b956118b0816d80bf0a6331d4eedecac0d9209b1d5b80b",
+    "models/cremation/hotd2/david/part_10.mdl": "968cf56c077f4839276fa5b7de82b09ed13da22c0ba77232d7b1716013d9e558",
+    "models/cremation/hotd2/david/part_11.mdl": "c546b22e942ba7fd20a41906b527d868eaf0dbb0c11669a989d16722f4a1a100",
+    "models/cremation/hotd2/david/part_12.mdl": "1bd960649fbf7292a80b4604c3c2ccf7ec26df4ff59a750baf5b0c8c9355b141",
+    "models/cremation/hotd2/david/part_13.mdl": "a6f6efbea51d9e90283704495f05b22855e6761d603e867dc8e47771197f27de",
+    "models/cremation/hotd2/david/part_14.mdl": "4ccd10f9e6ebef63d76790ef7bcbc41bef92d6d150cfaab2a2429d8caa790eec",
+    "models/cremation/hotd2/david/part_15.mdl": "cbf012f2753437afe7bbf0c539f64ad04c28efa24b8b2572495685d35dc87a8d"
+  },
+  "animation_mapping_evidence": {
+    "kind": 7,
+    "hit_motion_table": "0x00592FC8[kind][variant][0x004C84A8[slot]]",
+    "head": 977,
+    "chest": 982,
+    "stomach": 974,
+    "right_arm": 981,
+    "left_arm": 979,
+    "right_leg": 961,
+    "left_leg": 960,
+    "attack_table": "0x00592F18[kind][variant]",
+    "attack_hit_ticks_60Hz": {
+      "0x3F4": 50,
+      "0x3F5": 55
+    }
+  }
+}

@@ -449,6 +449,7 @@ static int sharedShells(edict_t* p,int spend) {
 #include "quake_zombie_validation.inc"
 #include "czero_smoke.inc"
 #include "czero_zombie.inc"
+#include "david_zombie.inc"
 #include "heart_pickups.inc"
 static bool disabledShotgunActive(edict_t* p){return !ShotgunsPlayable&&(winchester(p)||bounce::isTfcPlayer(p));}
 static void attachBounce() {
@@ -548,6 +549,7 @@ static bool hordeAlert(HordeProbe& probe) {
     return false;
 }
 static void hordeWalkAnimation(edict_t* e) {
+    if(davidState(e)){if(aliveEnemy(e)&&!davidBusy(e))davidActivity(e->pvPrivateData,nullptr,3);return;}
     if(!engine.pfnGetModelPtr)return;
     auto data=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!data)return;
     int count=*reinterpret_cast<int*>(data+164),offset=*reinterpret_cast<int*>(data+168);
@@ -574,6 +576,7 @@ static void tacticalSaveProbeFrame();
 static void dmcPreviewFrame();
 static void tacticalHudFrame();
 static void tacticalHudProbeFrame();
+static void davidProbeFrame();
 static void hookThink(edict_t* e) {
     if(vostokCoverThink(e))return;
     if(czThink(e))return;
@@ -617,6 +620,8 @@ static void hookStartFrame() {
     linkFrame();
     necroFrame();
     anatomicalGibFrame();
+    davidFrame();
+    davidProbeFrame();
     if(raven.pfnStartFrame)raven.pfnStartFrame();
     // Initial inventory is granted directly. Suppress native enemy/player
     // weapon drops as well, keeping owned inventory entities intact.
@@ -908,6 +913,7 @@ static void hookTouch(edict_t* a,edict_t* b) {
 }
 static const char* hookDescription() {return "Cremation";}
 static void extensionPrecache(){
+        davidStates.clear();davidNextDecision=0;davidPrecache();
         invalidFastSequenceLogged=false;
         startupTrace("worldspawn");
         char modulePath[MAX_PATH]{};
@@ -1007,9 +1013,11 @@ static int hookSpawn(edict_t* e) {
     if(disabledShotgunClass(text(e->v.classname))){e->v.flags|=FL_KILLME;e->v.solid=SOLID_NOT;e->v.effects|=EF_NODRAW;}
     humanGibInstall(e);
     weaponBloodInstall(e);
+    davidSpawn(e);
     return result;
 }
 #include "mansion_waves.inc"
+#include "david_validation.inc"
 #include "mansion_radar.inc"
 static const char* startupInventory[]={"item_suit","item_longjump","weapon_shockrifle","weapon_bounce_shotgun","weapon_ricochet","weapon_necromancer","weapon_pipewrench","weapon_nailgun","weapon_handgrenade","weapon_rpg","ammo_9mmAR","ammo_buckshot","ammo_buckshot","ammo_buckshot"};
 static void startupInventoryPrecache(){
@@ -1025,6 +1033,7 @@ static void startupInventoryGive(edict_t* player){
         char report[160];std::snprintf(report,sizeof report,"%s attached=%d consumed=%d",name,int(attached),int(consumed));startupTrace("StartupInventory",report);
         if(valid(item)&&!attached)engine.pfnRemoveEntity(item);
     }
+    if(valid(player)&&engine.pfnClientCommand)engine.pfnClientCommand(player,const_cast<char*>("weapon_ricochet\n"));
 }
 static void playerDefaults(edict_t* p){
     if(!valid(p)||p->v.health<=0)return;
@@ -1081,6 +1090,7 @@ static void hookActivate(edict_t* list,int count,int maxClients) {
     startupTrace("MapWeapons",inventory);
     engine.pfnAlertMessage(at_console,const_cast<char*>("Cremation loaded: Ricochet, Flak Cannon, Nailgun and Opposing Force Pipe Wrench.\n"));
     qzProbeBegin(list,count);
+    davidProbeBegin(list,count);
 }
 static void hookDeactivate() {
     for(auto& s:effects) {
@@ -1101,6 +1111,7 @@ static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
     float savedGrenadeDamage=e->v.dmg;
     for(auto& g:incendiaryGrenades)if(g.entity==e&&g.serial==e->serialnumber)e->v.dmg=g.originalDamage;
     raven.pfnSave(e,data);
+    davidSave(e,data);
     if(tacticalSaved(e)&&raven.pfnSaveWriteFields)raven.pfnSaveWriteFields(data,"CremationTactical1",&e->v,tacticalFields,ARRAYSIZE(tacticalFields));
     e->v.dmg=savedGrenadeDamage;
     if(constructionFreeze)e->v.flags|=FL_FROZEN;
@@ -1111,6 +1122,7 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     bool restoringWorld=engine.pfnIndexOfEdict(e)==0;
     if(restoringWorld)extensionPrecache();
     int result=raven.pfnRestore(e,data,globalEntity);
+    davidRestore(e,data);
     if(restoringWorld){mansionPrecache();startupInventoryPrecache();reactorPrecache();}
     if(tacticalSaved(e)&&raven.pfnSaveReadFields)raven.pfnSaveReadFields(data,"CremationTactical1",&e->v,tacticalFields,ARRAYSIZE(tacticalFields));
     const char* restoredClass=text(e->v.classname);
@@ -1126,6 +1138,7 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(restoredClass && !std::strcmp(restoredClass,"weapon_crowbar"))e->v.classname=engine.pfnAllocString("weapon_pipewrench");
     if(restoredClass && !std::strcmp(restoredClass,bounce::CarrierName))e->v.classname=engine.pfnAllocString(bounce::WeaponName);
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_anatomical_gib"))e->v.flags|=FL_KILLME;
+    if(e->v.targetname&&!std::strcmp(text(e->v.targetname),DavidGibTag))e->v.flags|=FL_KILLME;
     if(restoredClass&&(!std::strcmp(restoredClass,"weapon_357")||!std::strcmp(restoredClass,"weapon_python")))e->v.classname=engine.pfnAllocString("weapon_winchester1887");
     if(restoredClass&&!std::strcmp(restoredClass,"weapon_gauss"))e->v.classname=engine.pfnAllocString("weapon_shockrifle");
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_shock_core"))e->v.flags|=FL_KILLME;
@@ -1190,7 +1203,7 @@ extern "C" void __stdcall GiveFnptrsToDll(enginefuncs_t* incoming,globalvars_t* 
     hookedEngine.pfnWalkMove=hookWalkMove;hookedEngine.pfnMoveToOrigin=hookMoveToOrigin;
     hookedEngine.pfnGetModelPtr=hookModelPtr;
     hookedEngine.pfnSetModel=hookGibSetModel;
-    originalBloodTrace=engine.pfnTraceLine;engine.pfnTraceLine=weaponBloodTrace;hookedEngine.pfnTraceLine=weaponBloodTrace;
+    davidOriginalTrace=engine.pfnTraceLine;originalBloodTrace=davidTraceLine;engine.pfnTraceLine=weaponBloodTrace;hookedEngine.pfnTraceLine=weaponBloodTrace;
     hookedEngine.pfnEmitSound=hookEmitSound;
     hookedEngine.pfnRegUserMsg=hookRegisterMsg;hookedEngine.pfnMessageBegin=hookMessageBegin;hookedEngine.pfnMessageEnd=hookMessageEnd;
     hookedEngine.pfnWriteString=hookWriteString;hookedEngine.pfnWriteByte=hookWriteByte;

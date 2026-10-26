@@ -2,7 +2,7 @@
 static bool humanoidRemains(edict_t* e){if(!e||e->free)return false;const char* n=text(e->v.classname);return std::strstr(n,"zombie")||!std::strcmp(n,"monster_human_grunt");}
 static bool humanGibContext=false;
 static std::vector<std::pair<edict_t*,int>> humanNativeGibs;
-struct AnatomicalGib{edict_t* entity;int serial;float expires,born,last;Vector velocity;int bounces=0;bool asleep=false;int bloodDecals=5;float nextBlood=0;};
+struct AnatomicalGib{edict_t* entity;int serial;float expires,born,last;Vector velocity;int bounces=0;bool asleep=false;int bloodDecals=5;float nextBlood=0;bool localized=false;};
 static std::vector<AnatomicalGib> anatomicalGibs;
 static void anatomicalBloodImpact(AnatomicalGib& g,const TraceResult& tr){
  if(g.bloodDecals<=0||globals->time<g.nextBlood||tr.flFraction>=1||engine.pfnCVarGetFloat("violence_hblood")==0)return;
@@ -14,11 +14,12 @@ static void anatomicalBloodImpact(AnatomicalGib& g,const TraceResult& tr){
 static void anatomicalRest(AnatomicalGib& g,const Vector& ground){
     auto e=g.entity;
     // Lay elongated pieces on their side, then place the actual mesh on the floor.
-    e->v.angles.x=(e->v.body>=2)?90.f:0.f;e->v.angles.z=0;
+    e->v.angles.x=(g.localized||e->v.body>=2)?90.f:0.f;e->v.angles.z=0;
     float minZ=-3.f;auto h=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));
     if(h){int parts=*reinterpret_cast<int*>(h+204),offset=*reinterpret_cast<int*>(h+208);
         if(parts>0){auto part=h+offset;int count=*reinterpret_cast<int*>(part+64),models=*reinterpret_cast<int*>(part+72);if(e->v.body<count){auto model=h+models+e->v.body*112;int vertices=*reinterpret_cast<int*>(model+80),index=*reinterpret_cast<int*>(model+88);float pitch=e->v.angles.x*3.14159265f/180;minZ=0;
-            for(int i=0;i<vertices;++i){auto v=reinterpret_cast<float*>(h+index+i*12);minZ=std::min(minZ,-std::sin(pitch)*v[0]+std::cos(pitch)*v[2]);}}}}
+            Vector f,r,u;if(g.localized)engine.pfnAngleVectors(&e->v.angles.x,&f.x,&r.x,&u.x);
+            for(int i=0;i<vertices;++i){auto v=reinterpret_cast<float*>(h+index+i*12);float z=g.localized?f.z*v[0]-r.z*v[1]+u.z*v[2]:-std::sin(pitch)*v[0]+std::cos(pitch)*v[2];minZ=std::min(minZ,z);}}}}
     Vector at=ground+Vector(0,0,-minZ+.3f);engine.pfnSetOrigin(e,&at.x);g.velocity=Vector(0,0,0);e->v.velocity=Vector(0,0,0);e->v.avelocity=Vector(0,0,0);g.asleep=true;
 }
 static void humanGibSpawn(Vector origin,Vector impulse){
@@ -40,6 +41,7 @@ static void humanGibFinish(){
 static void anatomicalGibFrame(){
     for(auto it=anatomicalGibs.begin();it!=anatomicalGibs.end();){auto& g=*it;auto e=g.entity;if(!valid(e)||e->serialnumber!=g.serial){it=anatomicalGibs.erase(it);continue;}
         if(globals->time>=g.expires){engine.pfnRemoveEntity(e);it=anatomicalGibs.erase(it);continue;}
+        if(g.localized&&globals->time>g.expires-.25f){e->v.rendermode=kRenderTransTexture;e->v.renderamt=std::max(0.f,255.f*(g.expires-globals->time)/.25f);}
         float dt=std::min(.25f,std::max(0.f,globals->time-g.last));g.last=globals->time;
         if(!g.asleep){int steps=std::max(1,int(std::ceil(dt/.01f)));float step=dt/steps;
             for(int i=0;i<steps&&!g.asleep;++i){g.velocity.z-=800*step;Vector from=e->v.origin,to=from+g.velocity*step;TraceResult tr;engine.pfnTraceLine(&from.x,&to.x,1,nullptr,&tr);
