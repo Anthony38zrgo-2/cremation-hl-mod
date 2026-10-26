@@ -1,0 +1,47 @@
+{
+  "source": "C:\\Users\\bill\\Documents\\myFuneral\\Exported\\myFuneral Edit 1 Export 1.mp3",
+  "source_sha256": "151a8735bdff666b6f0ebd272f82b9f24878131766ea6c77c11d3172ea2dd335",
+  "mastered_mp3": "sound/music/myfuneral_mastered.mp3",
+  "mastered_sha256": "26a2e71a7adce274d620b2726eebbcee0432156559d0690789e1695611326ea4",
+  "original_loudness": {
+    "input_i": "-29.40",
+    "input_tp": "-13.77",
+    "input_lra": "8.90",
+    "input_thresh": "-39.53",
+    "output_i": "-16.53",
+    "output_tp": "-1.50",
+    "output_lra": "8.10",
+    "output_thresh": "-26.61",
+    "normalization_type": "dynamic",
+    "target_offset": "0.53"
+  },
+  "mastered_mp3_loudness": {
+    "input_i": "-16.03",
+    "input_tp": "-1.50",
+    "input_lra": "8.20",
+    "input_thresh": "-26.14",
+    "output_i": "-16.23",
+    "output_tp": "-1.50",
+    "output_lra": "8.00",
+    "output_thresh": "-26.28",
+    "normalization_type": "dynamic",
+    "target_offset": "0.23"
+  },
+  "mastering_target": {
+    "integrated_lufs": -16,
+    "true_peak_dbtp": -1.5,
+    "lra": 11
+  },
+  "path": "sound/music/myfuneral_loop.wav",
+  "sha256": "ea165982416995e11b8e6e848effb33d56192abf8018661f47be8e39a64e5aef",
+  "frames": 16572779,
+  "rate": 44100,
+  "crossfade_seconds": 6,
+  "loop_start_frame": 264600,
+  "gain": 1,
+  "seam_delta_pcm": [
+    31,
+    78
+  ],
+  "duration": 375.799977324263
+}

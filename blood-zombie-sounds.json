@@ -1,0 +1,99 @@
+{
+  "archive": "D:\\SteamLibrary\\steamapps\\common\\Blood\\sounds.rff",
+  "disabled_ids": [
+    1200,
+    1201,
+    1202,
+    1203,
+    1204,
+    1205,
+    1206,
+    1207
+  ],
+  "sources": [
+    "https://github.com/NBlood/NBlood/blob/master/source/blood/src/aizomba.cpp",
+    "https://github.com/NBlood/NBlood/blob/master/source/blood/src/aizombf.cpp"
+  ],
+  "clips": [
+    {
+      "id": 1100,
+      "name": "AZOMRISE",
+      "event": "Rise",
+      "path": "sound/blood/zombie/sfx_1100.wav",
+      "duration": 2.1128344671201815,
+      "sha256": "b928881edc3a1de237699ba0a0549132a5b2db7f676b1b8e6762dd0d75f90d0b"
+    },
+    {
+      "id": 1101,
+      "name": "AZOMSWIP",
+      "event": "Swipe",
+      "path": "sound/blood/zombie/sfx_1101.wav",
+      "duration": 0.19863945578231293,
+      "sha256": "3e7cc34cbef6613263547bc135696774b037c9f51360873be46d459fc168990b"
+    },
+    {
+      "id": 1102,
+      "name": "AZOMSTND",
+      "event": "Step",
+      "path": "sound/blood/zombie/sfx_1102.wav",
+      "duration": 0.818140589569161,
+      "sha256": "23fb828fc34bd7b9129ec611f1fc004b4b5325ef103d06918b45b4da81d027f9"
+    },
+    {
+      "id": 1103,
+      "name": "AZOMSPOT",
+      "event": "Alert",
+      "path": "sound/blood/zombie/sfx_1103.wav",
+      "duration": 1.6882539682539683,
+      "sha256": "eef663142f5026e5adc6d3b5eb293cc86237998ef95952a187e9f34bfab99f02"
+    },
+    {
+      "id": 1104,
+      "name": "AZOMROAM",
+      "event": "Idle",
+      "path": "sound/blood/zombie/sfx_1104.wav",
+      "duration": 2.286984126984127,
+      "sha256": "23e20db2d93af25d9b54716e5d02bb12890430f6c3aa51c14b6a179e4df5d4f2"
+    },
+    {
+      "id": 1105,
+      "name": "AZOMMOAN",
+      "event": "Idle",
+      "path": "sound/blood/zombie/sfx_1105.wav",
+      "duration": 1.4867120181405895,
+      "sha256": "e6a822ab5b4b29a1796fc88ca88eb708636162579aa3f15a2224587f610f2fcf"
+    },
+    {
+      "id": 1106,
+      "name": "AZOMPAIN",
+      "event": "Pain",
+      "path": "sound/blood/zombie/sfx_1106.wav",
+      "duration": 1.1740589569160997,
+      "sha256": "8aed382dd6cf8b835e51e05ff5f44e8a2bf58650a4458d6a2151d84d3b310cc2"
+    },
+    {
+      "id": 1107,
+      "name": "AZOMDIE1",
+      "event": "Death",
+      "path": "sound/blood/zombie/sfx_1107.wav",
+      "duration": 1.201451247165533,
+      "sha256": "6ff5c808deed408dda83b3472d7d8a876f8c3f11dfa718bd0aafb5266ff8e154"
+    },
+    {
+      "id": 1108,
+      "name": "AZOMDIE2",
+      "event": "Death",
+      "path": "sound/blood/zombie/sfx_1108.wav",
+      "duration": 1.1784126984126984,
+      "sha256": "9357cae60768c37834684608ed1a7aa874b4880eb85e4a3f212925eb3e5f3929"
+    },
+    {
+      "id": 1109,
+      "name": "AZOMDIE3",
+      "event": "Death",
+      "path": "sound/blood/zombie/sfx_1109.wav",
+      "duration": 1.3117460317460317,
+      "sha256": "58a8f21cfefd9ca6d45f1259c2459a0aaf63952e295508a0b354c0d73e5a265a"
+    }
+  ]
+}

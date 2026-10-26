@@ -1,0 +1,25 @@
+{
+  "enabled_ids": [
+    1100,
+    1101,
+    1102,
+    1103,
+    1104,
+    1105,
+    1106,
+    1107,
+    1108,
+    1109
+  ],
+  "disabled_ids": [
+    1200,
+    1201,
+    1202,
+    1203,
+    1204,
+    1205,
+    1206,
+    1207
+  ],
+  "reason": "User deleted these WAVs from Revision_sonidos_zombies_normales; do not reinstall them."
+}

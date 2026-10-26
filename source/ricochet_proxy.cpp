@@ -38,6 +38,7 @@ static constexpr const char* PipeWrenchViewModel="models/cremation/v_pipe_wrench
 static constexpr const char* PipeWrenchPlayerModel="models/cremation/p_pipe_wrench.mdl";
 static constexpr const char* RicochetRedModel="models/cremation/v_ricochet_red.mdl";
 static int trailSprite=0, flashSprite=0;
+static int msgTacticalHUD=0;
 static int msgLinkMuzzle=0,msgLinkShot=0,msgFlakMuzzle=0;
 static int msgWeaponList=0,msgCurWeapon=0,msgItemPickup=0,msgAmmoX=0,msgSetFov=0;
 static int currentMsg=0,currentByte=0,curWeaponId=0;
@@ -94,8 +95,10 @@ static int pipeWrenchSequence(int sequence) {
 static void coords(const Vector& p) { engine.pfnWriteCoord(p.x);engine.pfnWriteCoord(p.y);engine.pfnWriteCoord(p.z); }
 static void sound(edict_t* e,const char* name) { engine.pfnEmitSound(e,CHAN_WEAPON,name,1,ATTN_NORM,0,100); }
 #include "blood_cultist_voices.h"
+#include "blood_zombie_voices.inc"
 static void hookEmitSound(edict_t* entity,int channel,const char* sample,float volume,float attenuation,int flags,int pitch) {
     if(cultistVoiceSound(entity,channel,sample,flags))return;
+    if(zombieVoiceSound(entity,sample,flags))return;
     const char* replacement=sample;
     if(pipeWrench(entity)) {
         if(!std::strcmp(sample,"weapons/cbar_hit1.wav"))replacement="weapons/pwrench_hit1.wav";
@@ -569,6 +572,8 @@ static void truthProbeFrame();
 static void czTacticalProbeFrame();
 static void tacticalSaveProbeFrame();
 static void dmcPreviewFrame();
+static void tacticalHudFrame();
+static void tacticalHudProbeFrame();
 static void hookThink(edict_t* e) {
     if(vostokCoverThink(e))return;
     if(czThink(e))return;
@@ -590,6 +595,7 @@ static void hookThink(edict_t* e) {
     }
 }
 static void hookStartFrame() {
+    tacticalHudProbeFrame();
     dmcPreviewFrame();
     tacticalSaveProbeFrame();
     czTacticalProbeFrame();
@@ -598,6 +604,7 @@ static void hookStartFrame() {
     czAnimationProbeFrame();
     czSmokeFrame();
     czBombFrame();
+    tacticalHudFrame();
     mansionRadarFrame();
     heartFrame();
     heartProbeFrame();
@@ -605,6 +612,7 @@ static void hookStartFrame() {
     czVisualCleanup();
     qzProbeFrame();
     cultistFrame();
+    zombieVoiceFrame();
     rpgFrame();
     linkFrame();
     necroFrame();
@@ -920,6 +928,7 @@ static void extensionPrecache(){
             bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
         startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
+        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);
         czPrecache();
         heartPrecache();
         mansionRadarPrecache();
@@ -946,6 +955,7 @@ static void extensionPrecache(){
         winchesterPrecache();
         necroPrecache();
         cultistPrecache();
+        zombieVoicePrecache();
         rpgPrecache();
         bounce::precache();
     for(auto path:{"models/cremation/vostok/tree_noleaves2.mdl","models/cremation/vostok/jeep-russian.mdl","models/cremation/truth/tree_japan_maple_red.mdl","models/cremation/truth/tree_japan_maple_orange.mdl","models/cremation/truth/bush_japan_bush01.mdl","models/cremation/truth/rock_japan_rocks2.mdl"})engine.pfnPrecacheModel(const_cast<char*>(path));
@@ -1025,6 +1035,8 @@ static void playerDefaults(edict_t* p){
 }
 #include "mansion_reactor.inc"
 #include "czero_objective.inc"
+#include "tactical_hud.inc"
+#include "tactical_hud_validation.inc"
 #include "reactor_validation.inc"
 #include "reactor_preview.inc"
 #include "czero_validation.inc"
@@ -1037,6 +1049,7 @@ static void playerDefaults(edict_t* p){
 #include "tactical_save_validation.inc"
 #include "dmc_preview.inc"
 static void hookActivate(edict_t* list,int count,int maxClients) {
+    tacticalHudNext=0;
     shockStates.fill(ShockState{});shockOrbs.clear();
     winchesterStates.fill(WinchesterState{});
     anatomicalGibs.clear();humanNativeGibs.clear();humanGibContext=false;

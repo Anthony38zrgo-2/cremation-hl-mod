@@ -143,10 +143,10 @@ static bool czObjectiveThink(edict_t* e,float dt){
 static void czBombFrame(){
     auto b=mansionFind("cz_planted_bomb");if(!valid(b)||b->v.impulse)return;
     float dt=std::min(.1f,std::max(0.f,globals->time-b->v.fuser1));b->v.fuser1=globals->time;
-    if(globals->time>=b->v.dmgtime){b->v.impulse=2;auto state=mansionState();if(valid(state))state->v.impulse=2;
+    if(globals->time>=b->v.dmgtime){b->v.impulse=2;b->v.teleport_time=globals->time;auto state=mansionState();if(valid(state))state->v.impulse=2;
         engine.pfnEmitSound(b,CHAN_ITEM,"cremation/czero/c4_explode1.wav",1,ATTN_NONE,0,100);
         for(int i=1;i<globals->maxEntities;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!valid(p))continue;
-            if(p->v.flags&FL_CLIENT){reactorKill(p);engine.pfnClientPrintf(p,print_center,"GAME OVER - LA BOMBA HA EXPLOTADO\n");}
+            if(p->v.flags&FL_CLIENT){reactorKill(p);}
             else if(p->v.flags&FL_MONSTER){p->v.velocity=Vector(0,0,0);p->v.flags|=FL_FROZEN;}}
         startupTrace("CZBombExploded","game over");return;
     }
@@ -154,13 +154,12 @@ static void czBombFrame(){
     for(int i=1;i<=globals->maxClients&&i<33;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!valid(p)||p->v.health<=0)continue;
         if(length(center(p)-b->v.origin)>88||!(players[i].buttons&IN_USE)||std::strcmp(engine.pfnGetPhysicsKeyValue(p,"defuse"),"1"))continue;
         Vector eye=p->v.origin+p->v.view_ofs,end=b->v.origin+Vector(0,0,6);TraceResult tr{};engine.pfnTraceLine(&eye.x,&end.x,1,p,&tr);if(tr.flFraction<.99f)continue;
-        if(guarding){engine.pfnClientPrintf(p,print_center,"ELIMINA AL NPC PARA DESACTIVAR\n");continue;}defuser=p;break;
+        if(guarding)continue;defuser=p;break;
     }
     if(!valid(defuser)){b->v.enemy=nullptr;b->v.frags=0;}
     else if(b->v.enemy!=defuser||length(defuser->v.origin-b->v.vuser1)>4){b->v.enemy=defuser;b->v.vuser1=defuser->v.origin;b->v.frags=0;engine.pfnEmitSound(b,CHAN_ITEM,"cremation/czero/c4_disarm.wav",1,ATTN_NORM,0,100);}
-    else{b->v.frags+=dt;if(b->v.frags>=5){b->v.impulse=1;b->v.effects|=EF_NODRAW;engine.pfnEmitSound(b,CHAN_ITEM,"cremation/czero/c4_disarmed.wav",1,ATTN_NORM,0,100);startupTrace("CZBombDefused","five seconds with kit");}}
+    else{b->v.frags+=dt;if(b->v.frags>=5){b->v.impulse=1;b->v.teleport_time=globals->time;b->v.effects|=EF_NODRAW;engine.pfnEmitSound(b,CHAN_ITEM,"cremation/czero/c4_disarmed.wav",1,ATTN_NORM,0,100);startupTrace("CZBombDefused","five seconds with kit");}}
     if(globals->time>=b->v.pain_finished){b->v.pain_finished=globals->time+.5f;
         if(!b->v.impulse)engine.pfnEmitSound(b,CHAN_ITEM,"cremation/czero/c4_beep1.wav",1,ATTN_NORM,0,100);
-        char message[160];std::snprintf(message,sizeof message,b->v.impulse?"BOMBA DESACTIVADA":"BOMBA: %.0f s | %s %.0f%%",std::ceil(b->v.dmgtime-globals->time),guarding?"ELIMINA AL NPC":"MANTEN USAR",b->v.frags*20);
-        for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(valid(p)&&(p->v.flags&FL_CLIENT))engine.pfnClientPrintf(p,print_center,message);}}
+    }
 }

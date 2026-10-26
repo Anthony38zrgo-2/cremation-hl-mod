@@ -482,7 +482,7 @@ EXPORTS
  "HUD_CreateEntities"=client_forward_476
  "HUD_DirectorMessage"=client_forward_477
  HUD_DrawNormalTriangles
- "HUD_Frame"=client_forward_480
+ HUD_Frame
  "HUD_GetHullBounds"=client_forward_481
  HUD_GetStudioModelInterface
  "HUD_GetUserEntity"=client_forward_483
@@ -494,7 +494,7 @@ EXPORTS
  "HUD_ProcessPlayerState"=client_forward_490
  HUD_Redraw
  HUD_Reset
- "HUD_Shutdown"=client_forward_493
+ HUD_Shutdown
  "HUD_StudioEvent"=client_forward_494
  "HUD_TempEntUpdate"=client_forward_495
  "HUD_TxferLocalOverrides"=client_forward_496

@@ -25,6 +25,7 @@ static int __fastcall weaponBloodDamage(void* object,void*,entvars_t* inflictor,
 static void __fastcall weaponBloodKilled(void* object,void*,entvars_t* attacker,int gib){
  auto table=*reinterpret_cast<void***>(object);void* original=nullptr;for(auto& t:bloodDamageTables)if(t.table==table){original=t.killed;break;}
  edict_t* victim=nullptr;for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->pvPrivateData==object){victim=e;break;}}
+ zombieVoicePlay(victim,ZombieVoiceEvent::Death);
  bool drop=heartRollDeath(victim);Vector at=valid(victim)?center(victim):Vector(0,0,0);
  if(original)reinterpret_cast<void(__thiscall*)(void*,entvars_t*,int)>(original)(object,attacker,gib);
  if(drop)heartSpawn(at);

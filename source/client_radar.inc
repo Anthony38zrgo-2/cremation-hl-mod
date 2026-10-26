@@ -31,4 +31,4 @@ static void drawRadar(){
     }
     eng.pfnDrawCharacter(cx-4,top+3,'N',130,225,145);
 }
-extern "C" int HUD_Redraw(float time,int intermission){int result=reinterpret_cast<int(*)(float,int)>(GetProcAddress(donor,"HUD_Redraw"))(time,intermission);if(!intermission)drawRadar();return result;}
+extern "C" int HUD_Redraw(float time,int intermission){int result=reinterpret_cast<int(*)(float,int)>(GetProcAddress(donor,"HUD_Redraw"))(time,intermission);if(!intermission)drawRadar();drawTacticalHud();return result;}
