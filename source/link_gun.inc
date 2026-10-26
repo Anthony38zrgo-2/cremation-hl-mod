@@ -270,6 +270,31 @@ static void linkHud(edict_t* p,int remaining) {
     engine.pfnMessageBegin(MSG_ONE,msgAmmoX,nullptr,p);
     engine.pfnWriteByte(nailAmmoIndex);engine.pfnWriteByte(remaining);engine.pfnMessageEnd();
 }
+static float linkDps(float seconds){return 21.f*std::pow(2.f,std::min(6.f,std::max(0.f,seconds))/1.5f);}
+static void linkChain(edict_t* player,edict_t* primary,float damage){
+    std::vector<edict_t*> linked{primary};
+    for(size_t source=0;source<linked.size()&&linked.size()<5;++source){
+        auto from=linked[source];if(!valid(from))continue;
+        while(linked.size()<5){edict_t* best=nullptr;float nearest=128.f;
+            for(int i=globals->maxClients+1;i<globals->maxEntities;++i){auto candidate=engine.pfnPEntityOfEntIndex(i);
+                if(!linkEnemy(candidate)||std::find(linked.begin(),linked.end(),candidate)!=linked.end())continue;
+                float distance=length(center(candidate)-center(from));if(distance>nearest)continue;
+                Vector a=center(from),b=center(candidate);TraceResult tr{};engine.pfnTraceLine(&a.x,&b.x,0,from,&tr);
+                if(tr.flFraction<.999f&&tr.pHit!=candidate)continue;best=candidate;nearest=distance;
+            }if(!valid(best))break;
+            linked.push_back(best);Vector a=center(from),b=center(best);
+            engine.pfnMessageBegin(MSG_PVS,SvcTemp,&a.x,nullptr);engine.pfnWriteByte(TE_BEAMPOINTS);coords(a);coords(b);engine.pfnWriteShort(linkBeamSprite);
+            for(int value:{0,20,2,16,4,45,255,65,220,30})engine.pfnWriteByte(value);engine.pfnMessageEnd();
+        }
+    }
+    // Resolve the whole graph before applying damage: a killed source must
+    // never leave dangling traversal pointers or let a tick hit someone twice.
+    for(size_t i=1;i<linked.size();++i){auto e=linked[i];if(!linkEnemy(e))continue;
+        LinkLock death{};death.target=e;death.serial=e->serialnumber;death.lastOrigin=e->v.origin;death.lastAngles=e->v.angles;death.lastHeight=e->v.maxs.z-e->v.mins.z;
+        auto table=*reinterpret_cast<void***>(e->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[11])(e->pvPrivateData,&player->v,&player->v,damage,(1<<10)|(1<<12));
+        if(!aliveEnemy(e))linkDeathEffect(death,e);
+    }
+}
 static void linkPostThink(edict_t* p,bool active,bool held) {
     int i=engine.pfnIndexOfEdict(p);if(i<1||i>32)return;
     auto& state=linkLocks[i];
@@ -318,7 +343,8 @@ static void linkPostThink(edict_t* p,bool active,bool held) {
         if(p->v.weaponanim!=2)animation(p,2);
     }
     players[i].animUntil=globals->time+.2f;
-    float dps=std::min(48.f,12.f+state.connectedTime*6.f);
+    float dps=linkDps(state.connectedTime);
+    linkChain(p,target,dps*dt);
     state.lastOrigin=target->v.origin;state.lastAngles=target->v.angles;
     state.lastHeight=target->v.maxs.z-target->v.mins.z;
     float healthBefore=target->v.health;
@@ -330,6 +356,7 @@ static void linkPostThink(edict_t* p,bool active,bool held) {
         state.damaged=true;state.lastDamageAt=globals->time;
     }
     if(target->free||target->serialnumber!=state.serial||target->v.health<=0||target->v.deadflag!=DEAD_NO) {
-        linkDeathEffect(state,target);state.finished=true;
+        linkDeathEffect(state,target);
+        auto next=acquireLink(p);if(linkEnemy(next)){state.target=next;state.serial=next->serialnumber;state.deathShown=false;state.damaged=false;}else state.finished=true;
     }
 }

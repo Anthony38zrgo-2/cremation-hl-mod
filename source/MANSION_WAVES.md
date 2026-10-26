@@ -1,5 +1,10 @@
 # Mansion y oleadas
 
+La geometría instalada incluye el pozo radiactivo, cuatro puentes simétricos
+y dos casas pequeñas con salto y portal descritos en
+[MANSION_REACTOR.md](MANSION_REACTOR.md). La casa noreste ofrece armas del mod
+con munición; la suroeste ofrece salud, batería y salto largo de Half-Life.
+
 Mapa predeterminado: `cs_mansion`. Skybox activa: `city`, restaurada directamente
 desde `valve_addon_b921d.rar`, con sus seis caras originales sin cambios.
 El instalador general mantiene esta selección.
@@ -24,27 +29,37 @@ no detectaba la costura interna ni el efecto de estrella al mirar arriba.
 Los originales extraídos están en `assets-source/mansion/`; no se ejecutó
 contenido de los archivos. Las texturas originales necesarias se recopilan
 desde los WAD locales de Half-Life en `mansion_textures.wad`.
-Los 14 bloques BSP de geometría y datos originales permanecen idénticos;
-solo se sustituye el bloque de entidades de la copia de Cremation.
+La versión anterior al reactor conservaba los 14 bloques BSP de geometría;
+la versión actual se recompila desde la fuente reconstruida para modificar
+físicamente el patio, el pozo, las colisiones y la iluminación.
 
 Los diez `info_player_deathmatch` originales (TT) pasan a ser inicios del
 jugador, conservando posiciones y orientaciones. Se conservan también los
 inicios multijugador TT en esos mismos puntos para compatibilidad con Ravenholm;
 los inicios de jugador no llevan nombre de destino. El servidor entrega el
 equipamiento directamente al inventario al entrar, sin armas colocadas en el
-suelo; también elimina las armas que sueltan enemigos o jugadores. Los diez `info_player_start` originales
-(CT) se conservan como marcadores de aparición de enemigos. Se eliminan las
+suelo; también elimina las armas que sueltan enemigos o jugadores. Los diez
+marcadores CT antiguos se sustituyen por 40 marcadores: diez en cada frente
+cardinal de la arena ampliada. Se eliminan las
 entidades de rehenes y cámaras de Counter-Strike.
 
-| Oleada | Normales | Quake | Rápidos | Venenosos | Cultistas | Total |
-|---|---:|---:|---:|---:|---:|---:|
-| 1 | 20 | 0 | 0 | 0 | 0 | 20 |
-| 2 | 10 | 10 | 0 | 0 | 0 | 20 |
-| 3 | 10 | 10 | 10 | 10 | 0 | 40 |
-| 4 | 5 | 5 | 5 | 5 | 20 | 40 |
+| Oleada | Normales | Quake | Rápidos | Venenosos | Cultistas | Zombi knife | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 40 | 0 | 0 | 0 | 0 | 1 | 41 |
+| 2 | 20 | 20 | 0 | 0 | 0 | 1 | 41 |
+| 3 | 20 | 20 | 20 | 20 | 0 | 1 | 81 |
+| 4 | 10 | 10 | 10 | 10 | 40 | 1 | 81 |
+
+Cada oleada añade un [zombi con knife Leviathan](CZERO_ZOMBIE.md), con el
+modelo de la carpeta 0 del RAR. Aparece en un punto CT libre al azar, cuenta
+como enemigo y conserva compatibilidad con los efectos de Cremation.
 
 La primera oleada comienza cinco segundos después de entrar un jugador vivo.
-Se intenta generar un enemigo cada 0,75 segundos, rotando CT 0–9 y repitiendo.
+Se intenta generar un enemigo cada 0,375 segundos, alternando norte, este,
+sur y oeste y rotando los diez puntos de cada frente. Cada frente recibe
+10 enemigos en las dos primeras oleadas y 20 en las dos últimas. Los tipos
+también se reparten: en la cuarta, diez cultistas por frente y dos o tres de
+cada tipo de zombi, rotando el sobrante para mantener iguales los totales.
 Un punto ocupado retrasa la aparición; no se superponen monstruos ni se omiten
 puntos. La siguiente oleada empieza ocho segundos después de eliminar todos
 los enemigos y agotar las apariciones pendientes de la anterior. La cuarta
@@ -72,7 +87,7 @@ interactiva de guardar/cargar sigue siendo necesaria para aceptar ese flujo.
 - `python tools/install_mansion.py`: reinstala mapa, WAD, cielo, rutas y mapa predeterminado.
 - `powershell -ExecutionPolicy Bypass -File tools/build_mansion.ps1`: compila solo servidor, pruebas y lanzador; no ejecuta el pipeline general de armas.
 - `python tools/check_mansion_runtime.py`: prueba acotada de las cuatro oleadas con muertes por daño nativo.
-- `python tools/check_mansion_runtime.py --routes`: prueba de recorrido físico desde los diez CT, con los cinco tipos de enemigos.
+- `python tools/check_mansion_runtime.py --routes`: 20 recorridos físicos desde los cuatro frentes, con los cinco tipos de enemigos.
 
 Las pruebas de motor usan exclusivamente su proceso de servidor dedicado y la
 variable `CREMATION_MANSION_VALIDATE`; el juego normal no activa ese modo.

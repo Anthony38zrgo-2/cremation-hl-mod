@@ -16,6 +16,11 @@ SOURCE = MOD / 'assets-source/mansion'
 
 
 def install():
+    current=MOD/'mansion-placement.json'
+    if current.exists() and json.loads(current.read_text()).get('geometry_revision')=='reactor':
+        from build_mansion_reactor import install_map
+        install_map(MOD/'assets-source/mansion-reactor/cs_mansion_reactor.bsp')
+        return
     b = BSP(SOURCE / 'maps/cs_mansion.bsp')
     b.solids += [int(e['model'][1:]) for e in b.entities if e['classname'] in ('func_button', 'func_pushable')]
     b.solids = [m for m in b.solids if m == 0 or b.models[m][3] >= 0]

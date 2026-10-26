@@ -1,0 +1,31 @@
+{
+  "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\Cremation\\assets-source\\czero-zombie\\zombie_source_FIXED\\0\\zombie_source.mdl",
+  "source_sha256": "6c175f8bafc8bd8f97507e2244e60939cc13f7ae7949c78c25f038da1e018b94",
+  "folder": "0",
+  "bones": 34,
+  "hitboxes": 20,
+  "removed_shield_group": 8,
+  "feet_offset": 36,
+  "muzzle_bone": "Bip01 R Hand",
+  "muzzle_local": [
+    4.330248832702637,
+    0.4532009959220886,
+    1.4808100461959839
+  ],
+  "gun_source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\Cremation\\assets-source\\leviathan-knife\\[GOW]Leviatan Axe\\Counter Strike Folder\\cstrike\\models\\p_knife.mdl",
+  "gait_bakes": [
+    {
+      "sequence": 3,
+      "frames": 33,
+      "upper_bones": 24,
+      "lower_bones": 10
+    },
+    {
+      "sequence": 4,
+      "frames": 37,
+      "upper_bones": 24,
+      "lower_bones": 10
+    }
+  ],
+  "installed": true
+}

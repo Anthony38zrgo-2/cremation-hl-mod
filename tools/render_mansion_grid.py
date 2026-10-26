@@ -8,6 +8,10 @@ from bsp import BSP
 MOD=Path(__file__).resolve().parents[1]
 b=BSP(MOD/'maps/cs_mansion.bsp')
 placement=json.loads((MOD/'mansion-placement.json').read_text())
+if placement.get('reactor',{}).get('four_fronts'):
+    from render_mansion_cross import render
+    render()
+    raise SystemExit(0)
 vertices=b.records(3,'<3f')
 edges=b.records(12,'<2H')
 surfedges=[r[0] for r in b.records(13,'<i')]
@@ -39,6 +43,12 @@ for idx,f in enumerate(faces):
         color='#202d36' if z>=20 else '#142b38'
         d.polygon([point(v) for v in poly],fill=color)
 
+reactor=placement.get('reactor') if placement.get('geometry_revision')=='reactor' else None
+if reactor:
+    for polygon in reactor['regions']:d.polygon([point(v) for v in polygon],fill='#173a28')
+    x0,y0,x1,y1=reactor['island'];d.rectangle([point((x0,y1)),point((x1,y0))],fill='#34414a')
+    x0,y0,x1,y1=reactor['bridge'];d.rectangle([point((x0,y1)),point((x1,y0))],fill='#35444d')
+
 # Grid references and exact engine coordinates remain readable over floors.
 for x in range(xmin,xmax+1,64):
     major=x%256==0
@@ -66,6 +76,20 @@ def slice_lines(z):
     return lines
 
 for a,c in slice_lines(80):d.line([point(a),point(c)],fill='#c0d6df',width=3)
+if reactor:
+    for polygon in reactor['regions']:d.line([point(v) for v in polygon],fill='#64ce7f',width=3)
+    x0,y0,x1,y1=reactor['island'];d.rectangle([point((x0,y1)),point((x1,y0))],outline='#64ce7f',width=3)
+    px,py=point(reactor['pad']);d.rectangle((px-10,py-10,px+10,py+10),fill='#b077e0',outline='#eed8ff',width=2)
+    label(px-100,py-12,'SALTO',fill='#d6a6ff',f=small)
+    for station in reactor['stations']:
+        px,py=point(station);d.polygon([(px,py-8),(px+8,py),(px,py+8),(px-8,py)],fill='#ffd44e')
+    if 'portal' in reactor:
+        px,py=point(reactor['portal']);d.ellipse((px-10,py-10,px+10,py+10),outline='#70baff',width=4)
+        px,py=point(reactor['portal_exit']);d.ellipse((px-10,py-10,px+10,py+10),outline='#70baff',width=4)
+        label(px-24,py+15,'REGRESO',fill='#70baff',f=small)
+    px,py=point((720,-288));label(px-60,py-11,'PUENTE',fill='#ffffff',f=small)
+    px,py=point((700,280));label(px-120,py-11,'POZO RADIACTIVO',fill='#91e8a0',f=normal)
+    label(px-120,py+18,'PROFUNDIDAD: 448 u',fill='#91e8a0',f=small)
 
 # Upper-floor partitions are deliberately dashed to distinguish their level.
 for a,c in slice_lines(224):
@@ -118,6 +142,10 @@ label(rx,969,'o indicar una celda',f=small)
 label(rx,998,'y coordenadas X/Y.',f=small)
 label(rx,1080,'Skybox activa: CITY',fill='#e2b8a4',f=small)
 label(rx,1109,'Original del RAR',f=small)
+if reactor:
+    label(rx,1190,'Verde: pozo letal',fill='#91e8a0',f=small)
+    label(rx,1221,'Violeta: plataforma',fill='#d6a6ff',f=small)
+    label(rx,1252,'Rombos: armas al azar',fill='#ffd44e',f=small)
 
 label(105,1590,'Plano generado de la geometria instalada. Sin rutas de oleadas superpuestas para facilitar anotaciones.',f=small)
 out=MOD/'diagnostics/cs_mansion-vista-superior-cuadriculada.png'

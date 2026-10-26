@@ -12,6 +12,11 @@
 *.dmf
 __pycache__/
 *.pyc
+/tools/map-tools/
+/assets-source/mansion-reactor/*.prt
+/assets-source/mansion-reactor/*.ext
+/assets-source/mansion-reactor/*.wa_
+/cs_mansion*.bmp
 /startup-diagnostics.txt
 /server-startup-check.txt
 /server-startup-result.json

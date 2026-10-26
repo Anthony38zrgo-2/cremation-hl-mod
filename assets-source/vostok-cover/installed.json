@@ -1,0 +1,126 @@
+[
+  {
+    "name": "jeep",
+    "model": "jeep-russian",
+    "origin": [
+      -864,
+      64,
+      24
+    ],
+    "yaw": 0,
+    "rate": 10,
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\jeep-russian.mdl",
+    "installed": "models/cremation/vostok/jeep-russian.mdl",
+    "sha256": "95955689b06b052865bf130b8985fa8f5839727abcc698e61e98c6e4c84b42d2",
+    "collision_boxes": [
+      [
+        [
+          -36,
+          -84,
+          18
+        ],
+        [
+          36,
+          84,
+          55
+        ]
+      ],
+      [
+        [
+          -32,
+          -36,
+          55
+        ],
+        [
+          32,
+          30,
+          78
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "tree_spawn",
+    "model": "tree_noleaves2",
+    "origin": [
+      -864,
+      -624,
+      24
+    ],
+    "yaw": 0,
+    "rate": 1,
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\tree_noleaves2.mdl",
+    "installed": "models/cremation/vostok/tree_noleaves2.mdl",
+    "sha256": "7c5cdf0a0ffb1dc79655f6dd2c7ad0190eaf2c0b3b661e5273b8639ab5fb8031",
+    "collision_boxes": [
+      [
+        [
+          -12,
+          -12,
+          0
+        ],
+        [
+          12,
+          12,
+          208
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "tree_a_north",
+    "model": "tree_noleaves2",
+    "origin": [
+      -448,
+      344,
+      24
+    ],
+    "yaw": 90,
+    "rate": 1,
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\tree_noleaves2.mdl",
+    "installed": "models/cremation/vostok/tree_noleaves2.mdl",
+    "sha256": "7c5cdf0a0ffb1dc79655f6dd2c7ad0190eaf2c0b3b661e5273b8639ab5fb8031",
+    "collision_boxes": [
+      [
+        [
+          -12,
+          -12,
+          0
+        ],
+        [
+          12,
+          12,
+          208
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "tree_a_east",
+    "model": "tree_noleaves2",
+    "origin": [
+      336,
+      -640,
+      24
+    ],
+    "yaw": 120,
+    "rate": 1.3,
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\tree_noleaves2.mdl",
+    "installed": "models/cremation/vostok/tree_noleaves2.mdl",
+    "sha256": "7c5cdf0a0ffb1dc79655f6dd2c7ad0190eaf2c0b3b661e5273b8639ab5fb8031",
+    "collision_boxes": [
+      [
+        [
+          -12,
+          -12,
+          0
+        ],
+        [
+          12,
+          12,
+          208
+        ]
+      ]
+    ]
+  }
+]

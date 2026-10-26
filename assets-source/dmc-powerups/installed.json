@@ -1,0 +1,27 @@
+[
+  {
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\dmc\\models\\pow_quad.mdl",
+    "installed": "models\\cremation\\dmc\\pow_quad.mdl",
+    "sha256": "a0a4ed443ba0f65308cd3aa1945d1bc4e838dbef1c81086c3b6b29e4b7fa38d2"
+  },
+  {
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\dmc\\models\\pow_invuln.mdl",
+    "installed": "models\\cremation\\dmc\\pow_invuln.mdl",
+    "sha256": "251b9c4b15a827360cb8a89377bb9733c74b41c4f8086c0864e8916f322d426c"
+  },
+  {
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\dmc\\models\\pow_invis.mdl",
+    "installed": "models\\cremation\\dmc\\pow_invis.mdl",
+    "sha256": "367fe1545c1a9fee18d5ebc1b4fa878cb96b83ec42314883b0e23d50fd9acd45"
+  },
+  {
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\dmc\\models\\suit.mdl",
+    "installed": "models\\cremation\\dmc\\suit.mdl",
+    "sha256": "0513a6da086152ce78e78de4273979d97d7e4bb90fe47c5e8326afb6f2e1e2c3"
+  },
+  {
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\dmc\\models\\suitT.mdl",
+    "installed": "models\\cremation\\dmc\\suitT.mdl",
+    "sha256": "a742565b7ccbb91e6143c32e10edf140901c614d21820aea7236a5d044de34cb"
+  }
+]

@@ -492,7 +492,7 @@ EXPORTS
  "HUD_PlayerMoveTexture"=client_forward_488
  "HUD_PostRunCmd"=client_forward_489
  "HUD_ProcessPlayerState"=client_forward_490
- "HUD_Redraw"=client_forward_491
+ HUD_Redraw
  HUD_Reset
  "HUD_Shutdown"=client_forward_493
  "HUD_StudioEvent"=client_forward_494

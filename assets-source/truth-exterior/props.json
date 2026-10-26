@@ -1,0 +1,204 @@
+[
+  {
+    "name": "maple_red",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\tree_japan_maple_red.mdl",
+    "installed": "models/cremation/truth/tree_japan_maple_red.mdl",
+    "origin": [
+      -896,
+      304,
+      24
+    ],
+    "yaw": 0,
+    "framerate": 10,
+    "sha256": "4d5345bd816346dcd0685176c81bf622a59da8a777630bba50d93c5c0d27e39d",
+    "collision": [
+      [
+        [
+          -11,
+          -11,
+          0
+        ],
+        [
+          11,
+          11,
+          150
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "maple_orange",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\tree_japan_maple_orange.mdl",
+    "installed": "models/cremation/truth/tree_japan_maple_orange.mdl",
+    "origin": [
+      352,
+      -832,
+      24
+    ],
+    "yaw": 15,
+    "framerate": 10,
+    "sha256": "1871f167281868a7ec5768cc797346adb250c18060b2b6568dd7f6bcb0546a17",
+    "collision": [
+      [
+        [
+          -11,
+          -11,
+          0
+        ],
+        [
+          11,
+          11,
+          150
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "bush_0",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\bush_japan_bush01.mdl",
+    "installed": "models/cremation/truth/bush_japan_bush01.mdl",
+    "origin": [
+      -904,
+      -440,
+      39.6
+    ],
+    "yaw": 0,
+    "framerate": 10,
+    "sha256": "ccbaa7777e8882006e9b5d2fecebd3cd991588b4e869d22835dd0c1d1513d58c",
+    "collision": []
+  },
+  {
+    "name": "bush_1",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\bush_japan_bush01.mdl",
+    "installed": "models/cremation/truth/bush_japan_bush01.mdl",
+    "origin": [
+      -920,
+      -792,
+      39.6
+    ],
+    "yaw": 70,
+    "framerate": 10,
+    "sha256": "ccbaa7777e8882006e9b5d2fecebd3cd991588b4e869d22835dd0c1d1513d58c",
+    "collision": []
+  },
+  {
+    "name": "bush_2",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\bush_japan_bush01.mdl",
+    "installed": "models/cremation/truth/bush_japan_bush01.mdl",
+    "origin": [
+      -600,
+      344,
+      39.6
+    ],
+    "yaw": 110,
+    "framerate": 10,
+    "sha256": "ccbaa7777e8882006e9b5d2fecebd3cd991588b4e869d22835dd0c1d1513d58c",
+    "collision": []
+  },
+  {
+    "name": "bush_3",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\bush_japan_bush01.mdl",
+    "installed": "models/cremation/truth/bush_japan_bush01.mdl",
+    "origin": [
+      352,
+      120,
+      39.6
+    ],
+    "yaw": 270,
+    "framerate": 10,
+    "sha256": "ccbaa7777e8882006e9b5d2fecebd3cd991588b4e869d22835dd0c1d1513d58c",
+    "collision": []
+  },
+  {
+    "name": "bush_4",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\bush_japan_bush01.mdl",
+    "installed": "models/cremation/truth/bush_japan_bush01.mdl",
+    "origin": [
+      -72,
+      -872,
+      39.6
+    ],
+    "yaw": 30,
+    "framerate": 10,
+    "sha256": "ccbaa7777e8882006e9b5d2fecebd3cd991588b4e869d22835dd0c1d1513d58c",
+    "collision": []
+  },
+  {
+    "name": "rock_0",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\rock_japan_rocks2.mdl",
+    "installed": "models/cremation/truth/rock_japan_rocks2.mdl",
+    "origin": [
+      -936,
+      -120,
+      24
+    ],
+    "yaw": 0,
+    "framerate": 10,
+    "sha256": "3b82d3e879b2a5746405754427d689df766e5ada7d3ae935623590e5fdad5c44",
+    "collision": [
+      [
+        [
+          -36,
+          -38,
+          0
+        ],
+        [
+          36,
+          38,
+          55
+        ]
+      ],
+      [
+        [
+          -25,
+          -27,
+          55
+        ],
+        [
+          25,
+          27,
+          78
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "rock_1",
+    "source": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\czero\\models\\props\\rock_japan_rocks2.mdl",
+    "installed": "models/cremation/truth/rock_japan_rocks2.mdl",
+    "origin": [
+      344,
+      288,
+      24
+    ],
+    "yaw": 90,
+    "framerate": 10,
+    "sha256": "3b82d3e879b2a5746405754427d689df766e5ada7d3ae935623590e5fdad5c44",
+    "collision": [
+      [
+        [
+          -36,
+          -38,
+          0
+        ],
+        [
+          36,
+          38,
+          55
+        ]
+      ],
+      [
+        [
+          -25,
+          -27,
+          55
+        ],
+        [
+          25,
+          27,
+          78
+        ]
+      ]
+    ]
+  }
+]

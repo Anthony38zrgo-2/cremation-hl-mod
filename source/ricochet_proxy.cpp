@@ -46,7 +46,10 @@ static edict_t* messagePlayer=nullptr;
 static bool ownAnimation=false;
 static int shotgunAmmoIndex=-1,nailAmmoIndex=-1, ammoOffset=-1;
 static bool shotgunList=false,rpgList=false,necroList=false,winchesterList=false,shockList=false;
+static bool grenadeList=false;
+static int grenadeAmmoIndex=-1;
 static float lastFrame=0;
+static float firstPlayerPostThinkTime=0;
 struct HordeProbe {edict_t* entity; int serial; Vector origin; Vector previous; float previousTime; bool jumped=false; float walked=0; Vector patrol{0,0,0}; bool fallback=false,returning=false,combat=false; float initialHealth=0;};
 static std::vector<HordeProbe> hordeProbes;
 static float hordeReportAt=0;
@@ -403,7 +406,7 @@ static bool fireNailgun(edict_t* p,bool secondary) {
     if(secondary)return false;
     const int cost=1;
     if(sharedAmmo(p,nailAmmoIndex,0)<cost)return false;
-    if(!launchNail(p,9.f,false))return false;
+    if(!launchNail(p,9.f*1.75f,false))return false;
     int remaining=sharedAmmo(p,nailAmmoIndex,cost);
     if(msgAmmoX&&nailAmmoIndex>=0&&remaining>=0) {
         engine.pfnMessageBegin(MSG_ONE,msgAmmoX,nullptr,p);
@@ -415,6 +418,9 @@ static bool fireNailgun(edict_t* p,bool secondary) {
     return true;
 }
 #include "humanoid_gibs.inc"
+static bool heartRollDeath(edict_t* e);
+static edict_t* heartSpawn(const Vector& origin);
+#include "dmc_powerups.inc"
 #include "weapon_blood.inc"
 #include "link_gun.inc"
 #include "ut2004_rpg.inc"
@@ -438,6 +444,9 @@ static int sharedShells(edict_t* p,int spend) {
 #include "shockrifle.inc"
 #include "quake_zombie.inc"
 #include "quake_zombie_validation.inc"
+#include "czero_smoke.inc"
+#include "czero_zombie.inc"
+#include "heart_pickups.inc"
 static bool disabledShotgunActive(edict_t* p){return !ShotgunsPlayable&&(winchester(p)||bounce::isTfcPlayer(p));}
 static void attachBounce() {
     bounce::Host host{};
@@ -545,11 +554,24 @@ static void hordeWalkAnimation(edict_t* e) {
     }
 }
 static void mansionFrame(float dt);
+static void mansionRadarFrame();
+static void mansionRadarPrecache();
 static void mansionActivate();
 static void mansionPrecache();
 static void startupInventoryPrecache();
 static void startupInventoryGive(edict_t* player);
+static void reactorPrecache();
+static void reactorActivate();
+static void reactorFrame();
+#include "vostok_cover.inc"
+static void vostokProbeFrame();
+static void truthProbeFrame();
+static void czTacticalProbeFrame();
+static void tacticalSaveProbeFrame();
+static void dmcPreviewFrame();
 static void hookThink(edict_t* e) {
+    if(vostokCoverThink(e))return;
+    if(czThink(e))return;
     if(qzThink(e))return;
     if(bounce::isSentry(e)) {e->v.nextthink=globals->time+.1f;return;}
     bool incendiary=incendiaryBeforeThink(e);
@@ -568,6 +590,19 @@ static void hookThink(edict_t* e) {
     }
 }
 static void hookStartFrame() {
+    dmcPreviewFrame();
+    tacticalSaveProbeFrame();
+    czTacticalProbeFrame();
+    vostokProbeFrame();
+    truthProbeFrame();
+    czAnimationProbeFrame();
+    czSmokeFrame();
+    czBombFrame();
+    mansionRadarFrame();
+    heartFrame();
+    heartProbeFrame();
+    czProbeFrame();
+    czVisualCleanup();
     qzProbeFrame();
     cultistFrame();
     rpgFrame();
@@ -583,6 +618,7 @@ static void hookStartFrame() {
     }
     float dt=std::max(0.f,globals->time-lastFrame);lastFrame=globals->time;
     mansionFrame(dt);
+    reactorFrame();
     if(dt>0) {
         // Process long frames in bounded steps without changing disc travel speed.
         int steps=std::min(32,std::max(1,int(std::ceil(dt/.025f))));
@@ -656,12 +692,15 @@ static void hookPreThink(edict_t* p) {
     if(shockRifle(p)||winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPreThink(p);
 }
+static void playerDefaults(edict_t* p);
 static void hookPostThink(edict_t* p) {
+    if(!firstPlayerPostThinkTime)firstPlayerPostThinkTime=globals->time;
     int i=engine.pfnIndexOfEdict(p);if(i<=0||i>=33) {raven.pfnPlayerPostThink(p);return;}
     auto& state=players[i];
     bool carrier=bounce::isBouncePlayer(p);
     if(shockRifle(p)||winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPostThink(p);
+    dmcPlayerFrame(p);playerDefaults(p);
     rpgNormalize(p);
     rpgPostThink(p,state.buttons);
     necroPostThink(p,state.buttons);
@@ -741,7 +780,7 @@ static int hookRegisterMsg(const char* name,int size) {
     return id;
 }
 static void hookMessageBegin(int dest,int type,const float* origin,edict_t* player) {
-    shotgunList=false;rpgList=false;necroList=false;winchesterList=false;shockList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
+    shotgunList=false;rpgList=false;necroList=false;winchesterList=false;shockList=false;grenadeList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
     engine.pfnMessageBegin(dest,type,origin,player);
 }
 static void hookMessageEnd() {
@@ -765,6 +804,7 @@ static void hookMessageEnd() {
     }
 }
 static void hookWriteString(const char* value) {
+    if(currentMsg==msgWeaponList&&!std::strcmp(value,"weapon_handgrenade"))grenadeList=true;
     if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_rpg"))rpgList=true;
     if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_shotgun"))shotgunList=true;
     bool shock=!std::strcmp(value,"weapon_gauss")||!std::strcmp(value,"weapon_shockrifle");
@@ -794,6 +834,7 @@ static void hookWriteString(const char* value) {
     engine.pfnWriteString(value);
 }
 static void hookWriteByte(int value) {
+    if(currentMsg==msgWeaponList&&grenadeList&&currentByte==0)grenadeAmmoIndex=value;
     if(currentMsg==msgWeaponList&&shockList){const int fields[]={-1,50,255,255,3,1,9,0};if(currentByte==0)shockAmmoIndex=value;else if(currentByte<8)value=fields[currentByte];}
     if(currentMsg==msgWeaponList&&winchesterList){const int fields[]={shotgunAmmoIndex>=0?shotgunAmmoIndex:1,125,255,255,2,4,3,1};if(currentByte<8)value=fields[currentByte];}
     if(currentMsg==msgWeaponList&&necroList){const int fields[]={23,1,255,255,0,1,11,1};if(currentByte<8)value=fields[currentByte];}
@@ -858,19 +899,7 @@ static void hookTouch(edict_t* a,edict_t* b) {
     if(raven.pfnTouch)raven.pfnTouch(a,b);
 }
 static const char* hookDescription() {return "Cremation";}
-static int hookSpawn(edict_t* e) {
-    if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);return result;}
-    const char* classname=text(e->v.classname);
-    bool ricochetItem=classname && (!std::strcmp(classname,"weapon_ricochet")||!std::strcmp(classname,"weapon_9mmhandgun")||!std::strcmp(classname,"weapon_glock"));
-    bool bounceItem=bounce::isCarrierClass(classname);
-    bool nailItem=classname && (!std::strcmp(classname,"weapon_nailgun")||!std::strcmp(classname,"weapon_9mmAR")||!std::strcmp(classname,"weapon_mp5"));
-    bool wrenchItem=classname && (!std::strcmp(classname,"weapon_pipewrench")||!std::strcmp(classname,"weapon_crowbar"));
-    bool shockItem=classname&&(!std::strcmp(classname,"weapon_shockrifle")||!std::strcmp(classname,"weapon_gauss"));
-    bool winItem=classname&&(!std::strcmp(classname,"weapon_winchester1887")||!std::strcmp(classname,"weapon_357")||!std::strcmp(classname,"weapon_python"));
-    bool necroItem=classname&&(!std::strcmp(classname,"weapon_necromancer")||!std::strcmp(classname,"weapon_hornetgun"));
-    bool minionItem=classname&&!std::strcmp(classname,"monster_minion");
-    bool world=classname && !std::strcmp(classname,"worldspawn");
-    if(world) {
+static void extensionPrecache(){
         invalidFastSequenceLogged=false;
         startupTrace("worldspawn");
         char modulePath[MAX_PATH]{};
@@ -891,6 +920,9 @@ static int hookSpawn(edict_t* e) {
             bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
         startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
+        czPrecache();
+        heartPrecache();
+        mansionRadarPrecache();
         trailSprite=engine.pfnPrecacheModel(const_cast<char*>("sprites/ricochet/lgtning.spr"));
         flashSprite=engine.pfnPrecacheModel(const_cast<char*>("sprites/ricochet/discreturn.spr"));
         for(auto path:{"models/ricochet/disc.mdl","models/ricochet/disc_hard.mdl","models/p_9mmhandgun.mdl"})engine.pfnPrecacheModel(const_cast<char*>(path));
@@ -916,10 +948,27 @@ static int hookSpawn(edict_t* e) {
         cultistPrecache();
         rpgPrecache();
         bounce::precache();
-    }
+    for(auto path:{"models/cremation/vostok/tree_noleaves2.mdl","models/cremation/vostok/jeep-russian.mdl","models/cremation/truth/tree_japan_maple_red.mdl","models/cremation/truth/tree_japan_maple_orange.mdl","models/cremation/truth/bush_japan_bush01.mdl","models/cremation/truth/rock_japan_rocks2.mdl"})engine.pfnPrecacheModel(const_cast<char*>(path));
+}
+static int hookSpawn(edict_t* e) {
+    if(vostokCoverSpawn(e))return 0;
+    if(czIs(e)){int result=raven.pfnSpawn(e);czSpawn(e);return result;}
+    if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);return result;}
+    const char* classname=text(e->v.classname);
+    bool ricochetItem=classname && (!std::strcmp(classname,"weapon_ricochet")||!std::strcmp(classname,"weapon_9mmhandgun")||!std::strcmp(classname,"weapon_glock"));
+    bool bounceItem=bounce::isCarrierClass(classname);
+    bool nailItem=classname && (!std::strcmp(classname,"weapon_nailgun")||!std::strcmp(classname,"weapon_9mmAR")||!std::strcmp(classname,"weapon_mp5"));
+    bool wrenchItem=classname && (!std::strcmp(classname,"weapon_pipewrench")||!std::strcmp(classname,"weapon_crowbar"));
+    bool shockItem=classname&&(!std::strcmp(classname,"weapon_shockrifle")||!std::strcmp(classname,"weapon_gauss"));
+    bool winItem=classname&&(!std::strcmp(classname,"weapon_winchester1887")||!std::strcmp(classname,"weapon_357")||!std::strcmp(classname,"weapon_python"));
+    bool necroItem=classname&&(!std::strcmp(classname,"weapon_necromancer")||!std::strcmp(classname,"weapon_hornetgun"));
+    bool minionItem=classname&&!std::strcmp(classname,"monster_minion");
+    bool world=classname && !std::strcmp(classname,"worldspawn");
+    if(world)extensionPrecache();
     int result=raven.pfnSpawn(e);
     if(world)mansionPrecache();
     if(world)startupInventoryPrecache();
+    if(world)reactorPrecache();
     if(shockItem){e->v.classname=engine.pfnAllocString("weapon_shockrifle");engine.pfnSetModel(e,"models/cremation/w_shockrifle.mdl");}
     if(winItem){e->v.classname=engine.pfnAllocString("weapon_winchester1887");engine.pfnSetModel(e,"models/cremation/w_winchester1887.mdl");}
     if(necroItem){e->v.classname=engine.pfnAllocString("weapon_necromancer");engine.pfnSetModel(e,"models/cremation/w_necromancer.mdl");}
@@ -951,7 +1000,8 @@ static int hookSpawn(edict_t* e) {
     return result;
 }
 #include "mansion_waves.inc"
-static const char* startupInventory[]={"item_suit","weapon_shockrifle","weapon_bounce_shotgun","weapon_ricochet","weapon_necromancer","weapon_pipewrench","weapon_nailgun","weapon_handgrenade","weapon_rpg","ammo_9mmAR","ammo_buckshot","ammo_buckshot","ammo_buckshot"};
+#include "mansion_radar.inc"
+static const char* startupInventory[]={"item_suit","item_longjump","weapon_shockrifle","weapon_bounce_shotgun","weapon_ricochet","weapon_necromancer","weapon_pipewrench","weapon_nailgun","weapon_handgrenade","weapon_rpg","ammo_9mmAR","ammo_buckshot","ammo_buckshot","ammo_buckshot"};
 static void startupInventoryPrecache(){
     for(auto name:startupInventory){auto item=engine.pfnCreateNamedEntity(engine.pfnAllocString(name));if(!valid(item))continue;hookSpawn(item);engine.pfnRemoveEntity(item);}
 }
@@ -966,6 +1016,26 @@ static void startupInventoryGive(edict_t* player){
         if(valid(item)&&!attached)engine.pfnRemoveEntity(item);
     }
 }
+static void playerDefaults(edict_t* p){
+    if(!valid(p)||p->v.health<=0)return;
+    if(std::strcmp(engine.pfnGetPhysicsKeyValue(p,"slj"),"1")){
+        auto item=engine.pfnCreateNamedEntity(engine.pfnAllocString("item_longjump"));if(valid(item)){item->v.origin=p->v.origin;hookSpawn(item);raven.pfnTouch(item,p);if(valid(item))engine.pfnRemoveEntity(item);}
+    }
+    engine.pfnSetPhysicsKeyValue(p,"defuse","1");
+}
+#include "mansion_reactor.inc"
+#include "czero_objective.inc"
+#include "reactor_validation.inc"
+#include "reactor_preview.inc"
+#include "czero_validation.inc"
+#include "heart_validation.inc"
+#include "czero_animation_validation.inc"
+#include "vostok_validation.inc"
+#include "truth_validation.inc"
+#include "czero_tactical_validation.inc"
+#include "tactical_save.inc"
+#include "tactical_save_validation.inc"
+#include "dmc_preview.inc"
 static void hookActivate(edict_t* list,int count,int maxClients) {
     shockStates.fill(ShockState{});shockOrbs.clear();
     winchesterStates.fill(WinchesterState{});
@@ -977,6 +1047,8 @@ static void hookActivate(edict_t* list,int count,int maxClients) {
     raven.pfnServerActivate(list,count,maxClients);
     startupTrace("ServerActivate",text(globals->mapname));
     mansionActivate();
+    reactorActivate();
+    firstPlayerPostThinkTime=0;
     int ricochetCount=0,bounceCount=0,nailCount=0,wrenchCount=0;
     hordeProbes.clear();hordeReportAt=globals->time+5.f;hordeReportsRemaining=3;hordeStartedAt=globals->time;
     for(int i=0;i<count;++i)if(valid(&list[i])) {
@@ -1016,14 +1088,20 @@ static void hookSave(edict_t* e,SAVERESTOREDATA* data) {
     float savedGrenadeDamage=e->v.dmg;
     for(auto& g:incendiaryGrenades)if(g.entity==e&&g.serial==e->serialnumber)e->v.dmg=g.originalDamage;
     raven.pfnSave(e,data);
+    if(tacticalSaved(e)&&raven.pfnSaveWriteFields)raven.pfnSaveWriteFields(data,"CremationTactical1",&e->v,tacticalFields,ARRAYSIZE(tacticalFields));
     e->v.dmg=savedGrenadeDamage;
     if(constructionFreeze)e->v.flags|=FL_FROZEN;
     e->v.rendermode=mode;e->v.renderfx=fx;e->v.renderamt=alpha;e->v.rendercolor=color;e->v.framerate=frame;e->v.movetype=movement;
 }
 static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     incendiaryGrenades.erase(std::remove_if(incendiaryGrenades.begin(),incendiaryGrenades.end(),[e](const IncendiaryGrenade& g){return g.entity==e;}),incendiaryGrenades.end());
+    bool restoringWorld=engine.pfnIndexOfEdict(e)==0;
+    if(restoringWorld)extensionPrecache();
     int result=raven.pfnRestore(e,data,globalEntity);
+    if(restoringWorld){mansionPrecache();startupInventoryPrecache();reactorPrecache();}
+    if(tacticalSaved(e)&&raven.pfnSaveReadFields)raven.pfnSaveReadFields(data,"CremationTactical1",&e->v,tacticalFields,ARRAYSIZE(tacticalFields));
     const char* restoredClass=text(e->v.classname);
+    if(czIs(e)){czInstall(e);e->v.nextthink=globals->time+.05f;return result;}
     if(qzIs(e)){qzInstall(e);weaponBloodInstall(e);Vector mins(-16,-16,0),maxs(16,16,QZHeight);engine.pfnSetSize(e,&mins.x,&maxs.x);e->v.view_ofs=Vector(0,0,QZEye);e->v.nextthink=globals->time+.1f;return result;}
     if(qzGib(e)){e->v.nextthink=std::max(globals->time+.1f,e->v.dmgtime);return result;}
     if(restoredClass&&!std::strcmp(restoredClass,"monster_minion"))necroInstall(e);
@@ -1175,6 +1253,7 @@ extern "C" void cremation_sentry_base(entvars_t* vars) {
 extern "C" void weapon_necromancer(entvars_t* vars){spawnNativeAlias(vars,"weapon_hornetgun","weapon_necromancer");}
 extern "C" void monster_minion(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_minion");}
 extern "C" void monster_quake_zombie(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_quake_zombie");}
+extern "C" void monster_czero_zombie(entvars_t* vars){spawnNativeAlias(vars,"monster_human_grunt","monster_czero_zombie");}
 extern "C" void quake_zombie_gib(entvars_t* vars){spawnNativeAlias(vars,"info_target","quake_zombie_gib");}
 
 extern "C" void weapon_winchester1887(entvars_t* vars){spawnNativeAlias(vars,"weapon_357","weapon_winchester1887");}

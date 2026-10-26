@@ -1,5 +1,12 @@
 # UT GOTY Pulse Gun port
 
+Damage balance update: both Link Gun modes deal 75% more damage. Primary
+plasma increases from 9 to 15.75 per impact. Secondary beam scales from
+21 to 84 DPS (previously 12 to 48), with ramp gain 10.5 DPS per connected
+second. Cadence and ammo costs are unchanged. The native client validation
+fires a projectile into a zombie and measures 15.75 damage, then measures
+2.1 and 8.4 damage over 0.1-second beam ticks at minimum and maximum ramp.
+
 Source: C:/UnrealTournament/System/Botpack.u, exported by UModel into assets-source/ut99_pulsegun/export. Converter tools/convert_ut99_pulsegun.py compiles installed models/cremation/v_nailgun.mdl, p_nailgun.mdl and w_nailgun.mdl with original UT hand and gun textures. The existing weapon_nailgun inventory identity and Link Gun combat behavior remain.
 
 UE1 vertex-animation poses are approximated by 120 translation bones for the viewmodel, within GoldSrc's 128-bone limit. Conversion covers all 126 frames; mean pose error is 0.071 GoldSrc units, maximum 3.372 units in outlying poses. The 100-bone third-person conversion reproduces its source poses. Pickup uses one rigid bone. Details in assets-source/ut99_pulsegun/conversion-report.json.
