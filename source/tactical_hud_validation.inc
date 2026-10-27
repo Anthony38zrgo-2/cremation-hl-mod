@@ -12,7 +12,7 @@ static void tacticalHudProbeFrame(){
     if(!stage){create();for(int k=0;k<4;++k)dmcGive(p,k);began=globals->time;stage=1;shot=false;return;}
     players[1].buttons&=~IN_USE;
     if(stage==1){if(globals->time-began>.6f&&!shot){screenshot("planted");shot=true;}
-        if(globals->time-began>1){auto table=*reinterpret_cast<void***>(npc->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[11])(npc->pvPrivateData,&p->v,&p->v,1000000,1<<13);stage=2;began=globals->time;shot=false;}}
+        if(globals->time-began>1){auto table=*reinterpret_cast<void***>(npc->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(npc->pvPrivateData,&p->v,&p->v,1000000,1<<13);stage=2;began=globals->time;shot=false;}}
     else if(stage==2){players[1].buttons|=IN_USE;
         if(globals->time-began>2.4f&&!shot){screenshot("defusing");shot=true;}
         if(globals->time-began>2.9f){stage=3;began=globals->time;shot=false;}}

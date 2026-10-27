@@ -1,0 +1,19 @@
+{
+  "source_texture": 8,
+  "intermediate_alpha_levels": 14,
+  "source_faint_pixels": 285,
+  "faint_pixels_with_coverage": 285,
+  "max_baked_alpha_coverage_error": 0.029166666666666674,
+  "compiled_hair_texture": "{steve_16.bmp",
+  "baked_size": [
+    256,
+    256
+  ],
+  "compiled_size": [
+    332,
+    249
+  ],
+  "masked_flag": true,
+  "opaque_hair_vertical_mirror_corrected": true,
+  "engine_acceptance": "HLDS model loading and shared David/Steve acceptance passed"
+}

@@ -1,0 +1,272 @@
+{
+  "skeleton_nodes": 16,
+  "assembled_parts": 16,
+  "active_model_ids": [
+    7850,
+    7851,
+    7853,
+    7856,
+    7859,
+    7862,
+    7865,
+    7868,
+    7869,
+    7872,
+    7875,
+    7882,
+    7886,
+    7887,
+    7890
+  ],
+  "attachment_model_ids": [
+    7852
+  ],
+  "all_model_variants": 44,
+  "textures": 28,
+  "packed_textures": 28,
+  "materials": 136,
+  "clips": [
+    {
+      "name": "Waiting",
+      "bank": "zom.bin",
+      "id": 975,
+      "start": 1,
+      "end": 46,
+      "frames": 46
+    },
+    {
+      "name": "Johnny motion 0x3E8",
+      "bank": "zom.bin",
+      "id": 1000,
+      "start": 51,
+      "end": 80,
+      "frames": 30
+    },
+    {
+      "name": "Walk",
+      "bank": "zom.bin",
+      "id": 1022,
+      "start": 85,
+      "end": 115,
+      "frames": 31
+    },
+    {
+      "name": "Run",
+      "bank": "zom.bin",
+      "id": 968,
+      "start": 120,
+      "end": 150,
+      "frames": 31
+    },
+    {
+      "name": "Johnny motion 0x3F0",
+      "bank": "zom.bin",
+      "id": 1008,
+      "start": 155,
+      "end": 192,
+      "frames": 38
+    },
+    {
+      "name": "Johnny motion 0x306",
+      "bank": "ono.bin",
+      "id": 774,
+      "start": 197,
+      "end": 214,
+      "frames": 18
+    },
+    {
+      "name": "Axe throw",
+      "bank": "ono.bin",
+      "id": 775,
+      "start": 219,
+      "end": 269,
+      "frames": 51
+    },
+    {
+      "name": "Johnny motion 0x308",
+      "bank": "ono.bin",
+      "id": 776,
+      "start": 274,
+      "end": 321,
+      "frames": 48
+    },
+    {
+      "name": "Johnny motion 0x309",
+      "bank": "ono.bin",
+      "id": 777,
+      "start": 326,
+      "end": 371,
+      "frames": 46
+    },
+    {
+      "name": "Johnny motion 0x30A",
+      "bank": "ono.bin",
+      "id": 778,
+      "start": 376,
+      "end": 426,
+      "frames": 51
+    },
+    {
+      "name": "Johnny motion 0x30B",
+      "bank": "ono.bin",
+      "id": 779,
+      "start": 431,
+      "end": 476,
+      "frames": 46
+    },
+    {
+      "name": "Johnny motion 0x30C",
+      "bank": "ono.bin",
+      "id": 780,
+      "start": 481,
+      "end": 526,
+      "frames": 46
+    },
+    {
+      "name": "Johnny motion 0x30D",
+      "bank": "ono.bin",
+      "id": 781,
+      "start": 531,
+      "end": 561,
+      "frames": 31
+    },
+    {
+      "name": "Johnny motion 0x30E",
+      "bank": "ono.bin",
+      "id": 782,
+      "start": 566,
+      "end": 611,
+      "frames": 46
+    },
+    {
+      "name": "Johnny motion 0x30F",
+      "bank": "ono.bin",
+      "id": 783,
+      "start": 616,
+      "end": 633,
+      "frames": 18
+    },
+    {
+      "name": "Johnny run variant",
+      "bank": "ono.bin",
+      "id": 784,
+      "start": 638,
+      "end": 658,
+      "frames": 21
+    },
+    {
+      "name": "Johnny motion 0x311",
+      "bank": "ono.bin",
+      "id": 785,
+      "start": 663,
+      "end": 693,
+      "frames": 31
+    },
+    {
+      "name": "Johnny motion 0x312",
+      "bank": "ono.bin",
+      "id": 786,
+      "start": 698,
+      "end": 728,
+      "frames": 31
+    },
+    {
+      "name": "Johnny motion 0x313",
+      "bank": "ono.bin",
+      "id": 787,
+      "start": 733,
+      "end": 807,
+      "frames": 75
+    },
+    {
+      "name": "Johnny motion 0x314",
+      "bank": "ono.bin",
+      "id": 788,
+      "start": 812,
+      "end": 857,
+      "frames": 46
+    },
+    {
+      "name": "Johnny motion 0x315",
+      "bank": "ono.bin",
+      "id": 789,
+      "start": 862,
+      "end": 941,
+      "frames": 80
+    },
+    {
+      "name": "Johnny motion 0x316",
+      "bank": "ono.bin",
+      "id": 790,
+      "start": 946,
+      "end": 1037,
+      "frames": 92
+    },
+    {
+      "name": "Johnny motion 0x317",
+      "bank": "ono.bin",
+      "id": 791,
+      "start": 1042,
+      "end": 1101,
+      "frames": 60
+    },
+    {
+      "name": "Johnny motion 0x318",
+      "bank": "ono.bin",
+      "id": 792,
+      "start": 1106,
+      "end": 1136,
+      "frames": 31
+    },
+    {
+      "name": "Johnny motion 0x3EB",
+      "bank": "ono.bin",
+      "id": 1003,
+      "start": 1141,
+      "end": 1181,
+      "frames": 41
+    },
+    {
+      "name": "Johnny motion 0x3EC",
+      "bank": "ono.bin",
+      "id": 1004,
+      "start": 1186,
+      "end": 1224,
+      "frames": 39
+    },
+    {
+      "name": "Johnny motion 0x3ED",
+      "bank": "ono.bin",
+      "id": 1005,
+      "start": 1229,
+      "end": 1276,
+      "frames": 48
+    },
+    {
+      "name": "Johnny motion 0x3EE",
+      "bank": "ono.bin",
+      "id": 1006,
+      "start": 1281,
+      "end": 1338,
+      "frames": 58
+    }
+  ],
+  "scene_frames": [
+    1,
+    1342
+  ],
+  "bounds": [
+    [
+      -4.337635040283203,
+      -3.460216999053955,
+      -0.5281678438186646
+    ],
+    [
+      4.168761253356934,
+      4.774116516113281,
+      16.666397094726562
+    ]
+  ],
+  "alpha_audit": "Johnny_alpha_audit.json",
+  "blender_version": "5.2.0 LTS"
+}

@@ -23,8 +23,8 @@ GROUP = [0,2,1,5,5,5,4,4,4,3,7,7,7,6,6,6]
 # Source motion IDs checked against the original skeleton pose catalog.
 # name, original id, GoldSrc activity, loop, ground speed, contact event
 SEQS = [('idle',0x3CF,1,True,0,0),('walk',0x3FE,3,True,42,0),
-        ('run',0x3C8,4,True,130,0),('attack_right',0x3F4,30,False,0,1),
-        ('attack_left',0x3F5,30,False,0,2),('attack_both',0x3F5,30,False,0,3),
+        ('run',0x3C8,4,True,130,0),('attack_right',0x3EA,30,False,0,1),
+        ('attack_left',0x3E9,30,False,0,2),('attack_both',0x3C9,31,False,0,3),
         ('pain_small',0x3D6,26,False,0,0),('pain_big',0x3CE,27,False,0,0),
         ('die_simple',0x3DB,36,False,0,0),('die_back',0x3DA,37,False,0,0),
         ('die_forward',0x3CC,38,False,0,0),('die_violent',0x3DC,39,False,0,0),
@@ -32,9 +32,9 @@ SEQS = [('idle',0x3CF,1,True,0,0),('walk',0x3FE,3,True,42,0),
         ('pain_chest',0x3D6,71,False,0,0),('pain_stomach',0x3CE,72,False,0,0),
         ('pain_leftarm',0x3D3,73,False,0,0),('pain_rightarm',0x3D5,74,False,0,0),
         ('pain_leftleg',0x3C0,75,False,0,0),('pain_rightleg',0x3C1,76,False,0,0),
-        ('crawl',0x3E7,48,True,16,0),('crawl_idle',0x3E7,18,True,0,0),
+        ('crawl',0x41B,48,True,16,0),('crawl_idle',0x41E,18,True,0,0),
         ('prone_attack_right',0x3F4,30,False,0,1),('prone_attack_left',0x3F5,30,False,0,2),
-        ('prone_attack_both',0x3F5,30,False,0,3),('prone_die',0x3DB,36,False,0,0)]
+        ('prone_attack_both',0x3F5,30,False,0,3),('prone_die',0x404,36,False,0,0)]
 
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
@@ -44,6 +44,10 @@ def main():
     motion=(BASE/'zom.bin').read_bytes();table=json.loads((BASE/'motion_table.json').read_text())
     offsets=list(struct.unpack_from(f'<{len(table)}I',motion))+[len(motion)]
     motions={t['id']:(motion[offsets[i]:offsets[i+1]],t['ticks']) for i,t in enumerate(table)}
+    crawler=(BASE/'hzom.bin').read_bytes()
+    crawler_table=json.loads((BASE/'hzom_motion_table.json').read_text())
+    crawler_offsets=list(struct.unpack_from(f'<{len(crawler_table)}I',crawler))+[len(crawler)]
+    motions.update({t['id']:(crawler[crawler_offsets[i]:crawler_offsets[i+1]],t['ticks']) for i,t in enumerate(crawler_table)})
     def frames(mid):
         block,ticks=motions[mid];nf=(ticks-1)//2+2;stride=108
         assert len(block)>=4+nf*stride
@@ -142,21 +146,43 @@ def main():
     seq_report=[]
     for name,mid,activity,loop,speed,event in SEQS:
         pos,rot=frames(mid);pos*=scale;pos[:,0,2]+=floor
-        if name.startswith('prone_attack_') or name=='prone_die':
-            source_pos,source_rot=pos.copy(),rot.copy()
-            prone_pos,prone_rot=frames(0x3E7);prone_pos*=scale;prone_pos[:,0,2]+=floor
-            pos=np.repeat(prone_pos[:1],len(source_pos),axis=0)
-            rot=np.repeat(prone_rot[:1],len(source_rot),axis=0)
-            if name=='prone_attack_right':active_nodes=(3,4,5)
-            elif name=='prone_attack_left':active_nodes=(6,7,8)
-            elif name=='prone_attack_both':active_nodes=(3,4,5,6,7,8)
-            else:active_nodes=(2,3,4,5,6,7,8)
-            for node in active_nodes:
-                pos[:,node]=source_pos[:,node]
-                rot[:,node]=source_rot[:,node]
+        # Remove root travel before anchoring the visible lower body.
+        root_delta=pos[-1,0,:2]-pos[0,0,:2];pos[:,0,:2]=pos[0,0,:2]
+        if name.startswith('prone_attack_'):
+            # Keep the full body in David's grounded idle pose, then retarget
+            # the original, clearly readable standing slash onto both arm
+            # chains. Apply the source's rotational change over the prone bind
+            # pose so the hands sweep forward instead of trembling in place.
+            base_pos,base_rot=frames(0x3E7)
+            pose_pos=base_pos[0].copy();pose_pos*=scale;pose_pos[0,2]+=floor
+            pose_rot=base_rot[0].copy()
+            arm_pos,arm_rot=pos.copy(),rot.copy()
+            pos=np.repeat(pose_pos[None,:,:],len(arm_rot),axis=0)
+            rot=np.repeat(pose_rot[None,:,:],len(arm_rot),axis=0)
+            active=(3,4,5) if name=='prone_attack_right' else ((6,7,8) if name=='prone_attack_left' else (3,4,5,6,7,8))
+            for node in active:
+                start=Rotation.from_matrix(arm_rot[0,node])
+                for f in range(len(arm_rot)):
+                    delta=start.inv()*Rotation.from_matrix(arm_rot[f,node])
+                    rot[f,node]=(Rotation.from_matrix(rot[f,node])*Rotation.from_rotvec(delta.as_rotvec()*0.70)).as_matrix()
+        if name.startswith('prone_') or name.startswith('crawl'):
+            # hzom's original actor hides the legs. Preserve its complete upper
+            # body motion, but use zom's grounded resting lower body for
+            # David's visible legs instead of animating the hidden source nodes.
+            leg_pos,leg_rot=frames(0x3E7)
+            pos[:,9:]=leg_pos[0,9:]*scale
+            rot[:,9:]=leg_rot[0,9:]
+            assert parents[9]==0
+            # The authored root pitches during a strike/death. Countertransform
+            # the pelvis so its resting world pose stays on the floor rather
+            # than rotating the visible legs through it with the upper body.
+            resting_p=leg_pos[0,0]*scale+np.array([0,0,floor])+leg_rot[0,0]@(leg_pos[0,9]*scale)
+            resting_r=leg_rot[0,0]@leg_rot[0,9]
+            for f in range(len(pos)):
+                pos[f,9]=rot[f,0].T@(resting_p-pos[f,0])
+                rot[f,9]=rot[f,0].T@resting_r
         if name=='crawl_idle':pos=pos[:1];rot=rot[:1]
         # Entity navigation owns translation. Retain authored vertical motion but remove root travel.
-        root_delta=pos[-1,0,:2]-pos[0,0,:2];pos[:,0,:2]=pos[0,0,:2]
         # Export root motion only into QC LX extraction so StudioMDL computes native ground speed.
         if speed:pos[:,0,0]=pos[0,0,0]+np.linspace(0,speed*(len(pos)-1)/30,len(pos))
         # StudioMDL forces a loop's final pose to its first. Make that explicit
@@ -169,9 +195,10 @@ def main():
         for f in range(len(pos)):
             smd+=f'time {f}\n'+''.join(f'{i} '+' '.join(f'{x:.7f}' for x in (*pos[f,i],*angles[f,i]))+'\n' for i in range(16))
         (OUT/(name+'.smd')).write_text(smd+'end\n')
-        # Original kind-7 attack records at 0x00592F18: hit ticks 50/55
-        # (60 Hz), corresponding to stored frames 25/28 (30 Hz).
-        event_frame={0x3F4:25,0x3F5:28}.get(mid,0) if event else 0
+        # Original Steve strike records at 0x00592F18[8][0]: ticks 41/54/40.
+        # Legacy disabled prone clips retain their original upright source ticks 50/55,
+        # crawler tick 3 (60 Hz), rounded to stored frame 2 (30 Hz).
+        event_frame={0x3EA:21,0x3E9:27,0x3C9:20,0x3F4:25,0x3F5:28}.get(mid,0) if event else 0
         if event:assert 0<event_frame<len(pos)
         qc+=f'$sequence {name} "{name}" fps 30'+(' loop' if loop else '')+(' LX' if speed else '')
         if event:qc+=' { event '+str(event)+' '+str(event_frame)+' }'
@@ -208,10 +235,10 @@ def main():
     for i in range(nb):
         at=bo+i*112;name=bytes(data[at:at+32]).split(b'\0')[0].decode();compiled[name]=i
     assert set(compiled)==set(NAMES)
-    report=dict(source='HOTD2 PC original znsam2.bin/zom.bin',scale=scale,floor=floor,bones=compiled,bodygroups=bodygroups,hitboxes=hitboxes,sequences=seq_report,textures=len(textures),main_triangles=721,sha256={},
+    report=dict(source='HOTD2 PC original znsam2.bin/zom.bin/hzom.bin',scale=scale,floor=floor,bones=compiled,bodygroups=bodygroups,hitboxes=hitboxes,sequences=seq_report,textures=len(textures),main_triangles=721,sha256={},
         animation_mapping_evidence={'kind':7,'hit_motion_table':'0x00592FC8[kind][variant][0x004C84A8[slot]]',
         'head':0x3D1,'chest':0x3D6,'stomach':0x3CE,'right_arm':0x3D5,'left_arm':0x3D3,'right_leg':0x3C1,'left_leg':0x3C0,
-        'attack_table':'0x00592F18[kind][variant]','attack_hit_ticks_60Hz':{'0x3F4':50,'0x3F5':55}})
+        'attack_table':'0x00592F18[8][0] shared 16-node strike bank','attack_hit_ticks_60Hz':{'0x3EA':41,'0x3E9':54,'0x3C9':40,'0x3F4':50,'0x3F5':55}})
     DEST.mkdir(parents=True,exist_ok=True)
     backup=MOD/'backups/before-hotd2-david';backup.mkdir(parents=True,exist_ok=True)
     for path in [OUT/'david.mdl',OUT/'david_charred.mdl',*[OUT/(stem+'.mdl') for stem in gibfiles]]:

@@ -110,6 +110,7 @@ static edict_t* cultistEnemy(edict_t* e) {
     return valid(enemy)&&enemy->serialnumber==serial?enemy:nullptr;
 }
 static int __fastcall cultistTakeDamage(void* object,void*,entvars_t* inflictor,entvars_t* attacker,float amount,int bits) {
+    if(enemyCombatBlocked(object,inflictor,attacker))return 0;
     auto table=*reinterpret_cast<void***>(object);CultistDamageFn original=nullptr;
     for(auto& installed:cultistDamageTables)if(installed.table==table) {original=installed.original;break;}
     if(!original)return 0;
@@ -130,10 +131,10 @@ static void cultistInstall(edict_t* e) {
     if(!cultistState(e)||!e->pvPrivateData)return;
     auto table=*reinterpret_cast<void***>(e->pvPrivateData);
     for(auto& installed:cultistDamageTables)if(installed.table==table)return;
-    auto original=reinterpret_cast<CultistDamageFn>(table[11]);DWORD protection=0;
-    if(VirtualProtect(&table[11],sizeof(void*),PAGE_READWRITE,&protection)) {
-        cultistDamageTables.push_back({table,original});table[11]=reinterpret_cast<void*>(&cultistTakeDamage);
-        DWORD ignored=0;VirtualProtect(&table[11],sizeof(void*),protection,&ignored);
+    auto original=reinterpret_cast<CultistDamageFn>(table[ravenholm_abi::slot::TakeDamage]);DWORD protection=0;
+    if(VirtualProtect(&table[ravenholm_abi::slot::TakeDamage],sizeof(void*),PAGE_READWRITE,&protection)) {
+        cultistDamageTables.push_back({table,original});table[ravenholm_abi::slot::TakeDamage]=reinterpret_cast<void*>(&cultistTakeDamage);
+        DWORD ignored=0;VirtualProtect(&table[ravenholm_abi::slot::TakeDamage],sizeof(void*),protection,&ignored);
     }
 }
 static void cultistPrecache() {

@@ -122,9 +122,9 @@ $body abdomen "abdomen"
 $sequence idle "idle" fps 30 loop
 $sequence walk "walk" fps 30 loop LX
 $sequence run "run" fps 30 loop LX
-$sequence attack_right "attack_right" fps 30 { event 1 25 }
-$sequence attack_left "attack_left" fps 30 { event 2 28 }
-$sequence attack_both "attack_both" fps 30 { event 3 28 }
+$sequence attack_right "attack_right" fps 30 { event 1 21 }
+$sequence attack_left "attack_left" fps 30 { event 2 27 }
+$sequence attack_both "attack_both" fps 30 { event 3 20 }
 $sequence pain_small "pain_small" fps 30
 $sequence pain_big "pain_big" fps 30
 $sequence die_simple "die_simple" fps 30

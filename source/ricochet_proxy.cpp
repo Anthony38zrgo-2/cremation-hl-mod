@@ -4,6 +4,8 @@
 #include "extdll.h"
 #undef min
 #undef max
+#include "entity_handle.h"
+#include "ravenholm_abi.h"
 #include <algorithm>
 #include <array>
 #include <vector>
@@ -13,6 +15,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <memory>
+#include <unordered_map>
 #include "ricochet_balance.h"
 #include "bounce_shotgun.h"
 #include "entity_state.h"
@@ -72,6 +75,7 @@ static float length2d(const Vector& a) { return std::sqrt(a.x*a.x+a.y*a.y); }
 static Vector normal(const Vector& a) { float n=length(a); return n>.001f ? a*(1.f/n):Vector(0,0,0); }
 static float dot(const Vector&a,const Vector&b) { return a.x*b.x+a.y*b.y+a.z*b.z; }
 static Vector center(edict_t* e) { return (e->v.absmin+e->v.absmax)*.5f; }
+#include "enemy_combat_policy.inc"
 static bool ricochet(edict_t* e) {
     return valid(e) && e->v.health>0 && e->v.viewmodel && (!std::strcmp(text(e->v.viewmodel),"models/v_9mmhandgun.mdl") || !std::strcmp(text(e->v.viewmodel),RicochetRedModel));
 }
@@ -166,6 +170,17 @@ static void restoreSlow(Effect& s) {
     }
     s.slowUntil=0;
 }
+static void expireEffects() {
+    for(auto& s:effects) {
+        auto e=s.entity;if(!e)continue;
+        if(!valid(e)||e->serialnumber!=s.serial) {s=Effect{};continue;}
+        if(s.slowUntil && (s.slowUntil<=globals->time || !aliveEnemy(e)))restoreSlow(s);
+        if(s.pushUntil && (s.pushUntil<=globals->time || !aliveEnemy(e))) {
+            if(e->v.movetype==MOVETYPE_TOSS)e->v.movetype=s.movement;
+            s.pushUntil=0;
+        }
+    }
+}
 static void freeze(edict_t* e) {
     if(!aliveEnemy(e))return;
     auto s=getEffect(e,true);if(!s)return;
@@ -185,7 +200,7 @@ using TakeDamageFn=int(__thiscall*)(void*,entvars_t*,entvars_t*,float,int);
 static void damage(edict_t* e,edict_t* projectile,edict_t* owner,float amount) {
     if(!e->pvPrivateData || !e->v.takedamage || amount<=0)return;
     auto table=*reinterpret_cast<void***>(e->pvPrivateData);
-    auto fn=reinterpret_cast<TakeDamageFn>(table[11]);
+    auto fn=reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage]);
     fn(e->pvPrivateData,&projectile->v,&owner->v,amount,1<<6); // DMG_BLAST
 }
 // Shared small impulse for the bounce shotgun grenade. Same bookkeeping as the
@@ -397,7 +412,7 @@ static void advanceNails(float dt) {
         auto victim=tr.pHit;
         if(valid(victim)&&victim->v.takedamage>0&&victim->pvPrivateData) {
             auto table=*reinterpret_cast<void***>(victim->pvPrivateData);
-            auto takeDamage=reinterpret_cast<TakeDamageFn>(table[11]);
+            auto takeDamage=reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage]);
             takeDamage(victim->pvPrivateData,&nail.entity->v,&nail.owner->v,nail.damage,0); // DMC nails use DMG_GENERIC.
         }
         removeNail(nail);
@@ -423,6 +438,7 @@ static bool fireNailgun(edict_t* p,bool secondary) {
 #include "humanoid_gibs.inc"
 static bool heartRollDeath(edict_t* e);
 static edict_t* heartSpawn(const Vector& origin);
+static float davidMeleeScale(entvars_t* attacker);
 #include "dmc_powerups.inc"
 #include "weapon_blood.inc"
 #include "link_gun.inc"
@@ -446,7 +462,9 @@ static int sharedShells(edict_t* p,int spend) {
 #include "winchester1887.inc"
 #include "shockrifle.inc"
 #include "quake_zombie.inc"
+#ifdef CREMATION_ENABLE_VALIDATION
 #include "quake_zombie_validation.inc"
+#endif
 #include "czero_smoke.inc"
 #include "czero_zombie.inc"
 #include "david_zombie.inc"
@@ -568,16 +586,20 @@ static void startupInventoryGive(edict_t* player);
 static void reactorPrecache();
 static void reactorActivate();
 static void reactorFrame();
+static void tacticalHudFrame();
 #include "vostok_cover.inc"
+#ifdef CREMATION_ENABLE_VALIDATION
 static void vostokProbeFrame();
 static void truthProbeFrame();
 static void czTacticalProbeFrame();
 static void tacticalSaveProbeFrame();
-static void dmcPreviewFrame();
-static void tacticalHudFrame();
 static void tacticalHudProbeFrame();
 static void davidProbeFrame();
+static void enemyCombatProbeFrame();
+static void dmcPreviewFrame();
+#endif
 static void hookThink(edict_t* e) {
+    enemyCombatClearTargets(e);
     if(vostokCoverThink(e))return;
     if(czThink(e))return;
     if(qzThink(e))return;
@@ -598,6 +620,7 @@ static void hookThink(edict_t* e) {
     }
 }
 static void hookStartFrame() {
+#ifdef CREMATION_ENABLE_VALIDATION
     tacticalHudProbeFrame();
     dmcPreviewFrame();
     tacticalSaveProbeFrame();
@@ -605,15 +628,20 @@ static void hookStartFrame() {
     vostokProbeFrame();
     truthProbeFrame();
     czAnimationProbeFrame();
+#endif
     czSmokeFrame();
     czBombFrame();
     tacticalHudFrame();
     mansionRadarFrame();
     heartFrame();
+#ifdef CREMATION_ENABLE_VALIDATION
     heartProbeFrame();
     czProbeFrame();
+#endif
     czVisualCleanup();
+#ifdef CREMATION_ENABLE_VALIDATION
     qzProbeFrame();
+#endif
     cultistFrame();
     zombieVoiceFrame();
     rpgFrame();
@@ -621,7 +649,10 @@ static void hookStartFrame() {
     necroFrame();
     anatomicalGibFrame();
     davidFrame();
+#ifdef CREMATION_ENABLE_VALIDATION
     davidProbeFrame();
+    enemyCombatProbeFrame();
+#endif
     if(raven.pfnStartFrame)raven.pfnStartFrame();
     // Initial inventory is granted directly. Suppress native enemy/player
     // weapon drops as well, keeping owned inventory entities intact.
@@ -689,15 +720,7 @@ static void hookStartFrame() {
         }
         hordeReportAt=--hordeReportsRemaining>0?globals->time+5.f:0;
     }
-    for(auto& s:effects) {
-        auto e=s.entity;if(!e)continue;
-        if(!valid(e)||e->serialnumber!=s.serial) {s=Effect{};continue;}
-        if(s.slowUntil && (s.slowUntil<=globals->time || !aliveEnemy(e)))restoreSlow(s);
-        if(s.pushUntil && (s.pushUntil<=globals->time || !aliveEnemy(e))) {
-            if(e->v.movetype==MOVETYPE_TOSS)e->v.movetype=s.movement;
-            s.pushUntil=0;
-        }
-    }
+    expireEffects();
 }
 static void hookPreThink(edict_t* p) {
     rpgNormalize(p);
@@ -899,6 +922,18 @@ static void hookClientCommand(edict_t* p) {
     }
 }
 static void hookTouch(edict_t* a,edict_t* b) {
+    auto johnnyAxeTouch=[](edict_t* axe,edict_t* other){
+        if(!valid(axe)||!axe->v.classname||std::strcmp(text(axe->v.classname),"cremation_johnny_axe"))return false;
+        if(valid(other)&&other==axe->v.owner)return true;
+        if(valid(other)&&(other->v.flags&FL_CLIENT)&&other->pvPrivateData&&other->v.takedamage&&other->v.health>0){
+            auto table=*reinterpret_cast<void***>(other->pvPrivateData);
+            auto take=reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage]);
+            auto owner=valid(axe->v.owner)?axe->v.owner:axe;
+            take(other->pvPrivateData,&axe->v,&owner->v,axe->v.dmg,1<<2); // DMG_SLASH
+        }
+        engine.pfnRemoveEntity(axe);return true;
+    };
+    if(johnnyAxeTouch(a,b)||johnnyAxeTouch(b,a))return;
     if(qzTouch(a,b)||qzTouch(b,a))return;
     auto fullShockAmmo=[](edict_t* item,edict_t* player){return valid(item)&&valid(player)&&(player->v.flags&FL_CLIENT)&&(!std::strcmp(text(item->v.classname),"ammo_gaussclip")||!std::strcmp(text(item->v.classname),"ammo_shockcore"))&&shockAmmoIndex>=0&&sharedAmmo(player,shockAmmoIndex,0)>=50;};
     if(fullShockAmmo(a,b)||fullShockAmmo(b,a))return;
@@ -913,6 +948,7 @@ static void hookTouch(edict_t* a,edict_t* b) {
 }
 static const char* hookDescription() {return "Cremation";}
 static void extensionPrecache(){
+        enemyCombatReset();
         davidStates.clear();davidNextDecision=0;davidPrecache();
         invalidFastSequenceLogged=false;
         startupTrace("worldspawn");
@@ -966,11 +1002,15 @@ static void extensionPrecache(){
         bounce::precache();
     for(auto path:{"models/cremation/vostok/tree_noleaves2.mdl","models/cremation/vostok/jeep-russian.mdl","models/cremation/truth/tree_japan_maple_red.mdl","models/cremation/truth/tree_japan_maple_orange.mdl","models/cremation/truth/bush_japan_bush01.mdl","models/cremation/truth/rock_japan_rocks2.mdl"})engine.pfnPrecacheModel(const_cast<char*>(path));
 }
+#ifdef CREMATION_ENABLE_VALIDATION
+static void enemyCombatProbePrecache();
+#endif
 static int hookSpawn(edict_t* e) {
     if(vostokCoverSpawn(e))return 0;
-    if(czIs(e)){int result=raven.pfnSpawn(e);czSpawn(e);return result;}
-    if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);return result;}
+    if(czIs(e)){int result=raven.pfnSpawn(e);czSpawn(e);enemyCombatInstall(e);return result;}
+    if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);enemyCombatInstall(e);return result;}
     const char* classname=text(e->v.classname);
+    bool johnnyNpc=classname&&!std::strcmp(classname,"monster_johnny");
     bool ricochetItem=classname && (!std::strcmp(classname,"weapon_ricochet")||!std::strcmp(classname,"weapon_9mmhandgun")||!std::strcmp(classname,"weapon_glock"));
     bool bounceItem=bounce::isCarrierClass(classname);
     bool nailItem=classname && (!std::strcmp(classname,"weapon_nailgun")||!std::strcmp(classname,"weapon_9mmAR")||!std::strcmp(classname,"weapon_mp5"));
@@ -982,7 +1022,11 @@ static int hookSpawn(edict_t* e) {
     bool world=classname && !std::strcmp(classname,"worldspawn");
     if(world)extensionPrecache();
     int result=raven.pfnSpawn(e);
+    if(johnnyNpc)e->v.classname=engine.pfnAllocString("monster_johnny");
     if(world)mansionPrecache();
+#ifdef CREMATION_ENABLE_VALIDATION
+    if(world)enemyCombatProbePrecache();
+#endif
     if(world)startupInventoryPrecache();
     if(world)reactorPrecache();
     if(shockItem){e->v.classname=engine.pfnAllocString("weapon_shockrifle");engine.pfnSetModel(e,"models/cremation/w_shockrifle.mdl");}
@@ -1014,10 +1058,15 @@ static int hookSpawn(edict_t* e) {
     humanGibInstall(e);
     weaponBloodInstall(e);
     davidSpawn(e);
+    enemyCombatInstall(e);
     return result;
 }
 #include "mansion_waves.inc"
+#ifdef CREMATION_ENABLE_VALIDATION
+#include "hotd2_death_validation.inc"
+#include "enemy_combat_validation.inc"
 #include "david_validation.inc"
+#endif
 #include "mansion_radar.inc"
 static const char* startupInventory[]={"item_suit","item_longjump","weapon_shockrifle","weapon_bounce_shotgun","weapon_ricochet","weapon_necromancer","weapon_pipewrench","weapon_nailgun","weapon_handgrenade","weapon_rpg","ammo_9mmAR","ammo_buckshot","ammo_buckshot","ammo_buckshot"};
 static void startupInventoryPrecache(){
@@ -1045,18 +1094,24 @@ static void playerDefaults(edict_t* p){
 #include "mansion_reactor.inc"
 #include "czero_objective.inc"
 #include "tactical_hud.inc"
+#ifdef CREMATION_ENABLE_VALIDATION
 #include "tactical_hud_validation.inc"
 #include "reactor_validation.inc"
 #include "reactor_preview.inc"
+#endif
+#ifdef CREMATION_ENABLE_VALIDATION
 #include "czero_validation.inc"
 #include "heart_validation.inc"
 #include "czero_animation_validation.inc"
 #include "vostok_validation.inc"
 #include "truth_validation.inc"
 #include "czero_tactical_validation.inc"
+#endif
 #include "tactical_save.inc"
+#ifdef CREMATION_ENABLE_VALIDATION
 #include "tactical_save_validation.inc"
 #include "dmc_preview.inc"
+#endif
 static void hookActivate(edict_t* list,int count,int maxClients) {
     tacticalHudNext=0;
     shockStates.fill(ShockState{});shockOrbs.clear();
@@ -1089,8 +1144,11 @@ static void hookActivate(edict_t* list,int count,int maxClients) {
     char inventory[120];std::snprintf(inventory,sizeof(inventory),"ricochet=%d bounce_shotgun=%d nailgun=%d pipewrench=%d",ricochetCount,bounceCount,nailCount,wrenchCount);
     startupTrace("MapWeapons",inventory);
     engine.pfnAlertMessage(at_console,const_cast<char*>("Cremation loaded: Ricochet, Flak Cannon, Nailgun and Opposing Force Pipe Wrench.\n"));
+#ifdef CREMATION_ENABLE_VALIDATION
     qzProbeBegin(list,count);
     davidProbeBegin(list,count);
+    enemyCombatProbeBegin(list,count);
+#endif
 }
 static void hookDeactivate() {
     for(auto& s:effects) {
@@ -1126,8 +1184,8 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(restoringWorld){mansionPrecache();startupInventoryPrecache();reactorPrecache();}
     if(tacticalSaved(e)&&raven.pfnSaveReadFields)raven.pfnSaveReadFields(data,"CremationTactical1",&e->v,tacticalFields,ARRAYSIZE(tacticalFields));
     const char* restoredClass=text(e->v.classname);
-    if(czIs(e)){czInstall(e);e->v.nextthink=globals->time+.05f;return result;}
-    if(qzIs(e)){qzInstall(e);weaponBloodInstall(e);Vector mins(-16,-16,0),maxs(16,16,QZHeight);engine.pfnSetSize(e,&mins.x,&maxs.x);e->v.view_ofs=Vector(0,0,QZEye);e->v.nextthink=globals->time+.1f;return result;}
+    if(czIs(e)){czInstall(e);enemyCombatInstall(e);e->v.nextthink=globals->time+.05f;return result;}
+    if(qzIs(e)){qzInstall(e);weaponBloodInstall(e);enemyCombatInstall(e);Vector mins(-16,-16,0),maxs(16,16,QZHeight);engine.pfnSetSize(e,&mins.x,&maxs.x);e->v.view_ofs=Vector(0,0,QZEye);e->v.nextthink=globals->time+.1f;return result;}
     if(qzGib(e)){e->v.nextthink=std::max(globals->time+.1f,e->v.dmgtime);return result;}
     if(restoredClass&&!std::strcmp(restoredClass,"monster_minion"))necroInstall(e);
     if(restoredClass&&!std::strcmp(restoredClass,"weapon_hornetgun"))e->v.classname=engine.pfnAllocString("weapon_necromancer");
@@ -1148,6 +1206,7 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(!std::strcmp(text(e->v.classname),"cremation_disc")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     if(!std::strcmp(text(e->v.classname),"cremation_nail")) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     bounce::removeRestored(e);
+    enemyCombatInstall(e);
     if(e->v.targetname && (!std::strcmp(text(e->v.targetname),"ut2004_rpg_missile")||!std::strcmp(text(e->v.targetname),"cremation_link_skeleton_fx")||!std::strcmp(text(e->v.targetname),"cremation_link_plasma_fx"))) {e->v.flags|=FL_KILLME;e->v.effects|=EF_NODRAW;}
     int i=engine.pfnIndexOfEdict(e);if(i>0&&i<33) {players[i]=PlayerState{};rpgCharges[i]=RpgCharge{};linkLocks[i]=LinkLock{};}
     return result;
@@ -1278,6 +1337,7 @@ extern "C" void cremation_sentry_base(entvars_t* vars) {
 
 extern "C" void weapon_necromancer(entvars_t* vars){spawnNativeAlias(vars,"weapon_hornetgun","weapon_necromancer");}
 extern "C" void monster_minion(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_minion");}
+extern "C" void monster_johnny(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_johnny");}
 extern "C" void monster_quake_zombie(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_quake_zombie");}
 extern "C" void monster_czero_zombie(entvars_t* vars){spawnNativeAlias(vars,"monster_human_grunt","monster_czero_zombie");}
 extern "C" void quake_zombie_gib(entvars_t* vars){spawnNativeAlias(vars,"info_target","quake_zombie_gib");}

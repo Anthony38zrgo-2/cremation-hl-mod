@@ -5,8 +5,13 @@ changed. GoldSrc requires the name array and contiguous strings inside .rdata.
 """
 from pathlib import Path
 import pefile, struct, json
+import sys
 source=Path(__file__).resolve().parents[1]/'source'
-path=source/'build/cremation.dll'
+path=Path(sys.argv[1]) if len(sys.argv)>1 else Path('build/cremation.dll')
+if not path.is_absolute():path=source/path
+path=path.resolve()
+build_root=(source/'build').resolve()
+if build_root not in path.parents:raise SystemExit('Refusing to finalize a DLL outside source/build')
 mapping=json.loads((source/'export-names.json').read_text())
 pe=pefile.PE(str(path)); raw=bytearray(path.read_bytes())
 symbols=sorted((mapping.get(s.name.decode(),s.name.decode()),s.ordinal-pe.DIRECTORY_ENTRY_EXPORT.struct.Base) for s in pe.DIRECTORY_ENTRY_EXPORT.symbols if s.name)

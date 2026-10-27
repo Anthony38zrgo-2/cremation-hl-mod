@@ -41,7 +41,7 @@ static void qzProbeFrame(){
         char detail[200];std::snprintf(detail,sizeof detail,"target=%s health=%.0f state=%d nextshot=%.2f time=%.2f",text(t->v.classname),t->v.health,e->v.impulse,e->v.teleport_time,globals->time);startupTrace("QuakeZombieProbe",detail);
         qzProbeResult(t->v.health<1000,"real thrown chunk hit target and applied damage");
         auto table=*reinterpret_cast<void***>(e->pvPrivateData);
-        reinterpret_cast<TakeDamageFn>(table[11])(e->pvPrivateData,&t->v,&t->v,25,1<<1);
+        reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(e->pvPrivateData,&t->v,&t->v,25,1<<1);
         qzProbeResult(e->v.impulse==QZDown&&e->v.health==60,"real virtual TakeDamage entered knockdown");
         qzProbePhase=1;qzProbeAt=globals->time+2;
     }else if(qzProbePhase==1){
@@ -51,7 +51,7 @@ static void qzProbeFrame(){
         qzProbeResult(e->v.impulse!=QZDown&&e->v.impulse!=QZRise&&e->v.solid==SOLID_SLIDEBOX,"real timed recovery restored solid body");
         auto table=*reinterpret_cast<void***>(e->pvPrivateData);
         size_t before=anatomicalGibs.size();
-        reinterpret_cast<TakeDamageFn>(table[11])(e->pvPrivateData,&t->v,&t->v,60,1<<6);
+        reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(e->pvPrivateData,&t->v,&t->v,60,1<<6);
         qzProbeResult(e->v.impulse==QZDead&&e->v.health==0&&e->v.solid==SOLID_NOT,"60 damage permanently gibbed entity");
         qzProbeResult(anatomicalGibs.size()==before+6,"same six anatomical gib pieces as other monsters");
         auto energy=engine.pfnCreateNamedEntity(engine.pfnAllocString(QZClass));
@@ -60,7 +60,7 @@ static void qzProbeFrame(){
         qzProbeZombie=energy;qzProbeTicks=0;qzProbeGibs=anatomicalGibs.size();qzProbePhase=3;qzProbeAt=globals->time+.1f;
     }else if(qzProbePhase==3){
         auto table=*reinterpret_cast<void***>(e->pvPrivateData);
-        reinterpret_cast<TakeDamageFn>(table[11])(e->pvPrivateData,&t->v,&t->v,4,(1<<10)|(1<<12));++qzProbeTicks;
+        reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(e->pvPrivateData,&t->v,&t->v,4,(1<<10)|(1<<12));++qzProbeTicks;
         qzProbeAt=globals->time+.1f;
         if(qzProbeTicks==15){
             qzProbeResult(e->v.health==0&&e->v.impulse==QZDead&&anatomicalGibs.size()==qzProbeGibs,"Link beam ticks accumulate to non-gib death");

@@ -24,6 +24,16 @@ inline int attackEvent(int requested,unsigned mask){
     if(requested==1)return right?1:0;if(requested==2)return left?2:0;
     if(requested==3)return right&&left?3:(right?1:(left?2:0));return requested;
 }
+// Uniformly choose from strikes the zombie can physically perform. Both
+// David and Steve use this selector, so neither variant favors a strike.
+inline int uniformAttackEvent(int roll,unsigned mask){
+    bool right=!armGone(mask,false),left=!armGone(mask,true);
+    int count=int(right)+int(left)+(right&&left?1:0);
+    if(!count)return 0;
+    int pick=roll%count;if(pick<0)pick+=count;
+    if(right&&left){static constexpr int attacks[]={1,2,3};return attacks[pick];}
+    return right?1:2;
+}
 inline bool runnerEligible(bool alive,bool playerTarget,bool visible,bool recentlyMoving,bool legs,bool busy,float distance){
     return alive&&playerTarget&&visible&&recentlyMoving&&legs&&!busy&&distance>=128&&distance<=768;
 }

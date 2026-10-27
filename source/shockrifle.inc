@@ -11,7 +11,7 @@ static void shockPrecache(){
 }
 static void shockFx(edict_t* p,int mode,const Vector& at){if(!msgShockFx)return;for(int i=1;i<=globals->maxClients;++i){auto viewer=engine.pfnPEntityOfEntIndex(i);if(!valid(viewer)||!(viewer->v.flags&FL_CLIENT))continue;engine.pfnMessageBegin(MSG_ONE_UNRELIABLE,msgShockFx,nullptr,viewer);engine.pfnWriteByte(engine.pfnIndexOfEdict(p));engine.pfnWriteByte(mode);coords(at);engine.pfnMessageEnd();}}
 static void shockHurt(edict_t* e,edict_t* inflictor,edict_t* owner,float amount,bool blast,const Vector& direction){
- if(!valid(e)||!e->pvPrivateData||!e->v.takedamage||amount<=0)return;auto table=*reinterpret_cast<void***>(e->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[11])(e->pvPrivateData,&inflictor->v,&owner->v,amount,(1<<10)|(blast?(1<<6):0));if(aliveEnemy(e))applyPush(e,direction,blast?260.f:180.f,blast?130.f:45.f,.15f);
+ if(!valid(e)||!e->pvPrivateData||!e->v.takedamage||amount<=0)return;auto table=*reinterpret_cast<void***>(e->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(e->pvPrivateData,&inflictor->v,&owner->v,amount,(1<<10)|(blast?(1<<6):0));if(aliveEnemy(e))applyPush(e,direction,blast?260.f:180.f,blast?130.f:45.f,.15f);
 }
 static void shockExplode(ShockOrb& orb,edict_t* attacker,bool combo,edict_t* direct=nullptr,const Vector& surface=Vector(0,0,0)){
  auto entity=orb.entity;if(!valid(entity)||entity->serialnumber!=orb.serial){orb.entity=nullptr;return;}Vector at=entity->v.origin+surface*4;float radius=combo?250.f:70.f,maximum=combo?165.f:55.f;

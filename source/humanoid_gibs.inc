@@ -69,7 +69,7 @@ static void __fastcall humanGibKilled(void* object,void*,entvars_t* attacker,int
 }
 static void humanGibInstall(edict_t* e){
     if(!humanoidRemains(e)||!e->pvPrivateData)return;auto table=*reinterpret_cast<void***>(e->pvPrivateData);for(auto& t:humanGibTables)if(t.table==table)return;
-    DWORD old;if(!VirtualProtect(table+11,sizeof(void*)*3,PAGE_READWRITE,&old))return;humanGibTables.push_back({table,table[11],table[13]});table[11]=reinterpret_cast<void*>(&humanGibDamage);table[13]=reinterpret_cast<void*>(&humanGibKilled);DWORD unused;VirtualProtect(table+11,sizeof(void*)*3,old,&unused);
+    DWORD old;if(!VirtualProtect(table+ravenholm_abi::slot::TakeDamage,sizeof(void*)*3,PAGE_READWRITE,&old))return;humanGibTables.push_back({table,table[ravenholm_abi::slot::TakeDamage],table[ravenholm_abi::slot::Killed]});table[ravenholm_abi::slot::TakeDamage]=reinterpret_cast<void*>(&humanGibDamage);table[ravenholm_abi::slot::Killed]=reinterpret_cast<void*>(&humanGibKilled);DWORD unused;VirtualProtect(table+ravenholm_abi::slot::TakeDamage,sizeof(void*)*3,old,&unused);
 }
 static void hookGibSetModel(edict_t* e,const char* path){
  bool gib=humanGibContext&&(!std::strcmp(path,"models/agibs.mdl")||!std::strcmp(path,"models/hgibs.mdl"));

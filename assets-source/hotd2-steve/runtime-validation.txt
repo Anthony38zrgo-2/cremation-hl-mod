@@ -1,0 +1,43 @@
+DavidTest PASS normal zombie receives David model and guarded native hooks
+DavidTest PASS normal zombie health unchanged from actual donor Spawn
+DavidTest PASS bullet resistance/actual health loss unchanged; no duplicate damage
+DavidProbe melee baseline=10.00/25.00 David=10.00/25.00
+DavidTest PASS single and double melee preserve actual native damage against a real player
+DavidTest PASS Steve variant has exactly 110 percent of David spawn health
+DavidTest PASS Steve melee event is consumed once
+DavidTest PASS Steve melee event is consumed once
+SteveProbe Steve raw melee=11.00/27.50 actual health loss=11.00/27.00 health=55.00 baseline=10.00/25.00
+DavidTest PASS Steve single and two-arm hits deal exactly 110 percent before armor; bonus scope clears
+DavidTest PASS Steve favors the two-arm animation in real activity selection
+DavidTest PASS real save/restore keeps Steve identity, initial health and damage without multiplying health twice or enabling prone
+DavidTest PASS charred Steve retains shared David identity
+DavidProbe crowded=0 canrun=1 running=1 health=48.5
+DavidTest PASS player with no nearby enemies grants one runner
+DavidProbe native movement walk=4.200 run=13.000
+DavidTest PASS running changes actual native movement and original run sequence together
+DavidTest PASS simultaneous eligible Davids retain exactly one reservation per player
+DavidTest PASS enemy beside player cancels approach sprint
+DavidTest PASS nearby ally does not block enemy-density condition
+DavidTest PASS scripted allied sentry is excluded without invoking a nonexistent monster vtable slot
+DavidTest PASS real GoldSrc trace identifies animated David head hitbox
+DavidTest PASS native TraceAttack supplied positive multi-damage with original hitgroup multiplier
+DavidTest PASS upper arm sever removes descendants and spawns actual posed regional gibs
+DavidTest PASS missing arm cannot deal phantom melee damage
+DavidTest PASS removed arm hitboxes no longer obstruct actual traces
+DavidTest PASS trace through missing hand reaches the real entity behind it
+DavidTest PASS native TraceAttack supplied positive multi-damage with original hitgroup multiplier
+DavidTest PASS isolated hand sever hides its mesh and emits exactly one hand fragment
+DavidTest PASS real donor serializer preserves anatomy and clears the disabled prone state
+DavidTest PASS local fragments remain physical and fade before their one-second deadline
+DavidTest PASS local fragments removed after one second by shared gib simulation
+DavidTest PASS native TraceAttack supplied positive multi-damage with original hitgroup multiplier
+DavidTest PASS leg loss switches native locomotion to original HOTD2 crawl
+DavidTest PASS native TraceAttack supplied positive multi-damage with original hitgroup multiplier
+DavidProbe head result health=0.00 dead=1 body=3 mask=2316 regional=54.00
+DavidTest PASS head sever is lethal even with remaining body health
+DavidTest PASS native TraceAttack supplied positive multi-damage with original hitgroup multiplier
+DavidTest PASS headshot that also exhausts normal health still decapitates without a second native death
+DavidTest PASS extreme damage preserves one ordinary six-piece humanoid gibbing
+DavidProbe native chase moved=366.94 everRun=1 target=1 seq=1
+DavidTest PASS unmodified native Think acquires the real player, navigates and uses contextual run
+DavidTest COMPLETE 

@@ -36,7 +36,7 @@ int main(int argc,char** argv) {
     assert(entity.pvPrivateData && reinterpret_cast<void**>(entity.pvPrivateData)[1]==&entity.v);
     auto table=*reinterpret_cast<void***>(entity.pvPrivateData);
     using Classify=int(__thiscall*)(void*);
-    int classification=reinterpret_cast<Classify>(table[8])(entity.pvPrivateData);
+    int classification=reinterpret_cast<Classify>(table[ravenholm_abi::slot::Classify])(entity.pvPrivateData);
     std::printf("Ravenholm zombie classification: %d\n",classification);
     assert(classification==7); // Valve CLASS_ALIEN_MONSTER.
     HMODULE donor=GetModuleHandleA("hl_ravenholm.dll");assert(donor);
@@ -45,18 +45,18 @@ int main(int argc,char** argv) {
     auto base=reinterpret_cast<unsigned char*>(donor);
     auto dos=reinterpret_cast<IMAGE_DOS_HEADER*>(base);
     auto nt=reinterpret_cast<IMAGE_NT_HEADERS*>(base+dos->e_lfanew);
-    auto damageAddress=reinterpret_cast<unsigned char*>(table[11]);
+    auto damageAddress=reinterpret_cast<unsigned char*>(table[ravenholm_abi::slot::TakeDamage]);
     assert(damageAddress>=base && damageAddress<base+nt->OptionalHeader.SizeOfImage);
-    auto killedAddress=reinterpret_cast<unsigned char*>(table[13]);
+    auto killedAddress=reinterpret_cast<unsigned char*>(table[ravenholm_abi::slot::Killed]);
     assert(killedAddress>=base && killedAddress<base+nt->OptionalHeader.SizeOfImage);
     std::puts("PASS: zombie Killed virtual slot 13 resolves inside Ravenholm for native GIB_ALWAYS.");
     std::free(allocated);
     auto grunt=reinterpret_cast<void(*)(entvars_t*)>(GetProcAddress(module,"monster_human_grunt"));
     assert(grunt);entity.pvPrivateData=nullptr;grunt(&entity.v);
     table=*reinterpret_cast<void***>(entity.pvPrivateData);
-    assert(reinterpret_cast<Classify>(table[8])(entity.pvPrivateData)==4);
+    assert(reinterpret_cast<Classify>(table[ravenholm_abi::slot::Classify])(entity.pvPrivateData)==4);
     assert(cremationAllyHecu(entity.pvPrivateData));
-    assert(reinterpret_cast<Classify>(table[8])(entity.pvPrivateData)==7);
+    assert(reinterpret_cast<Classify>(table[ravenholm_abi::slot::Classify])(entity.pvPrivateData)==7);
     std::puts("PASS: native HECU classification changes from military 4 to zombie faction 7.");
     std::free(allocated);
     std::puts("PASS: actual Win32 DLL loads; API 140 and exports resolve; Ravenholm zombie constructor and base ABI match.");

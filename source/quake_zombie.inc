@@ -87,6 +87,7 @@ static int __fastcall qzClassify(void*,void*){return 7;}
 static int __fastcall qzBloodColor(void*,void*){return 247;}
 static void __fastcall qzKilled(void* object,void*,entvars_t* attacker,int gib){auto e=qzObject(object);if(qzIs(e))qzDie(e,attacker,gib!=1);}
 static int __fastcall qzDamage(void* object,void*,entvars_t* inflictor,entvars_t* attacker,float amount,int bits){
+    if(enemyCombatBlocked(object,inflictor,attacker))return 0;
     auto e=qzObject(object);if(!qzIs(e)||e->v.impulse==QZDead||amount<=0)return 0;
     // Cremation energy/thermal attacks must accumulate like other monsters.
     // The Quake single-frame regeneration rule remains for ordinary bullets.
@@ -114,7 +115,7 @@ static void qzInstall(edict_t* e){
     if(!e->pvPrivateData)return;auto table=*reinterpret_cast<void***>(e->pvPrivateData);
     for(auto& t:qzTables){if(table==t->slots.data())return;if(table==t->original){*reinterpret_cast<void***>(e->pvPrivateData)=t->slots.data();return;}}
     auto t=std::make_unique<QZTable>();t->original=table;std::copy_n(table,t->slots.size(),t->slots.begin());
-    t->slots[8]=reinterpret_cast<void*>(&qzClassify);t->slots[11]=reinterpret_cast<void*>(&qzDamage);t->slots[13]=reinterpret_cast<void*>(&qzKilled);
+    t->slots[ravenholm_abi::slot::Classify]=reinterpret_cast<void*>(&qzClassify);t->slots[ravenholm_abi::slot::TakeDamage]=reinterpret_cast<void*>(&qzDamage);t->slots[ravenholm_abi::slot::Killed]=reinterpret_cast<void*>(&qzKilled);
     t->slots[14]=reinterpret_cast<void*>(&qzBloodColor);
     *reinterpret_cast<void***>(e->pvPrivateData)=t->slots.data();qzTables.push_back(std::move(t));
 }
@@ -136,9 +137,9 @@ static bool qzTouch(edict_t* e,edict_t* other){
     if(e->v.dmg>0&&valid(other)&&other->v.takedamage&&other->pvPrivateData){
         // Keep the existing undead/cultist alliance. Player allies remain targets.
         auto table=*reinterpret_cast<void***>(other->pvPrivateData);
-        int faction=reinterpret_cast<int(__thiscall*)(void*)>(table[8])(other->pvPrivateData);
+        int faction=reinterpret_cast<int(__thiscall*)(void*)>(table[ravenholm_abi::slot::Classify])(other->pvPrivateData);
         if(faction!=7){auto owner=e->v.owner;entvars_t* attacker=valid(owner)&&owner->serialnumber==int(e->v.dmg_save)?&owner->v:&e->v;
-            reinterpret_cast<TakeDamageFn>(table[11])(other->pvPrivateData,&e->v,attacker,e->v.dmg,0);qzSound(e,8);}
+            reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(other->pvPrivateData,&e->v,attacker,e->v.dmg,0);qzSound(e,8);}
         e->v.flags|=FL_KILLME;return true;
     }
     if(e->v.dmg>0){qzSound(e,7);e->v.dmg=0;e->v.solid=SOLID_NOT;e->v.velocity=Vector(0,0,0);e->v.avelocity=Vector(0,0,0);}

@@ -100,7 +100,11 @@ static void czCover(edict_t* e,const Vector& threat){
     e->v.fuser3=globals->time+3;e->v.fuser4=globals->time+1;czPath(e).replan=0;
 }
 static bool czObjectiveThink(edict_t* e,float dt){
-    if(e->v.weapons<0||!mansionActor(e)||mansionCZRouteTest)return false;
+    if(e->v.weapons<0||!mansionActor(e)
+#ifdef CREMATION_ENABLE_VALIDATION
+       ||mansionCZRouteTest
+#endif
+       )return false;
     if(!e->v.iuser1){if(e->v.origin.x>=-1160&&e->v.origin.x<=456&&e->v.origin.y>=-1064&&e->v.origin.y<=552)czChooseEntrance(e);else{
         auto close=czEnemy(e);if(valid(close)&&length2d(close->v.origin-e->v.origin)<=64&&length(center(close)-(e->v.origin+Vector(0,0,40)))<=90)czFire(e,close);
         return true;}}

@@ -3,6 +3,9 @@ from pathlib import Path
 import hashlib,json,os,subprocess,time
 from PIL import Image,ImageDraw
 ROOT=Path(__file__).resolve().parents[2];MOD=ROOT/'Cremation'
+if __name__=='__main__' and os.environ.get('CREMATION_VALIDATION_DLL_ACTIVE')!='1':
+    from validation_dll import run_with_validation_dll
+    run_with_validation_dll(MOD,Path(__file__).resolve());raise SystemExit
 for prop in json.loads((MOD/'assets-source/vostok-cover/installed.json').read_text()):
     assert Path(prop['source']).read_bytes()==(MOD/prop['installed']).read_bytes()
 existing=set(ROOT.glob('*.bmp'))|set(MOD.glob('*.bmp'))

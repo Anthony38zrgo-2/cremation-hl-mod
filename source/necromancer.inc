@@ -18,8 +18,8 @@ static int __fastcall necroClassify(void* object,void*) {
 static void necroInstall(edict_t* e) {
     if(!e->pvPrivateData)return;auto table=*reinterpret_cast<void***>(e->pvPrivateData);
     for(auto& v:necroVtables)if(v.table==table)return;
-    DWORD old;if(VirtualProtect(table+8,sizeof(void*),PAGE_READWRITE,&old)){
-        necroVtables.push_back({table,table[8]});table[8]=reinterpret_cast<void*>(&necroClassify);DWORD unused;VirtualProtect(table+8,sizeof(void*),old,&unused);
+    DWORD old;if(VirtualProtect(table+ravenholm_abi::slot::Classify,sizeof(void*),PAGE_READWRITE,&old)){
+        necroVtables.push_back({table,table[ravenholm_abi::slot::Classify]});table[ravenholm_abi::slot::Classify]=reinterpret_cast<void*>(&necroClassify);DWORD unused;VirtualProtect(table+ravenholm_abi::slot::Classify,sizeof(void*),old,&unused);
     }
 }
 static bool necromancer(edict_t* p){return valid(p)&&p->v.health>0&&p->v.viewmodel&&(!std::strcmp(text(p->v.viewmodel),"models/v_hgun.mdl")||!std::strcmp(text(p->v.viewmodel),NecroView));}
@@ -32,10 +32,10 @@ static void necroPrecache(){
 }
 static void necroHurt(edict_t* e,edict_t* owner,float amount,bool burn){
     if(!aliveEnemy(e)||necroMinion(e)||!e->pvPrivateData)return;
-    auto table=*reinterpret_cast<void***>(e->pvPrivateData);int classification=reinterpret_cast<int(__thiscall*)(void*)>(table[8])(e->pvPrivateData);
+    auto table=*reinterpret_cast<void***>(e->pvPrivateData);int classification=reinterpret_cast<int(__thiscall*)(void*)>(table[ravenholm_abi::slot::Classify])(e->pvPrivateData);
     if(classification==11||classification==3||classification==1)return;
     const char* oldModel=text(e->v.model);
-    reinterpret_cast<int(__thiscall*)(void*,entvars_t*,entvars_t*,float,int)>(table[11])(e->pvPrivateData,&owner->v,&owner->v,amount,(burn?(1<<3):(1<<6))|(1<<12));
+    reinterpret_cast<int(__thiscall*)(void*,entvars_t*,entvars_t*,float,int)>(table[ravenholm_abi::slot::TakeDamage])(e->pvPrivateData,&owner->v,&owner->v,amount,(burn?(1<<3):(1<<6))|(1<<12));
     if(burn&&valid(e)&&!aliveEnemy(e))for(auto& pair:necroCharred)if(!std::strcmp(oldModel,pair[0])){engine.pfnSetModel(e,pair[1]);break;}
 }
 static void necroIgnite(edict_t* p,const Vector& origin){

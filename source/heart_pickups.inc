@@ -1,13 +1,15 @@
 // Health loot is separate from physical gibs. Lifetimes and death-roll marks
 // use saved native entvars; no corpse can roll again when damaged or gibbed.
 static constexpr int HeartRolled=1<<29;
+#ifdef CREMATION_ENABLE_VALIDATION
 static void heartProbeFrame();
+#endif
 static constexpr const char* HeartModel="models/cremation/heart_pickup.mdl";
 static constexpr const char* HeartSquare="sprites/cremation/heart_red_square.spr";
 static bool heartIs(edict_t* e){return valid(e)&&!std::strcmp(text(e->v.targetname),"cremation_heart");}
 static bool heartRollDeath(edict_t* e){
     if(!valid(e)||!(e->v.flags&FL_MONSTER)||!e->pvPrivateData||(e->v.spawnflags&HeartRolled))return false;
-    auto table=*reinterpret_cast<void***>(e->pvPrivateData);int faction=reinterpret_cast<int(__thiscall*)(void*)>(table[8])(e->pvPrivateData);
+    auto table=*reinterpret_cast<void***>(e->pvPrivateData);int faction=reinterpret_cast<int(__thiscall*)(void*)>(table[ravenholm_abi::slot::Classify])(e->pvPrivateData);
     if(faction==0||faction==1||faction==2||faction==3||faction==11)return false;
     e->v.spawnflags|=HeartRolled;
     return engine.pfnRandomLong(1,100)<=10;

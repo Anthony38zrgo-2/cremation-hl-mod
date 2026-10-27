@@ -5,8 +5,10 @@ static bool czObjectiveThink(edict_t* e,float dt);
 static bool czObjectiveOwns(edict_t* e);
 static bool czBombActive();
 static void czBombFrame();
+#ifdef CREMATION_ENABLE_VALIDATION
 static void czProbeFrame();
 static void czAnimationProbeFrame();
+#endif
 static constexpr const char* CZModel="models/cremation/czero/zombie_knife.mdl";
 static constexpr const char* CZGun="models/cremation/czero/p_knife.mdl";
 static bool czIs(edict_t* e){return valid(e)&&!std::strcmp(text(e->v.classname),CZClass);}
@@ -23,11 +25,12 @@ static void __fastcall czKilled(void* object,void*,entvars_t* attacker,int gib){
     }
 }
 static int __fastcall czDamage(void* object,void*,entvars_t* inflictor,entvars_t* attacker,float amount,int bits){
+    if(enemyCombatBlocked(object,inflictor,attacker))return 0;
     auto e=czObject(object);if(!valid(e)||e->v.takedamage==DAMAGE_NO||amount<=0)return 0;
     if(e->v.deadflag!=DEAD_NO){if(amount>=40&&!(bits&(1<<12)))czKilled(object,nullptr,attacker,2);return 0;}
     // Do not inherit Ravenholm HGrunt's scripted 50-HP survival clamp.
     e->v.health-=amount;
-    if(e->v.health<=0){auto table=*reinterpret_cast<void***>(object);reinterpret_cast<void(__thiscall*)(void*,entvars_t*,int)>(table[13])(object,attacker,(bits&(1<<13))?2:((bits&(1<<12))?1:0));}
+    if(e->v.health<=0){auto table=*reinterpret_cast<void***>(object);reinterpret_cast<void(__thiscall*)(void*,entvars_t*,int)>(table[ravenholm_abi::slot::Killed])(object,attacker,(bits&(1<<13))?2:((bits&(1<<12))?1:0));}
     return 1;
 }
 struct CZTable{void** base;std::array<void*,128> slots;};
@@ -38,8 +41,8 @@ static void czInstall(edict_t* e){
     auto t=std::make_unique<CZTable>();t->base=table;std::copy_n(table,128,t->slots.begin());
     // Isolated damage/death remove donor scripted immortality while preserving
     // native studio TraceAttack/hitgroups and all shared weapon-effect hooks.
-    t->slots[11]=reinterpret_cast<void*>(&czDamage);t->slots[13]=reinterpret_cast<void*>(&czKilled);
-    t->slots[8]=reinterpret_cast<void*>(&czClassify);
+    t->slots[ravenholm_abi::slot::TakeDamage]=reinterpret_cast<void*>(&czDamage);t->slots[ravenholm_abi::slot::Killed]=reinterpret_cast<void*>(&czKilled);
+    t->slots[ravenholm_abi::slot::Classify]=reinterpret_cast<void*>(&czClassify);
     *reinterpret_cast<void***>(e->pvPrivateData)=t->slots.data();czTables.push_back(std::move(t));
     humanGibInstall(e);weaponBloodInstall(e);
 }
@@ -89,7 +92,7 @@ static void czFire(edict_t* e,edict_t* target){
     Vector from=e->v.origin+Vector(0,0,40),to=center(target);
     TraceResult tr{};engine.pfnTraceHull(&from.x,&to.x,0,1,e,&tr);
     if(tr.pHit==target&&target->pvPrivateData&&target->v.takedamage){auto table=*reinterpret_cast<void***>(target->pvPrivateData);
-        reinterpret_cast<TakeDamageFn>(table[11])(target->pvPrivateData,&e->v,&e->v,20.f,1<<7);
+        reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(target->pvPrivateData,&e->v,&e->v,20.f,1<<7);
         engine.pfnEmitSound(e,CHAN_WEAPON,"cremation/czero/knife_hit1.wav",1,ATTN_NORM,0,100);
     }else engine.pfnEmitSound(e,CHAN_WEAPON,"cremation/czero/knife_slash1.wav",1,ATTN_NORM,0,100);
     e->v.dmgtime=globals->time+.65f/(slowed(e)?balance::SlowFactor:1.f);czSequence(e,76);e->v.frame=0;

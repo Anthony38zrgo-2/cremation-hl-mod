@@ -21,7 +21,7 @@ static bool linkEnemy(edict_t* e) {
     if(!aliveEnemy(e)||!e->v.takedamage||!e->pvPrivateData)return false;
     auto table=*reinterpret_cast<void***>(e->pvPrivateData);
     using ClassifyFn=int(__thiscall*)(void*);
-    int faction=reinterpret_cast<ClassifyFn>(table[8])(e->pvPrivateData);
+    int faction=reinterpret_cast<ClassifyFn>(table[ravenholm_abi::slot::Classify])(e->pvPrivateData);
     return faction!=3&&faction!=11; // Native human passives and player allies.
 }
 static Vector linkDirection(edict_t* p) {
@@ -291,7 +291,7 @@ static void linkChain(edict_t* player,edict_t* primary,float damage){
     // never leave dangling traversal pointers or let a tick hit someone twice.
     for(size_t i=1;i<linked.size();++i){auto e=linked[i];if(!linkEnemy(e))continue;
         LinkLock death{};death.target=e;death.serial=e->serialnumber;death.lastOrigin=e->v.origin;death.lastAngles=e->v.angles;death.lastHeight=e->v.maxs.z-e->v.mins.z;
-        auto table=*reinterpret_cast<void***>(e->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[11])(e->pvPrivateData,&player->v,&player->v,damage,(1<<10)|(1<<12));
+        auto table=*reinterpret_cast<void***>(e->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(e->pvPrivateData,&player->v,&player->v,damage,(1<<10)|(1<<12));
         if(!aliveEnemy(e))linkDeathEffect(death,e);
     }
 }
@@ -349,7 +349,7 @@ static void linkPostThink(edict_t* p,bool active,bool held) {
     state.lastHeight=target->v.maxs.z-target->v.mins.z;
     float healthBefore=target->v.health;
     auto table=*reinterpret_cast<void***>(target->pvPrivateData);
-    auto takeDamage=reinterpret_cast<TakeDamageFn>(table[11]);
+    auto takeDamage=reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage]);
     int result=takeDamage(target->pvPrivateData,&p->v,&p->v,dps*dt,(1<<10)|(1<<12)); // ENERGYBEAM | NEVERGIB.
     state.connectedTime+=dt;
     if(result>0||target->free||target->serialnumber!=state.serial||target->v.health<healthBefore) {

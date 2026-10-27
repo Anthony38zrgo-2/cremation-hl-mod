@@ -3,6 +3,9 @@ from pathlib import Path
 import os,subprocess,time
 ROOT=Path(__file__).resolve().parents[2]
 MOD=ROOT/'Cremation'
+if __name__=='__main__' and os.environ.get('CREMATION_VALIDATION_DLL_ACTIVE')!='1':
+    from validation_dll import run_with_validation_dll
+    run_with_validation_dll(MOD,Path(__file__).resolve());raise SystemExit
 env=dict(os.environ,CREMATION_MANSION_VALIDATE='1')
 log=MOD/'validation-david-mansion-engine.txt'
 with log.open('wb') as output:
@@ -20,11 +23,13 @@ with log.open('wb') as output:
             time.sleep(.5)
         text=(MOD/'startup-diagnostics.txt').read_text(errors='replace')
         (MOD/'validation-david-mansion-diagnostics.txt').write_text(text)
-        normal=sum(l.startswith('David spawn ') for l in text.splitlines())
+        davids=sum(l.startswith('David spawn ') for l in text.splitlines())
+        steves=sum(l.startswith('Steve spawn ') for l in text.splitlines())
+        normal=davids+steves
         assert p.poll() is None,f'engine exited {p.returncode}'
         assert 'MansionComplete four waves cleared' in text
-        assert normal>=60 and 'David ERROR' not in text
-        print(f'PASS: cs_mansion completed all four existing mixed waves; {normal} normal-zombie spawns used David.')
+        assert normal>=60 and davids>0 and steves>0 and 'David ERROR' not in text
+        print(f'PASS: cs_mansion completed all four existing mixed waves; {normal} normal-zombie spawns included {davids} David and {steves} Steve.')
     finally:
         if p.poll() is None:p.terminate()
         p.wait(timeout=5)

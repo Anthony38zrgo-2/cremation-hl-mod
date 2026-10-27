@@ -3,6 +3,9 @@ from pathlib import Path
 import os,subprocess,time,json
 from PIL import Image,ImageDraw
 ROOT=Path(__file__).resolve().parents[2];MOD=ROOT/'Cremation'
+if __name__=='__main__' and os.environ.get('CREMATION_VALIDATION_DLL_ACTIVE')!='1':
+    from validation_dll import run_with_validation_dll
+    run_with_validation_dll(MOD,Path(__file__).resolve());raise SystemExit
 for row in json.loads((MOD/'assets-source/tactical-hud/installed.json').read_text()):assert Path(row['source']).read_bytes()==(MOD/row['installed']).read_bytes()
 existing=set(ROOT.glob('*.bmp'))|set(MOD.glob('*.bmp'))
 env=dict(os.environ,CREMATION_HUD_VALIDATE='1');env['PATH']=r'C:\Program Files (x86)\Steam'+os.pathsep+env['PATH']

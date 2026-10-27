@@ -279,8 +279,8 @@ void makeEnemy(edict_t*& slot, int index, const Vector& origin, int victimIndex)
     slot->v.classname = addString("monster_zombie");
     Victim& victim = victims[victimIndex];
     victim.entity = slot;
-    victimVtable[11] = memberAddress(&Victim::takeDamage);
-    victimVtable[13] = memberAddress(&Victim::killed);
+    victimVtable[ravenholm_abi::slot::TakeDamage] = memberAddress(&Victim::takeDamage);
+    victimVtable[ravenholm_abi::slot::Killed] = memberAddress(&Victim::killed);
     victim.vtable = victimVtable;
     slot->pvPrivateData = &victim;
 }
@@ -706,7 +706,7 @@ int main() {
     assert(hud[4] == bounce_balance::HudSlot);
     assert(hud[5] == bounce_balance::HudSlotPos);
     assert(hud[6] == bounce::carrierWeaponId());
-    assert(hud[7] == 0);
+    assert(hud[7] == 1); // Selectable before ammo pickup.
     assert(bounce::isCarrierClass("weapon_crossbow"));
     assert(bounce::isCarrierClass("weapon_bounce_shotgun"));
     assert(!bounce::isCarrierClass("weapon_shotgun"));

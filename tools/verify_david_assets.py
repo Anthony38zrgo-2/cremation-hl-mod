@@ -4,6 +4,7 @@ import json,struct,re
 import numpy as np
 from scipy.spatial.transform import Rotation
 from PIL import Image
+from verify_hotd2_strikes import verify_strikes
 from convert_hotd2_david import MOD,BASE,OUT,DEST
 
 class Studio:
@@ -72,6 +73,8 @@ def main():
             r,p=mdl.pose(index,f);rs,ps=source_pose(OUT/(seq['name']+'.smd'),f)
             error=float(np.linalg.norm(p-ps,axis=1).max());angle_error=float(np.max(np.abs(r-rs)));assert error<.08,(seq['name'],f,error);assert angle_error<.003,(seq['name'],f,angle_error)
             samples.append(dict(sequence=seq['name'],frame=f,max_bone_position_error=error,max_rotation_matrix_error=angle_error))
+    strikes=verify_strikes(mdl,report)
+    (BASE/'strike-validation.json').write_text(json.dumps(strikes,indent=2)+'\n')
     mesh=mdl.geometry();assert len(mesh['faces'])==721
     pp=np.array(mesh['vertices'])[np.array(mesh['faces'])];volume=float(np.einsum('ij,ij->i',pp[:,0],np.cross(pp[:,1],pp[:,2])).sum()/6);assert volume<0,'GoldSrc clockwise winding required'
     height=float(np.ptp(np.array(mesh['vertices'])[:,2]));assert 71.8<height<72.2
@@ -85,6 +88,26 @@ def main():
     for label,seq,frame,body in [('Intacto',0,0,0),('Carrera',2,15,0),('Heridas y arrastre',20,25,2*16+3*64+3*256+2*262144+1048576)]:
         entry=mdl.geometry(seq,frame,body);entry.update(name=label,sequence=seq,frame=frame,body=body);pose_entries.append(entry)
     (BASE/'compiled-preview.json').write_text(json.dumps(dict(textures=textures,poses=pose_entries),separators=(',',':')))
+    prone_samples=[]
+    for index,seq in enumerate(report['sequences']):
+        if not (seq['name'].startswith('prone_') or seq['name'].startswith('crawl')):continue
+        heights=[]
+        for frame in range(seq['frames']):
+            v=np.array(mdl.geometry(index,frame)['vertices'])
+            heights.append([float(v[:,2].min()),float(v[:,2].max())])
+        assert min(v[0] for v in heights)>-0.5,(seq['name'],'floor penetration',heights)
+        assert max(v[1] for v in heights)<32,(seq['name'],'upright pose',heights)
+        so=mdl.i(168)+index*176
+        if seq['event']:
+            assert mdl.i(so+48)==1
+            event=mdl.i(so+52)
+            assert mdl.i(event)==seq['event_frame'] and mdl.i(event+4)==seq['event']
+        prone_samples.append(dict(sequence=seq['name'],frames=seq['frames'],height_range=heights))
+    poses=[]
+    for label,seq,frame in [('Arrastre inicio',20,0),('Arrastre impulso',20,8),('Arrastre fin',20,16),('Ataque',22,25),('Muerte inicio',25,0),('Muerte mitad',25,16),('Muerte fin',25,33)]:
+        entry=mdl.geometry(seq,frame);entry.update(name=label);poses.append(entry)
+    (BASE/'prone-preview.json').write_text(json.dumps(dict(textures=textures,poses=poses),separators=(',',':')))
+    (BASE/'prone-readback.json').write_text(json.dumps(prone_samples,indent=2)+'\n')
     result=dict(compiled_bones=16,compiled_triangles=721,compiled_height=height,compiled_textures=28,pose_samples=samples,clockwise_signed_volume=volume)
     (BASE/'compiled-readback.json').write_text(json.dumps(result,indent=2)+'\n')
     print(f'PASS: {len(samples)} compiled poses match source SMD, 721 triangles, 28 textures, 72-unit height, original UV and clockwise winding.')

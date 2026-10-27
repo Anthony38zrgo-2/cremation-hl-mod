@@ -4,13 +4,14 @@ Implementado e instalado el 26 de octubre de 2026. Sustituye únicamente a `mons
 
 ## Recursos y animaciones
 
-`models/cremation/hotd2/david/david.mdl`: 16 huesos, 721 triángulos, 28 texturas y 26 secuencias. Incluye espera, caminar, correr, tres ataques, reacciones de dolor por región, muertes, el arrastre original 0x3E7, tres ataques en postura tumbada y una muerte tumbada. Las secuencias tumbadas conservan la postura de arrastre del cuerpo y animan brazos/cabeza desde los clips originales. La altura inicial es de 72 unidades; al tumbarse el hull mide 32×32×24. Las velocidades de diseño son 42 al caminar, 130 al correr y 16 al arrastrarse. Los bucles se cierran de forma explícita para StudioMDL.
+El modelo tiene 16 huesos, 721 triangulos, 28 texturas y 26 secuencias. Incluye espera, caminar, correr, tres ataques, dolor, muertes y el arrastre original 0x3E7. El hull siempre mide 32x32x72; perder una pierna activa el arrastre sin bajar el cuerpo. Velocidades: 42 al caminar, 130 al correr y 16 al arrastrarse.
+
 
 Las variantes heridas y muñones proceden del banco original. Manos, pies y cabeza pueden ocultarse completamente; una amputación proximal también oculta sus descendientes. El abdomen conserva las asignaciones originales de vértices entre torso y pelvis. La variante carbonizada comparte exactamente rig, secuencias y bodygroups. Las texturas conservan sus colores originales, incluidas las heridas verdes de esta edición de HOTD2.
 
 La locomoción cambia de secuencia solo al cambiar entre caminar, correr y arrastrarse. El `MoveExecute` nativo se invoca en cada paso de ruta; volver a llamar `SetActivity` en cada paso reiniciaba el temporizador y entrecortaba la animación. Las tres animaciones de ataque quedan disponibles bajo la actividad de melee que realmente pide CZombie. Se seleccionan cíclicamente y cada animación acepta un solo evento de daño, evitando repetir el golpe si el motor vuelve a despachar el mismo evento.
 
-El mapeo de dolor se contrastó con la tabla original de kind 7: cabeza 0x3D1, pecho 0x3D6, estómago 0x3CE, brazo derecho/izquierdo 0x3D5/0x3D3 y pierna derecha/izquierda 0x3C1/0x3C0. Los ataques 0x3F4/0x3F5 usan los cuadros de contacto originales 25/28, traducidos desde ticks de 60 Hz a frames de 30 Hz. El daño de sus eventos sigue siendo el del zombie de Cremation.
+El mapeo de dolor se contrastó con la tabla original de kind 7: cabeza 0x3D1, pecho 0x3D6, estómago 0x3CE, brazo derecho/izquierdo 0x3D5/0x3D3 y pierna derecha/izquierda 0x3C1/0x3C0. Los golpes usan ahora 0x3EA/0x3E9/0x3C9 del banco compatible de Steve, con contacto en los cuadros 21/27/20. Los clips anteriores 0x3F4/0x3F5 son embestidas de mordida. Detalles: `source/HOTD2_MELEE_FIX.md`. El daño de sus eventos sigue siendo el del zombie de Cremation.
 
 El modelo usa múltiples bodygroups cuyo entero supera 255. `Cremation/delta.lst` amplía exclusivamente `entity_state_t.body` a 32 bits para transmitirlos íntegros al cliente. Los campos de jugador y entidades custom y todos los demás parámetros permanecen como en la tabla de Valve usada como base. No hace falta recompilar la DLL cliente: GoldSrc negocia las descripciones delta del servidor.
 
@@ -18,17 +19,15 @@ El modelo usa múltiples bodygroups cuyo entero supera 255. `Cremation/delta.lst
 
 El objetivo debe ser un jugador visible al que el zombie esté persiguiendo por su ruta nativa, a 128–768 unidades. Si existe otro enemigo vivo del jugador en un radio de 256 unidades alrededor del jugador, David camina. Se consideran todos los tipos hostiles, usando la relación nativa, con filtro de altura y paredes que separan las zonas. Los aliados, minions y sentries del jugador no cuentan.
 
-Solo puede correr un David por jugador. Se mantiene una reserva válida y se asignan las nuevas de forma determinista. Para entrar exige 0,4 s de zona libre; para reanudar, 320 unidades despejadas y 1 s de enfriamiento. Se evalúa cada 0,2 s. La pérdida de una pierna, estar tumbado, un ataque, dolor, muerte, cambio de objetivo o pérdida de ruta cancela la carrera. El fallback de patrulla ya utiliza las actividades de David y respeta el arrastre.
 
 ## Daño localizado y muerte
 
 El modo actual (`cremation_david_local_damage 0`) usa una sola caja general por zombie y devuelve hitgroup genérico. No aplica heridas, amputaciones, gibs locales ni decapitación por disparo. Salud, resistencia, daño recibido y muerte los sigue gestionando el CZombie nativo; el gibbing general de seis piezas por daño extremo permanece activo. El sistema anatómico anterior se conserva y se puede reactivar poniendo el cvar a 1.
 
-Con el daño localizado activado, los umbrales son cabeza 35 % de la salud inicial y extremidades 25 %. Una cabeza desprendida produce muerte inmediata; las heridas y amputaciones no restan salud adicional. Los disparos usan cajas orientadas por hueso. La caja general en modo actual sigue los límites del hull de GoldSrc: 32×32×72 unidades de pie y 32×32×24 tumbado.
+Con el dano localizado activado, los umbrales son cabeza 35 % de la salud inicial y extremidades 25 %. Una cabeza desprendida produce muerte inmediata; las heridas y amputaciones no restan salud adicional. Los disparos usan cajas orientadas por hueso. El hull de David siempre mide 32x32x72 unidades.
 
 El golpe melee sigue usando el `CheckTraceHullAttack` nativo: una traza de alcance corto que daña un solo `pHit` por evento. La corrección de animaciones impide reinicios de ruta que repetían o cortaban eventos. Si se observan varios Davids golpeando al jugador en el mismo instante, son eventos independientes de varios NPC; la reserva actual limita a uno corriendo por jugador, pero no serializa sus ataques.
 
-David entra en estado tumbado al quedar por debajo del 50 % de su salud inicial. El estado se mantiene hasta morir; su locomoción pasa al arrastre, los ataques usan únicamente los clips tumbados y las reacciones de dolor mantienen la postura baja. Toda muerte no convertida en gib usa el clip tumbado, incluso si un golpe letal salta directamente desde más de la mitad de salud. Al morir se conserva el hull reducido.
 
 ## Restos
 
@@ -38,13 +37,13 @@ Al reactivar daño localizado, las piezas locales empiezan a desvanecerse a los 
 
 ## Guardado y compatibilidad
 
-La extensión `CremationDavid1` guarda versión, máscara anatómica, contadores regionales, salud inicial y estado tumbado. Al restaurar se reinstalan los hooks y se recalculan objetivos y reservas de carrera; si está vivo y por debajo del umbral, se restaura con hull y postura tumbados. Los restos de un segundo se descartan. Los registros de ejecución comprueban edict y serial.
+La extension `CremationDavid1` conserva el campo antiguo prone para leer partidas existentes, pero lo limpia al restaurar. Los Davids guardados tumbados recuperan el hull de pie y una secuencia erguida. Se reinstalan hooks y se recalculan objetivos y reservas de carrera. Los restos de un segundo se descartan.
 
 Se encadenan los wrappers existentes de sangre, voces, loot y gibs. Los hooks de David utilizan una tabla clonada y verifican los puntos de entrada del donor actual. No se cambia la IA de Quake, rápidos, venenosos, CZERO, HECU o minions. Las sentries son entidades base con FL_MONSTER, por lo que se excluyen antes de llamar métodos exclusivos de CBaseMonster.
 
 ## Configuración y reconstrucción
 
-Los valores por defecto están registrados en el servidor: daño localizado desactivado y pistola 9 mm (Ricochet) del inventario inicial seleccionada al entrar, con sus cargas completas. El estado tumbado se activa al bajar de la mitad de la salud inicial. `exec config/david.cfg` permite aplicar la configuración explícita. `cremation_david 0` deja los nuevos spawns con el modelo anterior; usar un mapa/partida nueva para un cambio completo.
+Los valores por defecto estan registrados en el servidor: dano localizado desactivado y pistola 9 mm (Ricochet) seleccionada al entrar, con sus cargas completas. La postura tumbada por salud esta desactivada. `exec config/david.cfg` permite aplicar la configuracion. `cremation_david 0` deja los nuevos spawns con el modelo anterior; usa un mapa o partida nueva para un cambio completo.
 
 ```powershell
 python tools/convert_hotd2_david.py
@@ -67,10 +66,14 @@ El build dirigido no ejecuta `build_mod.py`, no reinstala otros assets y conserv
 - Think nativo sin sustitución: detectó al jugador y recorrió aproximadamente 278–300 unidades en la prueba de cinco segundos, usando carrera contextual.
 - `cs_mansion`: las cuatro oleadas mixtas existentes completaron el ensayo, con 91 spawns normales usando David, sin errores de precache. El ensayo mata 244 enemigos muy rápidamente; su servidor hijo necesita `-num_edicts 4096` para soportar los gibs de 25 s acumulados. No se cambió el presupuesto de entidades ni los tiempos de la partida normal.
 
-La revisión actual desactiva el daño anatómico y sustituye los hitboxes de disparo por una caja general; añade la pistola al inicio y el estado tumbado por umbral de salud, con ataques y muerte en clips tumbados. Se recompiló e instaló la DLL. No se ejecutaron pruebas de servidor ni una partida gráfica después de estos cambios; los resultados anteriores describen compilaciones previas.
+La revision actual desactiva la postura tumbada automatica, restaura el hull y las animaciones erguidas al cargar partidas anteriores y elimina el ajuste especial de punteria tumbada. El arrastre solo se activa al perder una pierna. Se recompilo e instalo la DLL.
 
 Evidencia: `validation-david-diagnostics.txt`, `validation-david-engine.txt`, `validation-david-mansion-diagnostics.txt`, `validation-david-mansion-engine.txt` y `assets-source/hotd2-david/compiled-readback.json`.
 
 El test general `test_ricochet.cpp` falla en su aserción antigua `discs.empty()` de la línea 95; se reprodujo también compilando el proxy de HEAD anterior a David. `verify_mod.py` falla por sus expectativas de armas en rapidcore, cuyo BSP no fue modificado aquí. No se consideran aprobadas esas comprobaciones generales.
 
 Queda la aceptación visual/jugable en una sesión gráfica: sensación de carrera, sincronía perceptiva de contactos, todas las armas y una partida guardada/cargada completa. Se verificó el serializador real de los campos nuevos, no un recorrido completo de savegame gráfico. Para probar el cambio instalado, cerrar completamente Half-Life y comenzar una partida nueva de Cremation.
+
+## Postura tumbada desactivada - 2026-10-26
+
+El campo antiguo `prone` se conserva para compatibilidad de guardado, pero se descarta al restaurar. Las secuencias de ataque tumbado permanecen en el MDL y ya no se seleccionan para David.

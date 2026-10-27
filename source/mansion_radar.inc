@@ -3,7 +3,7 @@ static float mansionRadarAt=0;
 static void mansionRadarPrecache(){mansionRadarMessage=engine.pfnRegUserMsg("HordeRadar",-1);mansionRadarAt=0;}
 static bool mansionRadarEligible(edict_t* e){
     if(!aliveEnemy(e)||czIs(e)||!e->pvPrivateData||necroMinion(e)||bounce::isSentry(e))return false;
-    auto table=*reinterpret_cast<void***>(e->pvPrivateData);int faction=reinterpret_cast<int(__thiscall*)(void*)>(table[8])(e->pvPrivateData);
+    auto table=*reinterpret_cast<void***>(e->pvPrivateData);int faction=reinterpret_cast<int(__thiscall*)(void*)>(table[ravenholm_abi::slot::Classify])(e->pvPrivateData);
     return faction!=0&&faction!=2&&faction!=3&&faction!=11;
 }
 static void mansionRadarFrame(){

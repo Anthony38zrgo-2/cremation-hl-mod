@@ -1,0 +1,17 @@
+# Johnny zombie
+
+Johnny uses the recovered HOTD2 PC rig, textures, and motion clips. Spawn him directly with the `monster_johnny` map classname, or let normal `monster_zombie` spawns select him using `cremation_johnny_chance` (default `0.1`). The existing `cremation_david` switch controls the shared David-family implementation.
+
+His walk sequence is compiled at 42 units per second, matching David. Johnny chases first, throws from 112–320 units, and switches to axe slashes inside 112 units. Each throw launches one physical axe at 480 units per second and removes that axe from the corresponding hand. The two-bit saved axe mask starts at `3`, so he can launch at most two axes in one life. Thrown axes use the active `sk_zombie_dmg_one_slash` skill value.
+
+Each throw keeps its launch target and last-aim position separate from the zombie AI's changing enemy pointer. The release event can launch while the target is temporarily occluded; if the animation event or entity creation fails, the end-of-sequence fallback retries once and restores locomotion so Johnny cannot remain frozen in the throw pose.
+
+Death cancels throw and guard state before native scheduling, selects a standing death clip, and resets its playback rate. Dead actors cannot resume locomotion or emit delayed melee/axe events. `python tools/check_hotd2_deaths.py` exercises six real HLDS death scenarios for David, Steve and Johnny, including death during a throw, a scripted kill during guard and a zero playback rate; it checks both animation progression and completion.
+
+The native death activity is selected once before `Killed` and cached through `GetDeathActivity` (verified donor slot 114). Its first playback is also the final choice: subsequent activity requests cannot replace the clip or reset its frame/event clock. This removes the provisional simple death followed by another native fall, and also prevents repeated requests from producing a visible twitch. The engine fixture checks every server frame for sequence changes or frame rewinds and explicitly sends duplicate and conflicting death requests after playback begins.
+
+Johnny's five death clips come from the shared `zom.bin` bank: `0x3DB`, `0x3DA`, `0x3CC`, `0x3DC`, and `0x3DE`. The previously assigned `ono.bin` clips `0x3EB`–`0x3EE` were standing reactions, so reaching their final frame still left the corpse upright. Conversion now rejects death clips whose final head/pelvis remain standing. The real-engine check also evaluates the installed model's final bone positions for all five deaths, rather than accepting frame progression alone. `python tools/convert_hotd2_johnny.py --actor-only` rebuilds the actor and charred actor without replacing projectiles or gibs.
+
+While Johnny still has an axe, the first positive hit from a player triggers his one-time guard clip. He takes no damage for one second while it plays; after that the native zombie schedule resumes. The saved guard flag prevents a second defense. Once no axes remain, whether thrown or lost with a severed arm, Johnny no longer throws or guards and continues with the shared zombie melee behavior using axe-free hands.
+
+The converter in `tools/convert_hotd2_johnny.py` builds the actor, charred palette, body-part gibs, and right/left projectile meshes from `assets-source/hotd2-johnny`. Material alpha follows the extracted HOTD2 TSP rule; opaque source passes ignore stray texture alpha, while masked hair and cutout passes retain it.

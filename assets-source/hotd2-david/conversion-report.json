@@ -1,5 +1,5 @@
 {
-  "source": "HOTD2 PC original znsam2.bin/zom.bin",
+  "source": "HOTD2 PC original znsam2.bin/zom.bin/hzom.bin",
   "scale": 4.159275629140744,
   "floor": 2.1967899332578975,
   "bones": {
@@ -437,43 +437,43 @@
     },
     {
       "name": "attack_right",
-      "source_id": 1012,
-      "frames": 46,
+      "source_id": 1002,
+      "frames": 35,
       "activity": 30,
       "loop": false,
       "speed": 0,
       "event": 1,
-      "event_frame": 25,
+      "event_frame": 21,
       "discarded_root_travel": [
-        2.30007931185019,
-        0.06904397436531852
+        59.12618219832617,
+        -0.5535995367553687
       ]
     },
     {
       "name": "attack_left",
-      "source_id": 1013,
-      "frames": 49,
+      "source_id": 1001,
+      "frames": 41,
       "activity": 30,
       "loop": false,
       "speed": 0,
       "event": 2,
-      "event_frame": 28,
+      "event_frame": 27,
       "discarded_root_travel": [
-        64.68921176566418,
-        0.0
+        49.105652572810975,
+        -2.654033647660436
       ]
     },
     {
       "name": "attack_both",
-      "source_id": 1013,
-      "frames": 49,
-      "activity": 30,
+      "source_id": 969,
+      "frames": 31,
+      "activity": 31,
       "loop": false,
       "speed": 0,
       "event": 3,
-      "event_frame": 28,
+      "event_frame": 20,
       "discarded_root_travel": [
-        64.68921176566418,
+        29.114929403985208,
         0.0
       ]
     },
@@ -675,21 +675,21 @@
     },
     {
       "name": "crawl",
-      "source_id": 999,
-      "frames": 51,
+      "source_id": 1051,
+      "frames": 17,
       "activity": 48,
       "loop": true,
       "speed": 16,
       "event": 0,
       "event_frame": 0,
       "discarded_root_travel": [
-        0.0,
-        0.0
+        36.02597829241589,
+        0.026619363354039065
       ]
     },
     {
       "name": "crawl_idle",
-      "source_id": 999,
+      "source_id": 1054,
       "frames": 1,
       "activity": 18,
       "loop": true,
@@ -711,8 +711,8 @@
       "event": 1,
       "event_frame": 25,
       "discarded_root_travel": [
-        0.0,
-        0.0
+        2.30007931185019,
+        0.06904397436531852
       ]
     },
     {
@@ -725,7 +725,7 @@
       "event": 2,
       "event_frame": 28,
       "discarded_root_travel": [
-        0.0,
+        64.68921176566418,
         0.0
       ]
     },
@@ -739,14 +739,14 @@
       "event": 3,
       "event_frame": 28,
       "discarded_root_travel": [
-        0.0,
+        64.68921176566418,
         0.0
       ]
     },
     {
       "name": "prone_die",
-      "source_id": 987,
-      "frames": 40,
+      "source_id": 1028,
+      "frames": 34,
       "activity": 36,
       "loop": false,
       "speed": 0,
@@ -761,8 +761,8 @@
   "textures": 28,
   "main_triangles": 721,
   "sha256": {
-    "models/cremation/hotd2/david/david.mdl": "481e03bde166af6fbfc4159918a3fab1277ccf129ad37f210706d1456cdb3064",
-    "models/cremation/hotd2/david/david_charred.mdl": "55e831ff459edb245f33d5743a76663300ef954e173322778fb81a717b6a9049",
+    "models/cremation/hotd2/david/david.mdl": "88fedba4d4dd11b97d310a633cbba4ee1aa4ad118eaa779c17e3e6cef9492257",
+    "models/cremation/hotd2/david/david_charred.mdl": "7c0554f6227a8582caf8b4952e5ea788f246c4e66c854b22dca7e98592daf90b",
     "models/cremation/hotd2/david/part_02.mdl": "c08335fa2cfa0e7de8da2f4c238eb14254851d778679df4f3373623143338207",
     "models/cremation/hotd2/david/part_03.mdl": "776fbf58a579c66d860041ea65d1956d91413092921c29674df5a117d77cafed",
     "models/cremation/hotd2/david/part_04.mdl": "5211384d269de10583d757e579f056aca9d0efe0960f1f4b7d1590da2ae45a22",
@@ -787,8 +787,11 @@
     "left_arm": 979,
     "right_leg": 961,
     "left_leg": 960,
-    "attack_table": "0x00592F18[kind][variant]",
+    "attack_table": "0x00592F18[8][0] shared 16-node strike bank",
     "attack_hit_ticks_60Hz": {
+      "0x3EA": 41,
+      "0x3E9": 54,
+      "0x3C9": 40,
       "0x3F4": 50,
       "0x3F5": 55
     }

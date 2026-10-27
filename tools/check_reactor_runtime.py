@@ -8,6 +8,9 @@ import argparse
 
 ROOT=Path(__file__).resolve().parents[2]
 MOD=ROOT/'Cremation'
+if __name__=='__main__' and os.environ.get('CREMATION_VALIDATION_DLL_ACTIVE')!='1':
+    from validation_dll import run_with_validation_dll
+    run_with_validation_dll(MOD,Path(__file__).resolve());raise SystemExit
 parser=argparse.ArgumentParser();parser.add_argument('--client',action='store_true',default=True);args=parser.parse_args()
 env=dict(os.environ,CREMATION_REACTOR_VALIDATE='2' if args.client else '1')
 env['PATH']=r'C:\Program Files (x86)\Steam'+os.pathsep+env['PATH']

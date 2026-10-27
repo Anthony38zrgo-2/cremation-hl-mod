@@ -37,7 +37,7 @@ int main(){
     qzSpawn(e);assert(qzIs(e)&&e->v.health==60&&e->v.impulse==QZIdle);
     assert(e->v.maxs.z==104&&e->v.view_ofs.z==80);
     assert(obj.table!=base.data()&&base[11]==nullptr); // instance-local table
-    assert(reinterpret_cast<int(__thiscall*)(void*)>(obj.table[8])(&obj)==7);
+    assert(reinterpret_cast<int(__thiscall*)(void*)>(obj.table[ravenholm_abi::slot::Classify])(&obj)==7);
     qzInstall(e);assert(base[11]==nullptr);
     qzDamage(&obj,nullptr,nullptr,nullptr,8,(1<<1));assert(e->v.health==60&&e->v.impulse==QZIdle);
     state.time+=.1f;qzDamage(&obj,nullptr,nullptr,nullptr,25,(1<<1));assert(e->v.impulse==QZDown);

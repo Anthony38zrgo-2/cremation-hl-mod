@@ -43,12 +43,20 @@ marcadores CT antiguos se sustituyen por 40 marcadores: diez en cada frente
 cardinal de la arena ampliada. Se eliminan las
 entidades de rehenes y cámaras de Counter-Strike.
 
-| Oleada | Normales | Quake | Rápidos | Venenosos | Cultistas | Zombi knife | Total |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 40 | 0 | 0 | 0 | 0 | 1 | 41 |
-| 2 | 20 | 20 | 0 | 0 | 0 | 1 | 41 |
-| 3 | 20 | 20 | 20 | 20 | 0 | 1 | 81 |
-| 4 | 10 | 10 | 10 | 10 | 40 | 1 | 81 |
+| Oleada | Normales* | Johnny fijo | Quake | Rápidos | Venenosos | Cultistas | Zombi knife | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 30 | 10 | 0 | 0 | 0 | 0 | 1 | 41 |
+| 2 | 13 | 15 | 12 | 0 | 0 | 0 | 1 | 41 |
+| 3 | 20 | 0 | 20 | 20 | 20 | 0 | 1 | 81 |
+| 4 | 10 | 0 | 10 | 10 | 10 | 40 | 1 | 81 |
+
+Los Johnnys sustituyen plazas del grupo principal, no se suman a la oleada.
+La primera oleada fija diez y la segunda quince; la selección aleatoria global
+de Johnny queda desactivada para el resto de zombis base de esas dos oleadas,
+por lo que sus cantidades son exactas. En las oleadas 3 y 4 sigue aplicándose
+`cremation_johnny_chance` a los zombis normales. En las filas 3 y 4, un
+Johnny seleccionado aleatoriamente ocupa una de las plazas `Normales*` y no
+aumenta el total.
 
 Cada oleada añade un [zombi con knife Leviathan](CZERO_ZOMBIE.md), con el
 modelo de la carpeta 0 del RAR. Aparece en un punto CT libre al azar, cuenta

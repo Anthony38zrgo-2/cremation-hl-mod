@@ -3,11 +3,13 @@
 // dmgtime=next spawn, teleport_time=next wave, impulse=finished.
 #include "mansion_waves.h"
 static float mansionHudAt=0,mansionTickAt=0,mansionVerifyAt=0;
+#ifdef CREMATION_ENABLE_VALIDATION
 static bool mansionTest=false;
 static bool mansionRouteTest=false;
 static bool mansionCZRouteTest=false;
 static bool mansionInventoryTest=false,mansionInventoryChecked=false;
 static float mansionRouteReport=0;
+#endif
 static float mansionMoveElapsed=0;
 static bool mansionMap(){return globals->mapname&&!std::strcmp(text(globals->mapname),"cs_mansion");}
 static edict_t* mansionFind(const char* name){auto e=engine.pfnFindEntityByString(nullptr,"targetname",name);return e&&engine.pfnIndexOfEdict(e)>0?e:nullptr;}
@@ -84,7 +86,15 @@ static void mansionPrecache(){
 }
 static bool mansionEmit(edict_t* state){
     int wave=int(state->v.frags),index=int(state->v.armorvalue),type=mansion::kind(wave,index);
-    if(mansionCZRouteTest)type=5;
+#ifdef CREMATION_ENABLE_VALIDATION
+    bool johnny=mansion::isJohnny(wave,index)&&!mansionCZRouteTest;
+    const char* actorMarkerFormat=johnny?"mansion_enemy_johnny_%d_%02d":(wave<=2?"mansion_enemy_fixed_%d_%02d":"mansion_enemy_%d_%02d");
+    if(mansionCZRouteTest)type=5;else if(johnny)type=0;
+#else
+    bool johnny=mansion::isJohnny(wave,index);
+    const char* actorMarkerFormat=johnny?"mansion_enemy_johnny_%d_%02d":(wave<=2?"mansion_enemy_fixed_%d_%02d":"mansion_enemy_%d_%02d");
+    if(johnny)type=0;
+#endif
     // Try only the next CT spawn. If occupied, wait for it to clear, preserving
     // exact round-robin order instead of stacking enemies or skipping points.
     int cursor=int(state->v.health)%mansion::SpawnCount;
@@ -105,17 +115,19 @@ static bool mansionEmit(edict_t* state){
     auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString(mansion::classname(type)));if(!valid(e))return false;
     e->v.origin=at;e->v.angles=point->v.angles;
     if(type==4){static const int weapons[]={1,8,3,10,5,12};e->v.weapons=weapons[(index/4+index%4)%6];}
+    std::snprintf(marker,sizeof marker,actorMarkerFormat,wave,index);
+    e->v.targetname=engine.pfnAllocString(marker);
     hookSpawn(e);
     if(type==5)e->v.weapons=cursor%4;
     if(!aliveEnemy(e)){engine.pfnRemoveEntity(e);startupTrace("MansionError","monster Spawn failed");return false;}
-    std::snprintf(marker,sizeof marker,"mansion_enemy_%d_%02d",wave,index);e->v.targetname=engine.pfnAllocString(marker);
+    std::snprintf(marker,sizeof marker,actorMarkerFormat,wave,index);e->v.targetname=engine.pfnAllocString(marker);
     std::snprintf(marker,sizeof marker,"mansion_route_%02d_00",cursor);e->v.target=engine.pfnAllocString(marker);
     // Quake's standalone idle patrol must not independently move this actor;
     // the shared Mansion approach owns idle movement; native combat stays intact.
     e->v.chain=nullptr;
     engine.pfnSetOrigin(e,&at.x);
     state->v.armorvalue+=1;if(type!=5)state->v.health=float((cursor+1)%mansion::SpawnCount);
-    char report[180];std::snprintf(report,sizeof report,"wave=%d index=%d ct=%d type=%s at=%.0f,%.0f,%.0f",wave,index,cursor,mansion::classname(type),at.x,at.y,at.z);startupTrace("MansionSpawn",report);
+    char report[180];std::snprintf(report,sizeof report,"wave=%d index=%d ct=%d type=%s at=%.0f,%.0f,%.0f",wave,index,cursor,johnny?"monster_johnny":mansion::classname(type),at.x,at.y,at.z);startupTrace("MansionSpawn",report);
     return true;
 }
 static void mansionHud(edict_t* state,int alive){
@@ -132,14 +144,20 @@ static void mansionHud(edict_t* state,int alive){
     }
 }
 static void mansionActivate(){
-    mansionHudAt=mansionTickAt=mansionVerifyAt=mansionRouteReport=mansionMoveElapsed=0;char env[8]{};GetEnvironmentVariableA("CREMATION_MANSION_VALIDATE",env,sizeof env);mansionTest=!std::strcmp(env,"1");mansionRouteTest=!std::strcmp(env,"2");
+    mansionHudAt=mansionTickAt=mansionVerifyAt=mansionMoveElapsed=0;
+#ifdef CREMATION_ENABLE_VALIDATION
+    mansionRouteReport=0;char env[8]{};GetEnvironmentVariableA("CREMATION_MANSION_VALIDATE",env,sizeof env);mansionTest=!std::strcmp(env,"1");mansionRouteTest=!std::strcmp(env,"2");
     mansionCZRouteTest=!std::strcmp(env,"4");mansionRouteTest=mansionRouteTest||mansionCZRouteTest;
+#endif
     if(mansionMap())startupTrace("MansionActivate","TT=10 CT=40 sectors=N,E,S,W waves=41,41,81,81 CZ=1/wave");
+#ifdef CREMATION_ENABLE_VALIDATION
     mansionInventoryTest=!std::strcmp(env,"3");mansionInventoryChecked=false;
+#endif
 }
 static void mansionFrame(float dt){
     if(!mansionMap())return;auto state=mansionState();if(!valid(state))return;
     if(state->v.impulse==2){if(globals->time>=mansionHudAt){mansionHud(state,mansionAlive());mansionHudAt=globals->time+.5f;}return;}
+#ifdef CREMATION_ENABLE_VALIDATION
     if(mansionInventoryTest){
         if(!mansionInventoryChecked){mansionInventoryChecked=true;auto player=engine.pfnCreateFakeClient("InventoryProbe");
             if(valid(player)){char reject[128]{};if(raven.pfnClientConnect)raven.pfnClientConnect(player,"InventoryProbe","127.0.0.1",reject);
@@ -154,6 +172,7 @@ static void mansionFrame(float dt){
             char report[100];std::snprintf(report,sizeof report,"owned=%d ground=%d",owned,ground);startupTrace("InventoryProbeComplete",report);mansionVerifyAt=0;
         }return;
     }
+#endif
     int alive=mansionAlive();
     if(globals->time>=mansionHudAt){mansionHud(state,alive);mansionHudAt=globals->time+.5f;}
     mansionMoveElapsed+=dt;
@@ -162,6 +181,7 @@ static void mansionFrame(float dt){
         mansionMoveElapsed=0;
     }
     if(globals->time<mansionTickAt)return;mansionTickAt=globals->time+.1f;
+#ifdef CREMATION_ENABLE_VALIDATION
     if(mansionRouteTest){
         if(state->v.frags==0){state->v.frags=4;state->v.armorvalue=0;state->v.health=0;state->v.max_health=0;}
         if(state->v.armorvalue<(mansionCZRouteTest?1:20))mansionEmit(state);
@@ -173,23 +193,48 @@ static void mansionFrame(float dt){
         if(state->v.max_health==(mansionCZRouteTest?1:20)&&!state->v.impulse){state->v.impulse=1;startupTrace("MansionRouteComplete",mansionCZRouteTest?"CZ route reached main door":"20 routes from four fronts reached main door");}
         return;
     }
+#endif
+#ifdef CREMATION_ENABLE_VALIDATION
     if(!mansionHasPlayer()&&!mansionTest)return;
+#else
+    if(!mansionHasPlayer())return;
+#endif
     if(state->v.impulse)return;
-    if(state->v.frags==0){state->v.frags=1;state->v.armorvalue=0;state->v.health=0;state->v.dmg_save=0;state->v.dmgtime=globals->time+(mansionTest?.2f:5.f);startupTrace("MansionWave","begin=1 total=41");}
+    if(state->v.frags==0){state->v.frags=1;state->v.armorvalue=0;state->v.health=0;state->v.dmg_save=0;
+#ifdef CREMATION_ENABLE_VALIDATION
+        state->v.dmgtime=globals->time+(mansionTest?.2f:5.f);
+#else
+        state->v.dmgtime=globals->time+5.f;
+#endif
+        startupTrace("MansionWave","begin=1 total=41");}
     int wave=int(state->v.frags),total=mansion::total(wave);
     if(int(state->v.armorvalue)<total){
-        if(globals->time>=state->v.dmgtime){bool emitted=mansionEmit(state);state->v.dmgtime=globals->time+(emitted?(mansionTest?.05f:.375f):.25f);}
+        if(globals->time>=state->v.dmgtime){bool emitted=mansionEmit(state);
+#ifdef CREMATION_ENABLE_VALIDATION
+            state->v.dmgtime=globals->time+(emitted?(mansionTest?.05f:.375f):.25f);
+#else
+            state->v.dmgtime=globals->time+(emitted?.375f:.25f);
+#endif
+        }
     }else if(alive==0&&!czBombActive()){
         if(wave==4){state->v.impulse=1;startupTrace("MansionComplete","four waves cleared");}
-        else if(state->v.teleport_time==0)state->v.teleport_time=globals->time+(mansionTest?.5f:8.f);
+        else if(state->v.teleport_time==0){
+#ifdef CREMATION_ENABLE_VALIDATION
+            state->v.teleport_time=globals->time+(mansionTest?.5f:8.f);
+#else
+            state->v.teleport_time=globals->time+8.f;
+#endif
+        }
         else if(globals->time>=state->v.teleport_time){state->v.frags+=1;state->v.armorvalue=0;state->v.dmg_save=0;state->v.teleport_time=0;state->v.dmgtime=globals->time;
             char report[64];std::snprintf(report,sizeof report,"begin=%d total=%d",wave+1,mansion::total(wave+1));startupTrace("MansionWave",report);}
     }
     // Explicit test-process mode only: native damage kills one actor at a time
     // to exercise death counting, all four compositions and final completion.
+#ifdef CREMATION_ENABLE_VALIDATION
     if(mansionTest&&globals->time>=mansionVerifyAt){mansionVerifyAt=globals->time+.1f;
         for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(!mansionActor(e)||!aliveEnemy(e))continue;
-            if(e->pvPrivateData){auto table=*reinterpret_cast<void***>(e->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[11])(e->pvPrivateData,&state->v,&state->v,10000.f,1<<6);}
+            if(e->pvPrivateData){auto table=*reinterpret_cast<void***>(e->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(e->pvPrivateData,&state->v,&state->v,10000.f,1<<6);}
             break;}
     }
+#endif
 }

@@ -2,6 +2,7 @@
 #include "extdll.h"
 #undef min
 #undef max
+#include "ravenholm_abi.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -143,7 +144,7 @@ void takeDamage(edict_t* victim, edict_t* inflictor, edict_t* attacker, float am
     if (!valid(victim) || !valid(inflictor) || !victim->pvPrivateData) return;
     if (!victim->v.takedamage || amount <= 0.f) return;
     auto table = *reinterpret_cast<void***>(victim->pvPrivateData);
-    auto fn = reinterpret_cast<TakeDamageFn>(table[11]);
+    auto fn = reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage]);
     bool wasAlive=aliveEnemy(victim);
     float healthBefore=victim->v.health;
     float maxHealthBefore=victim->v.max_health;

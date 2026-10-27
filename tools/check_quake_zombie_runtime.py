@@ -3,6 +3,9 @@ from pathlib import Path
 import os, subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
+if __name__=='__main__' and os.environ.get('CREMATION_VALIDATION_DLL_ACTIVE')!='1':
+    from validation_dll import run_with_validation_dll
+    run_with_validation_dll(ROOT/'Cremation',Path(__file__).resolve());raise SystemExit
 env = dict(os.environ, CREMATION_QZ_VALIDATE='1')
 log = ROOT / 'Cremation/validation-quake-zombie-engine.txt'
 with log.open('wb') as output:

@@ -3,6 +3,9 @@ from pathlib import Path
 import os, subprocess
 
 ROOT=Path(__file__).resolve().parents[2]
+if __name__=='__main__' and os.environ.get('CREMATION_VALIDATION_DLL_ACTIVE')!='1':
+    from validation_dll import run_with_validation_dll
+    run_with_validation_dll(ROOT/'Cremation',Path(__file__).resolve());raise SystemExit
 log=ROOT/'Cremation/validation-david-engine.txt'
 env=dict(os.environ,CREMATION_DAVID_VALIDATE='1')
 with log.open('wb') as output:
@@ -12,12 +15,12 @@ with log.open('wb') as output:
         creationflags=subprocess.CREATE_NO_WINDOW)
     try:
         try:
-            p.wait(timeout=12)
+            p.wait(timeout=27)
         except subprocess.TimeoutExpired:
             pass
         text=(ROOT/'Cremation/startup-diagnostics.txt').read_text(errors='replace')
         (ROOT/'Cremation/validation-david-diagnostics.txt').write_text(text)
-        lines=[line for line in text.splitlines() if 'DavidTest' in line or 'DavidProbe' in line or 'David ERROR' in line]
+        lines=[line for line in text.splitlines() if 'DavidTest' in line or 'DavidProbe' in line or 'SteveProbe' in line or 'David ERROR' in line]
         print('\n'.join(lines))
         assert p.poll() is None,f'HLDS exited unexpectedly: {p.returncode}; see {log}'
         assert 'DavidTest COMPLETE' in text,'engine acceptance did not complete'

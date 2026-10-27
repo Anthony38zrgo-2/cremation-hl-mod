@@ -1,0 +1,30 @@
+[
+  {
+    "sequence": "attack_right",
+    "source_motion": "0x3ea",
+    "event": 1,
+    "contact_frame": 21,
+    "hand_lead_ahead_of_head": [
+      16.536189290809286
+    ]
+  },
+  {
+    "sequence": "attack_left",
+    "source_motion": "0x3e9",
+    "event": 2,
+    "contact_frame": 27,
+    "hand_lead_ahead_of_head": [
+      23.29073558189351
+    ]
+  },
+  {
+    "sequence": "attack_both",
+    "source_motion": "0x3c9",
+    "event": 3,
+    "contact_frame": 20,
+    "hand_lead_ahead_of_head": [
+      14.443394978999763,
+      16.077518825840343
+    ]
+  }
+]

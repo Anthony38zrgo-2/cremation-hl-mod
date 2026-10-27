@@ -1,0 +1,921 @@
+{
+  "alpha_formats": {
+    "0": "ARGB1555",
+    "1": "RGB565 (opaque)",
+    "2": "ARGB4444"
+  },
+  "opaque_pass_rule": "TSP & 0x180000 == 0x80000; ignore texture alpha for this material",
+  "textures": [
+    {
+      "index": 0,
+      "id": 5502,
+      "w": 16,
+      "h": 64,
+      "fmt": 3329,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": false,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 1024,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 1,
+      "id": 5508,
+      "w": 64,
+      "h": 128,
+      "fmt": 3328,
+      "format_name": "ARGB1555",
+      "used_by_johnny": true,
+      "alpha_unique": 2,
+      "alpha_zero": 230,
+      "alpha_partial": 0,
+      "alpha_opaque": 7962,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7872,
+          "node": 10,
+          "material_index": 0,
+          "tsp": "0x200C045C",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7853,
+          "node": 14,
+          "material_index": 0,
+          "tsp": "0x2008045C",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7853,
+          "node": 14,
+          "material_index": 2,
+          "tsp": "0x2008045C",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7856,
+          "node": 11,
+          "material_index": 0,
+          "tsp": "0x2008045C",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7856,
+          "node": 11,
+          "material_index": 2,
+          "tsp": "0x2008045C",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7869,
+          "node": 13,
+          "material_index": 0,
+          "tsp": "0x200C045C",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": 5510,
+      "w": 128,
+      "h": 64,
+      "fmt": 3329,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 8192,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7868,
+          "node": 9,
+          "material_index": 3,
+          "tsp": "0x20080463",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "id": 5511,
+      "w": 128,
+      "h": 64,
+      "fmt": 3329,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 8192,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7868,
+          "node": 9,
+          "material_index": 2,
+          "tsp": "0x20080463",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "id": 5512,
+      "w": 64,
+      "h": 32,
+      "fmt": 3328,
+      "format_name": "ARGB1555",
+      "used_by_johnny": true,
+      "alpha_unique": 2,
+      "alpha_zero": 1099,
+      "alpha_partial": 0,
+      "alpha_opaque": 949,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7853,
+          "node": 14,
+          "material_index": 1,
+          "tsp": "0x9400245A",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7856,
+          "node": 11,
+          "material_index": 1,
+          "tsp": "0x9400245A",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "id": 5513,
+      "w": 32,
+      "h": 16,
+      "fmt": 3330,
+      "format_name": "ARGB4444",
+      "used_by_johnny": true,
+      "alpha_unique": 16,
+      "alpha_zero": 153,
+      "alpha_partial": 119,
+      "alpha_opaque": 240,
+      "alpha_values": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7872,
+          "node": 10,
+          "material_index": 1,
+          "tsp": "0x94002451",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7869,
+          "node": 13,
+          "material_index": 1,
+          "tsp": "0x94002451",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "id": 5516,
+      "w": 64,
+      "h": 64,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": false,
+      "alpha_unique": 2,
+      "alpha_zero": 1647,
+      "alpha_partial": 0,
+      "alpha_opaque": 2449,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 7,
+      "id": 5519,
+      "w": 64,
+      "h": 64,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": false,
+      "alpha_unique": 2,
+      "alpha_zero": 1296,
+      "alpha_partial": 0,
+      "alpha_opaque": 2800,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 8,
+      "id": 5521,
+      "w": 64,
+      "h": 64,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": false,
+      "alpha_unique": 2,
+      "alpha_zero": 1602,
+      "alpha_partial": 0,
+      "alpha_opaque": 2494,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 9,
+      "id": 5525,
+      "w": 32,
+      "h": 32,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": false,
+      "alpha_unique": 2,
+      "alpha_zero": 353,
+      "alpha_partial": 0,
+      "alpha_opaque": 671,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 10,
+      "id": 5529,
+      "w": 32,
+      "h": 64,
+      "fmt": 3330,
+      "format_name": "ARGB4444",
+      "used_by_johnny": true,
+      "alpha_unique": 16,
+      "alpha_zero": 646,
+      "alpha_partial": 642,
+      "alpha_opaque": 760,
+      "alpha_values": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7872,
+          "node": 10,
+          "material_index": 2,
+          "tsp": "0x941424D3",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7853,
+          "node": 14,
+          "material_index": 3,
+          "tsp": "0x941424D3",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7856,
+          "node": 11,
+          "material_index": 3,
+          "tsp": "0x941424D3",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7869,
+          "node": 13,
+          "material_index": 2,
+          "tsp": "0x941424D3",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "id": 5530,
+      "w": 32,
+      "h": 64,
+      "fmt": 3329,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 2048,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7851,
+          "node": 12,
+          "material_index": 0,
+          "tsp": "0x20082453",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7850,
+          "node": 15,
+          "material_index": 0,
+          "tsp": "0x20082453",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "id": 5531,
+      "w": 32,
+      "h": 64,
+      "fmt": 3329,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 2048,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7851,
+          "node": 12,
+          "material_index": 1,
+          "tsp": "0x20080453",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7850,
+          "node": 15,
+          "material_index": 1,
+          "tsp": "0x20080453",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "id": 5604,
+      "w": 32,
+      "h": 32,
+      "fmt": 257,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": false,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 1024,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 14,
+      "id": 5605,
+      "w": 32,
+      "h": 32,
+      "fmt": 257,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": false,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 1024,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 15,
+      "id": 5638,
+      "w": 64,
+      "h": 64,
+      "fmt": 258,
+      "format_name": "ARGB4444",
+      "used_by_johnny": true,
+      "alpha_unique": 16,
+      "alpha_zero": 2501,
+      "alpha_partial": 870,
+      "alpha_opaque": 725,
+      "alpha_values": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7882,
+          "node": 8,
+          "material_index": 3,
+          "tsp": "0x2008245B",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7886,
+          "node": 5,
+          "material_index": 3,
+          "tsp": "0x2008245B",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "id": 5639,
+      "w": 64,
+      "h": 64,
+      "fmt": 257,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 4096,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7882,
+          "node": 8,
+          "material_index": 2,
+          "tsp": "0x2008045B",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7886,
+          "node": 5,
+          "material_index": 2,
+          "tsp": "0x2008045B",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "id": 5641,
+      "w": 64,
+      "h": 64,
+      "fmt": 258,
+      "format_name": "ARGB4444",
+      "used_by_johnny": true,
+      "alpha_unique": 16,
+      "alpha_zero": 1765,
+      "alpha_partial": 695,
+      "alpha_opaque": 1636,
+      "alpha_values": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7859,
+          "node": 2,
+          "material_index": 2,
+          "tsp": "0x9400245B",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "id": 5642,
+      "w": 32,
+      "h": 32,
+      "fmt": 257,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 1024,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7882,
+          "node": 8,
+          "material_index": 0,
+          "tsp": "0x20082452",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7886,
+          "node": 5,
+          "material_index": 0,
+          "tsp": "0x20082452",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "id": 5643,
+      "w": 32,
+      "h": 32,
+      "fmt": 257,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 1024,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7882,
+          "node": 8,
+          "material_index": 1,
+          "tsp": "0x20082452",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7886,
+          "node": 5,
+          "material_index": 1,
+          "tsp": "0x20082452",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "id": 5644,
+      "w": 128,
+      "h": 128,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": true,
+      "alpha_unique": 2,
+      "alpha_zero": 109,
+      "alpha_partial": 0,
+      "alpha_opaque": 16275,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7859,
+          "node": 2,
+          "material_index": 0,
+          "tsp": "0x20082464",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "id": 5646,
+      "w": 128,
+      "h": 128,
+      "fmt": 258,
+      "format_name": "ARGB4444",
+      "used_by_johnny": true,
+      "alpha_unique": 16,
+      "alpha_zero": 12822,
+      "alpha_partial": 1808,
+      "alpha_opaque": 1754,
+      "alpha_values": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7859,
+          "node": 2,
+          "material_index": 1,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "id": 5648,
+      "w": 128,
+      "h": 128,
+      "fmt": 258,
+      "format_name": "ARGB4444",
+      "used_by_johnny": false,
+      "alpha_unique": 16,
+      "alpha_zero": 747,
+      "alpha_partial": 671,
+      "alpha_opaque": 14966,
+      "alpha_values": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255
+      ],
+      "material_uses": []
+    },
+    {
+      "index": 23,
+      "id": 5649,
+      "w": 128,
+      "h": 128,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": true,
+      "alpha_unique": 2,
+      "alpha_zero": 1814,
+      "alpha_partial": 0,
+      "alpha_opaque": 14570,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7875,
+          "node": 1,
+          "material_index": 0,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7852,
+          "node": null,
+          "material_index": 0,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7868,
+          "node": 9,
+          "material_index": 0,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "id": 5650,
+      "w": 64,
+      "h": 64,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": true,
+      "alpha_unique": 2,
+      "alpha_zero": 428,
+      "alpha_partial": 0,
+      "alpha_opaque": 3668,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7875,
+          "node": 1,
+          "material_index": 1,
+          "tsp": "0x9400245B",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7852,
+          "node": null,
+          "material_index": 1,
+          "tsp": "0x9400245B",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7868,
+          "node": 9,
+          "material_index": 1,
+          "tsp": "0x9400245B",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "id": 5651,
+      "w": 128,
+      "h": 128,
+      "fmt": 258,
+      "format_name": "ARGB4444",
+      "used_by_johnny": true,
+      "alpha_unique": 16,
+      "alpha_zero": 1003,
+      "alpha_partial": 872,
+      "alpha_opaque": 14509,
+      "alpha_values": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7887,
+          "node": 7,
+          "material_index": 1,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7890,
+          "node": 4,
+          "material_index": 1,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7862,
+          "node": 6,
+          "material_index": 0,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        },
+        {
+          "model_id": 7865,
+          "node": 3,
+          "material_index": 0,
+          "tsp": "0x94002464",
+          "uses_texture_alpha": true
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "id": 5652,
+      "w": 32,
+      "h": 64,
+      "fmt": 3329,
+      "format_name": "RGB565 (opaque)",
+      "used_by_johnny": true,
+      "alpha_unique": 1,
+      "alpha_zero": 0,
+      "alpha_partial": 0,
+      "alpha_opaque": 2048,
+      "alpha_values": [
+        255
+      ],
+      "material_uses": [
+        {
+          "model_id": 7887,
+          "node": 7,
+          "material_index": 0,
+          "tsp": "0x20082453",
+          "uses_texture_alpha": false
+        },
+        {
+          "model_id": 7890,
+          "node": 4,
+          "material_index": 0,
+          "tsp": "0x20082453",
+          "uses_texture_alpha": false
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "id": 5674,
+      "w": 64,
+      "h": 64,
+      "fmt": 256,
+      "format_name": "ARGB1555",
+      "used_by_johnny": false,
+      "alpha_unique": 2,
+      "alpha_zero": 1085,
+      "alpha_partial": 0,
+      "alpha_opaque": 3011,
+      "alpha_values": [
+        0,
+        255
+      ],
+      "material_uses": []
+    }
+  ]
+}

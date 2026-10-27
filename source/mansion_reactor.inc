@@ -7,8 +7,10 @@ static std::array<float,2> reactorPortalLightAt{};
 static std::array<float,33> reactorPortalCooldown{};
 static std::array<float,33> reactorJumpCooldown{};
 static std::array<bool,33> reactorInFlight{};
+#ifdef CREMATION_ENABLE_VALIDATION
 static void reactorTestFrame();
 static void reactorPreviewFrame();
+#endif
 static const char* reactorWeapons[]={"weapon_bounce_shotgun","weapon_nailgun","weapon_shockrifle","weapon_rpg","weapon_handgrenade"};
 static const char* reactorWorldModels[]={"models/cremation/w_bounce_shotgun.mdl","models/cremation/w_nailgun.mdl","models/cremation/w_shockrifle.mdl","models/w_rpg.mdl","models/w_grenade.mdl"};
 static const char** reactorPowerups=dmcNames;
@@ -36,8 +38,8 @@ static void reactorKill(edict_t* victim){
     if(!valid(victim)||victim->v.health<=0||victim->v.deadflag!=DEAD_NO||!victim->pvPrivateData)return;
     auto world=engine.pfnPEntityOfEntIndex(0);auto table=*reinterpret_cast<void***>(victim->pvPrivateData);
     victim->v.takedamage=DAMAGE_YES;
-    reinterpret_cast<TakeDamageFn>(table[11])(victim->pvPrivateData,&world->v,&world->v,1000000.f,(1<<20)|(1<<13));
-    if(valid(victim)&&victim->v.deadflag==DEAD_NO){victim->v.health=0;reinterpret_cast<void(__thiscall*)(void*,entvars_t*,int)>(table[13])(victim->pvPrivateData,&world->v,2);}
+    reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(victim->pvPrivateData,&world->v,&world->v,1000000.f,(1<<20)|(1<<13));
+    if(valid(victim)&&victim->v.deadflag==DEAD_NO){victim->v.health=0;reinterpret_cast<void(__thiscall*)(void*,entvars_t*,int)>(table[ravenholm_abi::slot::Killed])(victim->pvPrivateData,&world->v,2);}
     startupTrace("ReactorKill",text(victim->v.classname));
 }
 static bool reactorGive(edict_t* player,int kind){
@@ -106,8 +108,10 @@ static void reactorActivate(){
 }
 static void reactorFrame(){
     if(!reactorActive)return;
+#ifdef CREMATION_ENABLE_VALIDATION
     reactorPreviewFrame();
     reactorTestFrame();
+#endif
     reactorPortalFrame();
     for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(!valid(e)||e->v.health<=0||e->v.deadflag!=DEAD_NO)continue;
         if(!(e->v.flags&(FL_CLIENT|FL_MONSTER)))continue;

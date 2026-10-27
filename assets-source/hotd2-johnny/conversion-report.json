@@ -1,0 +1,703 @@
+{
+  "source": "HOTD2 PC Johnny kind 0x13; geometry F12992_znonoo.bin; textures F13793_znonoo.bin; motions F12583_zom.bin/F12597_ono.bin",
+  "scale": 4.187370323715111,
+  "floor": 2.2116286089605883,
+  "bones": {
+    "Root": 0,
+    "Torso": 1,
+    "Head": 2,
+    "UpperArm_R": 3,
+    "Forearm_R": 4,
+    "Hand_R": 5,
+    "UpperArm_L": 6,
+    "Forearm_L": 7,
+    "Hand_L": 8,
+    "Pelvis": 9,
+    "Thigh_R": 10,
+    "Shin_R": 11,
+    "Foot_R": 12,
+    "Thigh_L": 13,
+    "Shin_L": 14,
+    "Foot_L": 15
+  },
+  "bodygroups": [
+    {
+      "node": 1,
+      "base": 1,
+      "count": 4,
+      "models": [
+        7875,
+        7875,
+        7875,
+        null
+      ]
+    },
+    {
+      "node": 2,
+      "base": 4,
+      "count": 4,
+      "models": [
+        7859,
+        7859,
+        7859,
+        null
+      ]
+    },
+    {
+      "node": 3,
+      "base": 16,
+      "count": 4,
+      "models": [
+        7865,
+        7865,
+        7865,
+        null
+      ]
+    },
+    {
+      "node": 4,
+      "base": 64,
+      "count": 4,
+      "models": [
+        7890,
+        7890,
+        7890,
+        null
+      ]
+    },
+    {
+      "node": 5,
+      "base": 256,
+      "count": 5,
+      "models": [
+        7886,
+        7886,
+        7886,
+        7886,
+        null
+      ]
+    },
+    {
+      "node": 6,
+      "base": 1280,
+      "count": 4,
+      "models": [
+        7862,
+        7862,
+        7862,
+        null
+      ]
+    },
+    {
+      "node": 7,
+      "base": 5120,
+      "count": 4,
+      "models": [
+        7887,
+        7887,
+        7887,
+        null
+      ]
+    },
+    {
+      "node": 8,
+      "base": 20480,
+      "count": 5,
+      "models": [
+        7882,
+        7882,
+        7882,
+        7882,
+        null
+      ]
+    },
+    {
+      "node": 9,
+      "base": 102400,
+      "count": 1,
+      "models": [
+        7868
+      ]
+    },
+    {
+      "node": 10,
+      "base": 102400,
+      "count": 4,
+      "models": [
+        7872,
+        7872,
+        7872,
+        null
+      ]
+    },
+    {
+      "node": 11,
+      "base": 409600,
+      "count": 4,
+      "models": [
+        7856,
+        7856,
+        7856,
+        null
+      ]
+    },
+    {
+      "node": 12,
+      "base": 1638400,
+      "count": 2,
+      "models": [
+        7851,
+        null
+      ]
+    },
+    {
+      "node": 13,
+      "base": 3276800,
+      "count": 4,
+      "models": [
+        7869,
+        7869,
+        7869,
+        null
+      ]
+    },
+    {
+      "node": 14,
+      "base": 13107200,
+      "count": 4,
+      "models": [
+        7853,
+        7853,
+        7853,
+        null
+      ]
+    },
+    {
+      "node": 15,
+      "base": 52428800,
+      "count": 2,
+      "models": [
+        7850,
+        null
+      ]
+    }
+  ],
+  "hitboxes": [
+    {
+      "node": 1,
+      "group": 2,
+      "minimum": [
+        -6.485578666756344,
+        -9.164166814332258,
+        0.74105894732795
+      ],
+      "maximum": [
+        5.175571348360643,
+        9.206752298962936,
+        18.313078547033328
+      ]
+    },
+    {
+      "node": 2,
+      "group": 1,
+      "minimum": [
+        -5.891511855001202,
+        -5.963124774421342,
+        -5.126522066837586
+      ],
+      "maximum": [
+        4.996089544126334,
+        5.963123776074459,
+        8.142859949970516
+      ]
+    },
+    {
+      "node": 3,
+      "group": 5,
+      "minimum": [
+        -2.6603641656674504,
+        -3.4024561193149823,
+        -13.049424392817077
+      ],
+      "maximum": [
+        3.5658343387437776,
+        2.837578474544308,
+        3.2835994287092425
+      ]
+    },
+    {
+      "node": 4,
+      "group": 5,
+      "minimum": [
+        -1.8865964125372354,
+        -2.6800902521370302,
+        -12.45592214622413
+      ],
+      "maximum": [
+        3.9098394662813987,
+        2.7973800373102904,
+        2.7901921893411954
+      ]
+    },
+    {
+      "node": 5,
+      "group": 5,
+      "minimum": [
+        -8.739848423878033,
+        -14.836496261696892,
+        -14.282955844126752
+      ],
+      "maximum": [
+        5.359251700410367,
+        4.724688444876705,
+        1.5305488505197764
+      ]
+    },
+    {
+      "node": 6,
+      "group": 4,
+      "minimum": [
+        -2.660365663187774,
+        -2.9883223645851533,
+        -13.049432379592139
+      ],
+      "maximum": [
+        3.5658328412234535,
+        3.2517127284475786,
+        3.2835914419341807
+      ]
+    },
+    {
+      "node": 7,
+      "group": 4,
+      "minimum": [
+        -1.8865986588177215,
+        -3.091203009199651,
+        -12.45592913465231
+      ],
+      "maximum": [
+        3.9098379687610745,
+        2.56788255177042,
+        2.7901824554590884
+      ]
+    },
+    {
+      "node": 8,
+      "group": 4,
+      "minimum": [
+        -8.739808490002723,
+        -4.724692438264237,
+        -14.283044696999315
+      ],
+      "maximum": [
+        5.359291634285676,
+        14.836496261696892,
+        1.5305487257264159
+      ]
+    },
+    {
+      "node": 9,
+      "group": 3,
+      "minimum": [
+        -5.959962011496783,
+        -7.371971429250159,
+        -11.394346960346578
+      ],
+      "maximum": [
+        5.989360332153187,
+        7.371971429250159,
+        5.477768703489249
+      ]
+    },
+    {
+      "node": 10,
+      "group": 7,
+      "minimum": [
+        -4.078634216722566,
+        -3.745596428865419,
+        -19.34720218867584
+      ],
+      "maximum": [
+        4.887949608133498,
+        3.884300255500273,
+        3.938010069858738
+      ]
+    },
+    {
+      "node": 11,
+      "group": 7,
+      "minimum": [
+        -3.1506692916840655,
+        -3.0288108215886105,
+        -22.764232084109224
+      ],
+      "maximum": [
+        5.015072111754985,
+        3.8572799971185843,
+        2.339662700653752
+      ]
+    },
+    {
+      "node": 12,
+      "group": 7,
+      "minimum": [
+        -10.869059759558326,
+        -3.027038256698284,
+        -3.0644470631551712
+      ],
+      "maximum": [
+        3.949692974667425,
+        3.543493082614828,
+        2.1100341820855206
+      ]
+    },
+    {
+      "node": 13,
+      "group": 6,
+      "minimum": [
+        -4.078634965482728,
+        -3.666556806984486,
+        -19.34719819528831
+      ],
+      "maximum": [
+        4.887948609786615,
+        3.9633398773812067,
+        3.9380138136595484
+      ]
+    },
+    {
+      "node": 14,
+      "group": 6,
+      "minimum": [
+        -3.150670040444228,
+        -3.639536548602797,
+        -22.764228090721694
+      ],
+      "maximum": [
+        5.015071612581543,
+        3.246553271757515,
+        2.339666694041283
+      ]
+    },
+    {
+      "node": 15,
+      "group": 6,
+      "minimum": [
+        -10.869060757905208,
+        -3.325748635752158,
+        -3.0644430697676404
+      ],
+      "maximum": [
+        3.9496922259072633,
+        3.244782703560954,
+        2.1100385498531327
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "idle",
+      "source_id": 975,
+      "frames": 46,
+      "activity": 1,
+      "loop": true,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -0.14655794635482566,
+        -0.07579139890329399
+      ]
+    },
+    {
+      "name": "walk",
+      "source_id": 1022,
+      "frames": 31,
+      "activity": 3,
+      "loop": true,
+      "speed": 42,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        40.17153378222119,
+        0.0
+      ]
+    },
+    {
+      "name": "run",
+      "source_id": 968,
+      "frames": 31,
+      "activity": 4,
+      "loop": true,
+      "speed": 130,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        125.62110971145333,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_right",
+      "source_id": 774,
+      "frames": 18,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 1,
+      "event_frame": 10,
+      "discarded_root_travel": [
+        0.0,
+        0.00041873702179332395
+      ]
+    },
+    {
+      "name": "throw",
+      "source_id": 775,
+      "frames": 51,
+      "activity": 31,
+      "loop": false,
+      "speed": 0,
+      "event": 20,
+      "event_frame": 18,
+      "discarded_root_travel": [
+        40.83272294911786,
+        -0.005443580948174792
+      ]
+    },
+    {
+      "name": "attack_left",
+      "source_id": 776,
+      "frames": 48,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 2,
+      "event_frame": 27,
+      "discarded_root_travel": [
+        50.248443884581334,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_both",
+      "source_id": 778,
+      "frames": 51,
+      "activity": 31,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 29,
+      "discarded_root_travel": [
+        40.83272294911786,
+        0.0033498961743465916
+      ]
+    },
+    {
+      "name": "guard",
+      "source_id": 781,
+      "frames": 31,
+      "activity": 100,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -65.88115039606997,
+        0.17335711769949463
+      ]
+    },
+    {
+      "name": "pain_small",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 26,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    },
+    {
+      "name": "die_simple",
+      "source_id": 987,
+      "frames": 40,
+      "activity": 36,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -34.318429671409085,
+        -0.320752536696419
+      ]
+    },
+    {
+      "name": "die_back",
+      "source_id": 986,
+      "frames": 50,
+      "activity": 37,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        39.71594816574605,
+        0.37476962350639137
+      ]
+    },
+    {
+      "name": "die_forward",
+      "source_id": 972,
+      "frames": 31,
+      "activity": 38,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -97.26381726373273,
+        0.0
+      ]
+    },
+    {
+      "name": "die_violent",
+      "source_id": 988,
+      "frames": 82,
+      "activity": 39,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -10.581484600371935,
+        2.4567300123828644
+      ]
+    },
+    {
+      "name": "die_head",
+      "source_id": 990,
+      "frames": 43,
+      "activity": 66,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        39.07360778799575,
+        0.9061469274694731
+      ]
+    },
+    {
+      "name": "pain_head",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 70,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_chest",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 71,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_stomach",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 72,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_leftarm",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 73,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_rightarm",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 74,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_leftleg",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 75,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    },
+    {
+      "name": "pain_rightleg",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 76,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.35243024398836,
+        0.0
+      ]
+    }
+  ],
+  "textures": 33,
+  "main_triangles": 860,
+  "axe_projectile_triangles": {
+    "5": 42,
+    "8": 42
+  },
+  "sha256": {
+    "models/cremation/hotd2/johnny/johnny.mdl": "f434410d9143e9f904d63a0d17f8d982c74ba4517c14e3f06353871ae9af2f87",
+    "models/cremation/hotd2/johnny/johnny_charred.mdl": "9580febcfdb926adbb1fc8f7e66d28615a5faf1e94e2c63b719357a8f7e77589"
+  }
+}

@@ -5,6 +5,9 @@ from PIL import Image,ImageDraw
 from bsp import BSP
 from map_brushes import read_map
 ROOT=Path(__file__).resolve().parents[2];MOD=ROOT/'Cremation'
+if __name__=='__main__' and os.environ.get('CREMATION_VALIDATION_DLL_ACTIVE')!='1':
+    from validation_dll import run_with_validation_dll
+    run_with_validation_dll(MOD,Path(__file__).resolve());raise SystemExit
 props=json.loads((MOD/'assets-source/truth-exterior/props.json').read_text())
 assert len(props)==9
 for prop in props:assert Path(prop['source']).read_bytes()==(MOD/prop['installed']).read_bytes()

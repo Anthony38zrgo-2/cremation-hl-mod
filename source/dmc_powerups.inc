@@ -26,14 +26,15 @@ static int __fastcall dmcPlayerDamage(void* object,void*,entvars_t* inflictor,en
         // Objective floor and bomb remain lethal, even under artifacts.
         if(amount<99999){if(dmcUntil(p,1)>globals->time)return 0;
             if(dmcUntil(p,3)>globals->time&&(bits&((1<<3)|(1<<14)|(1<<16)|(1<<17)|(1<<18)|(1<<20))))return 0;}break;
-    }return entry->damage(object,inflictor,attacker,amount*dmcDamageScale(attacker),bits);
+    }return entry->damage(object,inflictor,attacker,amount*dmcDamageScale(attacker)*davidMeleeScale(attacker),bits);
 }
 static void dmcInstallPlayer(edict_t* p){
     if(!valid(p)||!p->pvPrivateData)return;auto base=*reinterpret_cast<void***>(p->pvPrivateData);
     for(auto& t:dmcPlayerTables)if(base==t->base)return;
-    DWORD old;if(!VirtualProtect(base+11,sizeof(void*),PAGE_READWRITE,&old))return;
-    auto t=std::make_unique<DMCPlayerTable>();t->base=base;t->damage=reinterpret_cast<TakeDamageFn>(base[11]);
-    dmcPlayerTables.push_back(std::move(t));base[11]=reinterpret_cast<void*>(&dmcPlayerDamage);DWORD unused;VirtualProtect(base+11,sizeof(void*),old,&unused);
+    constexpr auto damageSlot=ravenholm_abi::slot::TakeDamage;
+    DWORD old;if(!VirtualProtect(base+damageSlot,sizeof(void*),PAGE_READWRITE,&old))return;
+    auto t=std::make_unique<DMCPlayerTable>();t->base=base;t->damage=reinterpret_cast<TakeDamageFn>(base[damageSlot]);
+    dmcPlayerTables.push_back(std::move(t));base[damageSlot]=reinterpret_cast<void*>(&dmcPlayerDamage);DWORD unused;VirtualProtect(base+damageSlot,sizeof(void*),old,&unused);
 }
 static void dmcPlayerFrame(edict_t* p){
     dmcInstallPlayer(p);bool invis=dmcInvisible(p),quad=dmcUntil(p,0)>globals->time,invul=dmcUntil(p,1)>globals->time;constexpr int owned=1<<26;

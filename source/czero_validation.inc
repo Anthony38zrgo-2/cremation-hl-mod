@@ -12,7 +12,7 @@ static void czProbeFrame(){
         auto controller=mansionState();if(valid(controller))controller->v.impulse=1;
         npc=create(Vector(900,-256,24.1f));pass(czIs(npc)&&aliveEnemy(npc),"native_monster_spawn");if(!valid(npc)){stage=5;return;}
         auto h=static_cast<unsigned char*>(engine.pfnGetModelPtr(npc));pass(h&&*reinterpret_cast<int*>(h+140)==34&&*reinterpret_cast<int*>(h+156)==20,"first_folder_body_hitboxes");
-        auto table=*reinterpret_cast<void***>(npc->pvPrivateData);pass(reinterpret_cast<int(__thiscall*)(void*)>(table[8])(npc->pvPrivateData)==7,"zombie_alliance");
+        auto table=*reinterpret_cast<void***>(npc->pvPrivateData);pass(reinterpret_cast<int(__thiscall*)(void*)>(table[ravenholm_abi::slot::Classify])(npc->pvPrivateData)==7,"zombie_alliance");
         pass(linkEnemy(npc)&&humanoidRemains(npc),"link_and_anatomical_effect_eligibility");
         Vector camera(740,-380,80);engine.pfnSetOrigin(p,&camera.x);p->v.velocity=Vector(0,0,0);p->v.movetype=MOVETYPE_NOCLIP;
         p->v.v_angle=p->v.angles=Vector(8,38,0);p->v.fixangle=1;p->v.health=1000;p->v.armorvalue=0;
@@ -32,7 +32,7 @@ static void czProbeFrame(){
         pass(npc->v.frags==0&&npc->v.impulse==0,"knife_without_ammo_or_reload");
         Vector distant(900,-256,24.1f);engine.pfnSetOrigin(npc,&distant.x);before=p->v.health;npc->v.dmgtime=0;czFire(npc,p);
         pass(p->v.health==before,"no_ranged_knife_damage");
-        auto table=*reinterpret_cast<void***>(npc->pvPrivateData);auto hurt=reinterpret_cast<TakeDamageFn>(table[11]);
+        auto table=*reinterpret_cast<void***>(npc->pvPrivateData);auto hurt=reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage]);
         bool damaged=true;
         for(int bits:{0,1<<1,1<<7,1<<6,1<<10}){before=npc->v.health;hurt(npc->pvPrivateData,&p->v,&p->v,5.f,bits);damaged=damaged&&npc->v.health<before;}
         pass(damaged,"bullet_plasma_melee_blast_energy_damage");
