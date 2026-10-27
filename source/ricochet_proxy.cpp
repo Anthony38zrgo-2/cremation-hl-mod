@@ -13,6 +13,7 @@
 #include <cstring>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <cstdio>
 #include <memory>
 #include <unordered_map>

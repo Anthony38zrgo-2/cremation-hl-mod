@@ -67,7 +67,7 @@ gamedll "dlls/cremation.dll"
 type "singleplayer_only"
 secure "1"
 ''')
-    (MOD/'cremation.cfg').write_text('''// Start a fresh Cremation session.
+    (MOD/'cremation.cfg').write_text('''// Initialize Cremation and leave the player at the main menu.
 deathmatch 0
 coop 0
 maxplayers 1
@@ -75,7 +75,6 @@ skill 1
 sv_cheats 0
 hud_draw 1
 cl_lw 0
-map cs_mansion
 ''')
     # Server-authoritative disc attacks must not run the inherited pistol prediction.
     (MOD/'autoexec.cfg').write_text('// Cremation Ricochet runs on the local game server.\ncl_lw 0\n')

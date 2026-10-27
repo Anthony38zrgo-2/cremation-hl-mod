@@ -194,6 +194,8 @@ def install():
     if mountain_sky:
         from install_mountain_sky import install as install_sky
         install_sky(update_map=False)
+    from install_menu import install_wave_maps
+    install_wave_maps()
     for config in ('cremation.cfg', 'liblist.gam'):
         path = MOD/config
         path.write_text(path.read_text().replace('rapidcore', 'cs_mansion'))

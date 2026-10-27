@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstdint>
 static std::thread musicThread;
+static std::string musicCurrentPath;
 static std::atomic<bool> musicStop{false};
 static std::atomic<float> musicGain{0};
 static cvar_s* musicEnabled=nullptr;static cvar_s* musicVolume=nullptr;
@@ -33,14 +34,17 @@ static void musicWorker(std::string path){
  unsigned rendered=0;while(!musicStop){WaitForSingleObject(event,50);for(int i=0;i<4&&!musicStop;++i)if(headers[i].dwFlags&WHDR_DONE){rendered+=frames;if(rendered==frames)musicTrace("Playback",rendered);fill(i);waveOutWrite(device,&headers[i],sizeof(WAVEHDR));}}
  waveOutReset(device);for(auto& h:headers)waveOutUnprepareHeader(device,&h,sizeof(h));waveOutClose(device);CloseHandle(event);std::fclose(f);musicTrace("RenderedFrames",rendered);
 }
-static void musicShutdown(){musicStop=true;if(musicThread.joinable())musicThread.join();}
+static void musicShutdown(){musicStop=true;if(musicThread.joinable())musicThread.join();musicCurrentPath.clear();}
 static void musicUpdate(){
  static DWORD probeStart=0;static bool probeEnded=false;if(GetEnvironmentVariableA("CREMATION_AUDIO_VALIDATE",nullptr,0)&&musicThread.joinable()&&!probeEnded){if(!probeStart)probeStart=GetTickCount();if(GetTickCount()-probeStart>8000){probeEnded=true;eng.pfnClientCmd("disconnect\n");}}
  if(!musicEnabled){musicEnabled=eng.pfnRegisterVariable("cremation_music","1",1);musicVolume=eng.pfnRegisterVariable("cremation_music_volume","0.65",1);}
- const char* level=eng.pfnGetLevelName();bool active=musicEnabled&&musicEnabled->value>0&&level&&*level;
- if(!active){if(musicThread.joinable())musicShutdown();return;}
+ const char* level=eng.pfnGetLevelName();bool inLevel=level&&*level;
+ if(!musicEnabled||musicEnabled->value<=0){if(musicThread.joinable())musicShutdown();return;}
  float master=eng.pfnGetCvarFloat("volume");musicGain=std::max(0.f,std::min(1.f,musicVolume->value*master));
- if(!musicThread.joinable()){musicStop=false;std::string path=eng.pfnGetGameDirectory();path+="/sound/music/myfuneral_loop.wav";musicThread=std::thread(musicWorker,path);}
+ const char* gameDirectory=eng.pfnGetGameDirectory();std::string path=gameDirectory?gameDirectory:"";
+ path+=inLevel?"/sound/music/myfuneral_loop.wav":"/sound/music/menu_introduction.wav";
+ if(musicThread.joinable()&&path!=musicCurrentPath)musicShutdown();
+ if(!musicThread.joinable()){musicStop=false;musicCurrentPath=path;musicThread=std::thread(musicWorker,path);}
 }
 extern "C" void HUD_Frame(double time){musicUpdate();auto fn=reinterpret_cast<void(*)(double)>(GetProcAddress(donor,"HUD_Frame"));if(fn)fn(time);}
 extern "C" void HUD_Shutdown(){musicShutdown();auto fn=reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_Shutdown"));if(fn)fn();}

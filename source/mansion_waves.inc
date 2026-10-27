@@ -11,7 +11,16 @@ static bool mansionInventoryTest=false,mansionInventoryChecked=false;
 static float mansionRouteReport=0;
 #endif
 static float mansionMoveElapsed=0;
-static bool mansionMap(){return globals->mapname&&!std::strcmp(text(globals->mapname),"cs_mansion");}
+static int mansionStartWave(){
+    if(!globals->mapname)return 0;
+    const char* name=text(globals->mapname);
+    if(!std::strcmp(name,"cs_mansion"))return 1;
+    constexpr char prefix[]="cs_mansion_wave";
+    if(std::strncmp(name,prefix,sizeof(prefix)-1))return 0;
+    char* end=nullptr;long wave=std::strtol(name+sizeof(prefix)-1,&end,10);
+    return end&&!*end&&wave>=1&&wave<=4?int(wave):0;
+}
+static bool mansionMap(){return mansionStartWave()!=0;}
 static edict_t* mansionFind(const char* name){auto e=engine.pfnFindEntityByString(nullptr,"targetname",name);return e&&engine.pfnIndexOfEdict(e)>0?e:nullptr;}
 static bool mansionActor(edict_t* e){return valid(e)&&e->v.targetname&&!std::strncmp(text(e->v.targetname),"mansion_enemy_",14);}
 static edict_t* mansionState(){return mansionFind("mansion_wave_state");}
@@ -134,7 +143,7 @@ static void mansionHud(edict_t* state,int alive){
     char message[180];int wave=int(state->v.frags),pending=mansion::total(wave)-int(state->v.armorvalue);
     if(state->v.impulse==2)std::snprintf(message,sizeof message,"GAME OVER | LA BOMBA HA EXPLOTADO");
     else if(state->v.impulse)std::snprintf(message,sizeof message,"OLEADA 4/4 COMPLETADA | ENEMIGOS VIVOS: 0");
-    else if(!wave)std::snprintf(message,sizeof message,"OLEADA 1/4 | ENEMIGOS VIVOS: 0");
+    else if(!wave)std::snprintf(message,sizeof message,"OLEADA %d/4 | ENEMIGOS VIVOS: 0",mansionStartWave());
     else std::snprintf(message,sizeof message,"OLEADA %d/4 | ENEMIGOS VIVOS: %d%s",wave,alive,pending>0?" | REFUERZOS EN CAMINO":"");
     for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!valid(p)||!(p->v.flags&FL_CLIENT))continue;
         engine.pfnMessageBegin(MSG_ONE_UNRELIABLE,SvcTemp,nullptr,p);engine.pfnWriteByte(TE_TEXTMESSAGE);engine.pfnWriteByte(4);
@@ -200,13 +209,13 @@ static void mansionFrame(float dt){
     if(!mansionHasPlayer())return;
 #endif
     if(state->v.impulse)return;
-    if(state->v.frags==0){state->v.frags=1;state->v.armorvalue=0;state->v.health=0;state->v.dmg_save=0;
+    if(state->v.frags==0){int requestedWave=mansionStartWave();state->v.frags=requestedWave?requestedWave:1;state->v.armorvalue=0;state->v.health=0;state->v.dmg_save=0;
 #ifdef CREMATION_ENABLE_VALIDATION
         state->v.dmgtime=globals->time+(mansionTest?.2f:5.f);
 #else
         state->v.dmgtime=globals->time+5.f;
 #endif
-        startupTrace("MansionWave","begin=1 total=41");}
+        char report[80];std::snprintf(report,sizeof report,"begin=%d total=%d",int(state->v.frags),mansion::total(int(state->v.frags)));startupTrace("MansionWave",report);}
     int wave=int(state->v.frags),total=mansion::total(wave);
     if(int(state->v.armorvalue)<total){
         if(globals->time>=state->v.dmgtime){bool emitted=mansionEmit(state);

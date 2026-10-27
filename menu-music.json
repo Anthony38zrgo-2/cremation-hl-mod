@@ -1,0 +1,14 @@
+{
+  "source": "assets-source/menu/introduction_attract_mode.flac",
+  "source_sha256": "63459350ca9bc155fad93699696673659202140617119077ca2b8b568590d3b8",
+  "path": "sound/music/menu_introduction.wav",
+  "rate": 44100,
+  "channels": 2,
+  "frames": 3525060,
+  "loop_start_frame": 176399,
+  "crossfade_seconds": 4.0,
+  "seam_delta_pcm": [
+    0,
+    0
+  ]
+}

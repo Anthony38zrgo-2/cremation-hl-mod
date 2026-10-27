@@ -9,6 +9,16 @@ Mapa predeterminado: `cs_mansion`. Skybox activa: `city`, restaurada directament
 desde `valve_addon_b921d.rar`, con sus seis caras originales sin cambios.
 El instalador general mantiene esta selección.
 
+El lanzador abre el menú principal. Allí `Wave 1`–`Wave 4` cargan las copias
+`cs_mansion_wave1`–`cs_mansion_wave4` del mismo BSP y el controlador empieza
+directamente en la oleada indicada. Las acciones usan el prefijo `engine ` de
+GameUI para enviar el comando `map` al motor. New Game, Load Game, Find Servers,
+Create Server y Change Game están retirados del menú. Al reinstalar el mapa
+se regeneran las cuatro copias.
+El menú usa `HALF DEAD.jpg` como fondo y reproduce en bucle `Introduction (Attract Mode)`;
+al entrar a un mapa vuelve al tema de partida. `cremation_music`
+y `cremation_music_volume` controlan reproducción y nivel.
+
 Skybox alternativa conservada, actualmente desactivada: `cremation_mountains`, mezcla
 generada con el editor de imágenes entre el cielo City original y la referencia
 de montañas rocosas con niebla roja. Las seis caras TGA de 256×256 se proyectan
@@ -93,6 +103,7 @@ interactiva de guardar/cargar sigue siendo necesaria para aceptar ese flujo.
 ## Herramientas
 
 - `python tools/install_mansion.py`: reinstala mapa, WAD, cielo, rutas y mapa predeterminado.
+- `python tools/install_menu.py`: regenera el fondo del menú y la pista en bucle desde `assets-source/menu/`, además de las copias para iniciar cada oleada.
 - `powershell -ExecutionPolicy Bypass -File tools/build_mansion.ps1`: compila solo servidor, pruebas y lanzador; no ejecuta el pipeline general de armas.
 - `python tools/check_mansion_runtime.py`: prueba acotada de las cuatro oleadas con muertes por daño nativo.
 - `python tools/check_mansion_runtime.py --routes`: 20 recorridos físicos desde los cuatro frentes, con los cinco tipos de enemigos.

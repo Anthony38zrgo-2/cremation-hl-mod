@@ -189,6 +189,8 @@ def install_map(output):
         routes.append([list(map(float,e['origin'].split())) for e in nodes])
     data['routes']=routes
     path.write_text(json.dumps(data,indent=2)+'\n')
+    from install_menu import install_wave_maps
+    install_wave_maps()
     print('Installed radioactive Mansion with four fronts and two reward islands.' if data['reactor'].get('four_fronts') else 'Installed radioactive Mansion, with central bridge and isolated reward house.')
 
 if __name__=='__main__':

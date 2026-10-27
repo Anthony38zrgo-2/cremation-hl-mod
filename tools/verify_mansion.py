@@ -121,7 +121,8 @@ for i in range(struct.unpack_from('<i',textures)[0]):
     if off>=0:
         if placement.get('geometry_revision')=='reactor':assert struct.unpack_from('<i',textures,off+24)[0]>0
         else:assert textures[off:off+16].split(b'\0')[0].lower() in names
-assert 'map cs_mansion' in (MOD/'cremation.cfg').read_text()
+assert not any(line.strip().lower() == 'map cs_mansion'
+               for line in (MOD/'cremation.cfg').read_text().splitlines())
 for key in ('startmap','trainmap'):
     assert f'{key} "cs_mansion"' in (MOD/'liblist.gam').read_text()
 print(f'PASS: validated geometry, 10 exact TT starts, {len(ct)} CT markers/routes, symmetric hubs/bridges/houses, no ground weapons, textures, original sky and defaults.')
