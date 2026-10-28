@@ -5,7 +5,7 @@ using MansionNavClock=std::chrono::steady_clock;
 using MansionNavItem=std::pair<float,int>;
 struct MansionNavPath{
     edict_t* actor=nullptr;int serial=0;std::vector<int> nodes;size_t cursor=0;
-    Vector goal{0,0,0};float retryAt=0,blocked=0;bool requested=false,planning=false;
+    Vector goal{0,0,0};float retryAt=0,blocked=0,recoveryAt=0;bool requested=false,planning=false;
     int finish=-1,node=-1,edge=0;
     std::vector<float> costs;std::vector<int> previous;
     std::priority_queue<MansionNavItem,std::vector<MansionNavItem>,std::greater<MansionNavItem>> pending;
@@ -130,11 +130,56 @@ static void mansionPlanNav(edict_t* e,MansionNavPath& path,const Vector& goal){
     }
     mansionNavWorkMs+=std::chrono::duration<double,std::milli>(MansionNavClock::now()-began).count();
 }
+static float mansionNearestPlayerDistance(const Vector& at){
+    float nearest=1e30f;
+    for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);
+        if(valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO)nearest=std::min(nearest,length(p->v.origin-at));}
+    return nearest;
+}
+static bool mansionNavEdgeClear(edict_t* e,const Vector& a,const Vector& b){
+    float sweep=std::max(a.z,b.z)+36.2f;Vector from(a.x,a.y,sweep),to(b.x,b.y,sweep);TraceResult tr{};
+    engine.pfnTraceHull(&from.x,&to.x,1,1,e,&tr);return !tr.fStartSolid&&!tr.fAllSolid&&tr.flFraction>=.995f;
+}
+static bool mansionNavSpotFree(edict_t* e,const Vector& at){
+    Vector probe=at+Vector(0,0,36.2f);TraceResult tr{};
+    engine.pfnTraceHull(&probe.x,&probe.x,1,1,e,&tr);if(tr.fStartSolid||tr.fAllSolid)return false;
+    Vector lo=at+e->v.mins,hi=at+e->v.maxs;
+    for(int i=1;i<globals->maxEntities;++i){auto other=engine.pfnPEntityOfEntIndex(i);
+        if(!valid(other)||other==e||other->v.solid==SOLID_NOT)continue;
+        bool blocker=(other->v.flags&FL_CLIENT)?(other->v.health>0&&other->v.deadflag==DEAD_NO):((other->v.flags&FL_MONSTER)&&other->v.health>0&&other->v.deadflag==DEAD_NO);
+        if(!blocker)continue;
+        Vector otherLo=other->v.origin+other->v.mins,otherHi=other->v.origin+other->v.maxs;
+        if(lo.x<otherHi.x-2&&hi.x>otherLo.x+2&&lo.y<otherHi.y-2&&hi.y>otherLo.y+2&&lo.z<otherHi.z-2&&hi.z>otherLo.z+2)return false;
+    }
+    return true;
+}
+static bool mansionTryStuckStep(edict_t* e,MansionNavPath& path){
+    // A rare recovery for the zombie horde only. Never skip a sealed door or
+    // move through a wall: candidate cells and every traversed graph edge are
+    // swept again, and the destination must be empty.
+    if(mansionCultist(e)||path.nodes.empty()||path.cursor>=path.nodes.size()||mansionNearestPlayerDistance(e->v.origin)<640.f)return false;
+    const size_t last=std::min(path.nodes.size()-1,path.cursor+4);size_t chosen=path.cursor;Vector destination{};bool found=false;
+    for(size_t i=path.cursor;i<=last;++i){Vector at=czNavPoint(path.nodes[i]);
+        if(length(at-e->v.origin)>96.f||std::fabs(at.z-e->v.origin.z)>64.f)break;
+        if(length(at-e->v.origin)<18.f)continue;
+        bool clear=true;for(size_t edge=path.cursor;edge<i;++edge){
+            if(!mansionNavEdgeClear(e,czNavPoint(path.nodes[edge]),czNavPoint(path.nodes[edge+1]))){clear=false;break;}}
+        if(!clear)break;
+        if(!mansionNavSpotFree(e,at))continue;
+        chosen=i;destination=at;found=true;
+    }
+    if(!found)return false;
+    float distance=length(destination-e->v.origin);Vector old=e->v.origin;
+    engine.pfnSetOrigin(e,&destination.x);e->v.velocity=Vector(0,0,0);path.cursor=chosen+1;
+    char report[192];std::snprintf(report,sizeof report,"class=%s distance=%.1f dz=%.1f from=%.0f,%.0f,%.0f to=%.0f,%.0f,%.0f",
+        text(e->v.classname),distance,destination.z-old.z,old.x,old.y,old.z,destination.x,destination.y,destination.z);
+    startupTrace("MansionStuckStep",report);return true;
+}
 static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed){
     if(!valid(e)||!aliveEnemy(e)||CZNavCount<=0)return false;
     auto& path=mansionNavPath(e);
     if(!path.requested||length(path.goal-goal)>8.f){
-        path.nodes.clear();path.cursor=0;path.goal=goal;path.retryAt=0;path.blocked=0;
+        path.nodes.clear();path.cursor=0;path.goal=goal;path.retryAt=0;path.blocked=0;path.recoveryAt=0;
         path.requested=true;path.planning=false;path.pending={};
     }
     if(path.planning||(path.nodes.empty()&&globals->time>=path.retryAt))mansionPlanNav(e,path,goal);
@@ -154,6 +199,9 @@ static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed){
         if(hookWalkMove(e,yaw+turn,distance,0)){yaw+=turn;moved=true;break;}
     }
     if(moved){if(goal.z>140.f)++mansionNavUpperSteps;path.blocked=0;e->v.angles.y=yaw;if(!czIs(e)&&!qzIs(e))hordeWalkAnimation(e);}
-    else if((path.blocked+=dt)>=1.f){path.nodes.clear();path.retryAt=globals->time+.75f;path.blocked=0;}
+    else if((path.blocked+=dt)>=1.25f){
+        if(globals->time>=path.recoveryAt&&mansionTryStuckStep(e,path)){path.blocked=0;path.recoveryAt=globals->time+2.f;}
+        else if(path.blocked>=2.5f){path.nodes.clear();path.retryAt=globals->time+.75f;path.blocked=0;}
+    }
     return false;
 }
