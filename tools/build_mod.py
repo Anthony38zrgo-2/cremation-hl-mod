@@ -7,8 +7,9 @@ from install_tfc_assets import install as install_tfc
 from install_horde_assets import install as install_horde
 from install_hecu_assets import install as install_hecu
 from install_additional_weapons import install as install_additional_weapons
-from install_quake_zombie import install as install_quake_zombie
-from install_quake_zombie import adjust_tall_patrols, main_zombie_class
+from install_hotd2_max import install as install_hotd2_max, main_zombie_class
+from install_hotd2_ken import install as install_hotd2_ken
+from install_hotd2_randy import install as install_hotd2_randy
 from install_purple_zombie import install as install_purple_zombie
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -37,7 +38,9 @@ def prepare():
     install_horde()
     install_hecu()
     install_additional_weapons()
-    install_quake_zombie()
+    install_hotd2_max()
+    install_hotd2_ken()
+    install_hotd2_randy()
     install_purple_zombie()
     for file in ('config.cfg','default.cfg'):
         if not (MOD/file).exists(): shutil.copy2(ROOT/'valve'/file,MOD/file)
@@ -133,7 +136,7 @@ def build():
         for eye in (32,64):
             assert not bsp.line_clear((SPAWN[0],SPAWN[1],SPAWN[2]+28),(x,y,floor_z+eye)),(origin,'visible from spawn')
         yaw=(i*137+35)%360
-        classname=main_zombie_class(i) if i<20 else ('monster_fastzombie' if i%2==0 else 'monster_poisionzombie')
+        classname=main_zombie_class(i) if i<20 else ('monster_randy' if i%2==0 else 'monster_poisionzombie')
         target=f'cremation_zombie_{i+1:02}'
         es.append(dict(classname=classname,origin=vec(origin),angles=f'0 {yaw} 0',targetname=target,spawnflags='0'))
         # Native route following toward the spawn starts one second after spawn.
@@ -203,7 +206,6 @@ def build():
     bsp.write(MOD/'maps/rapidcore.bsp',es)
     report=dict(hecu=hecu,shell_pickups=shell_pickups,name='Cremation',map='rapidcore',spawn=dict(origin=SPAWN,angles=(0,SPAWN_YAW,0)),loadout=loadout,zombies=placements,navigation_nodes=len(nodes),original_map_sha256=hashlib.sha256(bsp.data).hexdigest(),runtime_source=DONOR.name,validation='Static geometry and files only; manual gameplay validation pending.')
     (MOD/'placement.json').write_text(json.dumps(report,indent=2)+'\n')
-    adjust_tall_patrols()
     print('Built Cremation:',len(placements),'zombies;',len(nodes),'navigation nodes;',len(es),'entities')
     print('Closest zombie:',min(p['distance_from_spawn'] for p in placements),'units')
 

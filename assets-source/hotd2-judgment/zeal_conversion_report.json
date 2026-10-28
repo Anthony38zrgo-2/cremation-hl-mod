@@ -1,0 +1,309 @@
+{
+  "name": "zeal",
+  "kind": 69,
+  "scale": 4.302350611512624,
+  "source_height": 13.01614049077034,
+  "target_height": 56.0,
+  "floor_offset": 34.43665427564228,
+  "nodes": [
+    "Root",
+    "Body",
+    "Head",
+    "Arm_R",
+    "Forearm_R",
+    "Hand_R",
+    "Arm_L",
+    "Forearm_L",
+    "Hand_L",
+    "Pelvis",
+    "Thigh_R",
+    "Shin_R",
+    "Foot_R",
+    "Thigh_L",
+    "Shin_L",
+    "Foot_L",
+    "WingRoot",
+    "Wing_1",
+    "Wing_2",
+    "Wing_3",
+    "Wing_4",
+    "Wing_5",
+    "Wing_6"
+  ],
+  "compiled_bones": [
+    "Root",
+    "Body",
+    "Head",
+    "Arm_R",
+    "Forearm_R",
+    "Hand_R",
+    "Arm_L",
+    "Forearm_L",
+    "Hand_L",
+    "Pelvis",
+    "Thigh_R",
+    "Shin_R",
+    "Foot_R",
+    "Thigh_L",
+    "Shin_L",
+    "Foot_L",
+    "WingRoot",
+    "Wing_1",
+    "Wing_2",
+    "Wing_3",
+    "Wing_4",
+    "Wing_5",
+    "Wing_6"
+  ],
+  "parents": [
+    -1,
+    0,
+    1,
+    1,
+    3,
+    4,
+    1,
+    6,
+    7,
+    0,
+    9,
+    10,
+    11,
+    9,
+    13,
+    14,
+    1,
+    16,
+    17,
+    18,
+    16,
+    20,
+    21
+  ],
+  "active_models": [
+    699,
+    681,
+    695,
+    704,
+    702,
+    694,
+    703,
+    701,
+    696,
+    698,
+    676,
+    673,
+    697,
+    675,
+    672,
+    674,
+    706,
+    710,
+    712,
+    705,
+    709,
+    711,
+    708,
+    707
+  ],
+  "attachment_models": [
+    674,
+    708,
+    707
+  ],
+  "triangles": 1247,
+  "sequences": [
+    {
+      "name": "hit_reaction_1",
+      "motion_id": 1032,
+      "frames": 50,
+      "ticks_60hz": 98,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "hit_reaction_2",
+      "motion_id": 1033,
+      "frames": 60,
+      "ticks_60hz": 118,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "death",
+      "motion_id": 1034,
+      "frames": 111,
+      "ticks_60hz": 219,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_40b",
+      "motion_id": 1035,
+      "frames": 34,
+      "ticks_60hz": 66,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "charge",
+      "motion_id": 1036,
+      "frames": 68,
+      "ticks_60hz": 134,
+      "wing_motion_id": 20,
+      "wing_frames": 5
+    },
+    {
+      "name": "anim_40d",
+      "motion_id": 1037,
+      "frames": 51,
+      "ticks_60hz": 100,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_40e",
+      "motion_id": 1038,
+      "frames": 51,
+      "ticks_60hz": 100,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_40f",
+      "motion_id": 1039,
+      "frames": 35,
+      "ticks_60hz": 67,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_410",
+      "motion_id": 1040,
+      "frames": 34,
+      "ticks_60hz": 66,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "hover",
+      "motion_id": 1041,
+      "frames": 68,
+      "ticks_60hz": 134,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_412",
+      "motion_id": 1042,
+      "frames": 60,
+      "ticks_60hz": 118,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_413",
+      "motion_id": 1043,
+      "frames": 33,
+      "ticks_60hz": 64,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_414",
+      "motion_id": 1044,
+      "frames": 24,
+      "ticks_60hz": 46,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_415",
+      "motion_id": 1045,
+      "frames": 35,
+      "ticks_60hz": 67,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    },
+    {
+      "name": "anim_416",
+      "motion_id": 1046,
+      "frames": 51,
+      "ticks_60hz": 100,
+      "wing_motion_id": 16,
+      "wing_frames": 12
+    }
+  ],
+  "compiled_bone_count": 23,
+  "compiled_sequences": 15,
+  "compiled_textures": 12,
+  "masked_textures": 4,
+  "installed_path": "D:\\SteamLibrary\\steamapps\\common\\Half-Life\\Cremation\\models\\cremation\\hotd2\\judgment\\zeal.mdl",
+  "installed_sha256": "4c60abe9fff00d72d9e6c3740c174ee1658fb57757da08cc8016be72886f912b",
+  "source_texture_alpha": {
+    "0": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "1": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "2": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "3": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "4": {
+      "transparent": 39,
+      "partial": 0
+    },
+    "5": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "6": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "7": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "8": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "9": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "10": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "11": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "12": {
+      "transparent": 596,
+      "partial": 1336
+    },
+    "13": {
+      "transparent": 168,
+      "partial": 0
+    },
+    "14": {
+      "transparent": 0,
+      "partial": 0
+    },
+    "100": {
+      "transparent": 1545,
+      "partial": 503
+    }
+  }
+}

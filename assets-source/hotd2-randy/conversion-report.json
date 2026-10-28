@@ -1,0 +1,669 @@
+{
+  "source": "HOTD2 PC Randy kind 0x19; zstin geometry and textures; ans/szom original leaper motions; run1 uses original Randy locomotion 0x0A",
+  "scale": 6.759597133377345,
+  "floor": 0.35086263110613763,
+  "bones": {
+    "Root": 0,
+    "Torso": 1,
+    "Head": 2,
+    "UpperArm_R": 3,
+    "Forearm_R": 4,
+    "Hand_R": 5,
+    "UpperArm_L": 6,
+    "Forearm_L": 7,
+    "Hand_L": 8,
+    "Pelvis": 9,
+    "Thigh_R": 10,
+    "Shin_R": 11,
+    "Foot_R": 12,
+    "Thigh_L": 13,
+    "Shin_L": 14,
+    "Foot_L": 15
+  },
+  "bodygroups": [
+    {
+      "node": 1,
+      "base": 1,
+      "count": 4,
+      "models": [
+        8209,
+        8209,
+        8209,
+        null
+      ]
+    },
+    {
+      "node": 2,
+      "base": 4,
+      "count": 4,
+      "models": [
+        8192,
+        8192,
+        8192,
+        null
+      ]
+    },
+    {
+      "node": 3,
+      "base": 16,
+      "count": 4,
+      "models": [
+        8199,
+        8199,
+        8199,
+        null
+      ]
+    },
+    {
+      "node": 4,
+      "base": 64,
+      "count": 4,
+      "models": [
+        8321,
+        8321,
+        8321,
+        null
+      ]
+    },
+    {
+      "node": 5,
+      "base": 256,
+      "count": 4,
+      "models": [
+        8266,
+        8266,
+        8266,
+        null
+      ]
+    },
+    {
+      "node": 6,
+      "base": 1024,
+      "count": 4,
+      "models": [
+        8196,
+        8196,
+        8196,
+        null
+      ]
+    },
+    {
+      "node": 7,
+      "base": 4096,
+      "count": 4,
+      "models": [
+        8318,
+        8318,
+        8318,
+        null
+      ]
+    },
+    {
+      "node": 8,
+      "base": 16384,
+      "count": 4,
+      "models": [
+        8214,
+        8214,
+        8214,
+        null
+      ]
+    },
+    {
+      "node": 9,
+      "base": 65536,
+      "count": 1,
+      "models": [
+        8202
+      ]
+    },
+    {
+      "node": 10,
+      "base": 65536,
+      "count": 4,
+      "models": [
+        8206,
+        8206,
+        8206,
+        null
+      ]
+    },
+    {
+      "node": 11,
+      "base": 262144,
+      "count": 4,
+      "models": [
+        8189,
+        8189,
+        8189,
+        null
+      ]
+    },
+    {
+      "node": 12,
+      "base": 1048576,
+      "count": 2,
+      "models": [
+        8184,
+        null
+      ]
+    },
+    {
+      "node": 13,
+      "base": 2097152,
+      "count": 4,
+      "models": [
+        8203,
+        8203,
+        8203,
+        null
+      ]
+    },
+    {
+      "node": 14,
+      "base": 8388608,
+      "count": 4,
+      "models": [
+        8186,
+        8186,
+        8186,
+        null
+      ]
+    },
+    {
+      "node": 15,
+      "base": 33554432,
+      "count": 2,
+      "models": [
+        8183,
+        null
+      ]
+    }
+  ],
+  "hitboxes": [
+    {
+      "node": 1,
+      "group": 2,
+      "minimum": [
+        -5.021443256046293,
+        -13.564225908236155,
+        -0.5963257420612496
+      ],
+      "maximum": [
+        14.748108353665662,
+        13.57584886511432,
+        32.23953032582418
+      ]
+    },
+    {
+      "node": 2,
+      "group": 1,
+      "minimum": [
+        -12.091739738409851,
+        -6.956095065066344,
+        -7.529126420264465
+      ],
+      "maximum": [
+        2.96733059308919,
+        6.944842779303261,
+        11.382642672029121
+      ]
+    },
+    {
+      "node": 3,
+      "group": 5,
+      "minimum": [
+        -6.0173180886786515,
+        -5.450814977043236,
+        -19.830542785535627
+      ],
+      "maximum": [
+        5.670639467326237,
+        6.584897758161351,
+        7.4236906331926695
+      ]
+    },
+    {
+      "node": 4,
+      "group": 5,
+      "minimum": [
+        -4.707870400111416,
+        -4.522040480115379,
+        -21.52354281333831
+      ],
+      "maximum": [
+        6.017546937801876,
+        4.583093235996625,
+        9.237113648218076
+      ]
+    },
+    {
+      "node": 5,
+      "group": 5,
+      "minimum": [
+        -3.0325940922571006,
+        -6.53151708855555,
+        -25.012579769255463
+      ],
+      "maximum": [
+        10.298645616626427,
+        4.976811230563221,
+        1.4277166901281397
+      ]
+    },
+    {
+      "node": 6,
+      "group": 4,
+      "minimum": [
+        -5.945235852606758,
+        -6.567987097245851,
+        -19.83063303589408
+      ],
+      "maximum": [
+        5.7427217033981295,
+        5.467725637958736,
+        7.4236003828342145
+      ]
+    },
+    {
+      "node": 7,
+      "group": 4,
+      "minimum": [
+        -4.635788969846295,
+        -4.566176128626949,
+        -21.523626617242588
+      ],
+      "maximum": [
+        6.089628368066998,
+        4.538958393291827,
+        9.237030650120568
+      ]
+    },
+    {
+      "node": 8,
+      "group": 4,
+      "minimum": [
+        -2.9605140721538303,
+        -4.959905404488352,
+        -25.01267001961392
+      ],
+      "maximum": [
+        10.370725838181391,
+        6.548422914630419,
+        1.4276284542866144
+      ]
+    },
+    {
+      "node": 9,
+      "group": 3,
+      "minimum": [
+        -7.836219381042952,
+        -10.820425646613543,
+        -16.611757304784803
+      ],
+      "maximum": [
+        10.133609943283156,
+        10.804885663017078,
+        4.197611826826029
+      ]
+    },
+    {
+      "node": 10,
+      "group": 7,
+      "minimum": [
+        -5.917238499219804,
+        -4.6783242861088326,
+        -21.730659327924755
+      ],
+      "maximum": [
+        6.347161392048739,
+        5.8922568776767585,
+        3.6119461957741574
+      ]
+    },
+    {
+      "node": 11,
+      "group": 7,
+      "minimum": [
+        -8.294509089663766,
+        -5.235953853571872,
+        -22.902943796486028
+      ],
+      "maximum": [
+        3.8338121975138164,
+        5.237209300522522,
+        6.384648328885202
+      ]
+    },
+    {
+      "node": 12,
+      "group": 7,
+      "minimum": [
+        -14.367371100387915,
+        -3.8749478274135303,
+        -6.2339677002802905
+      ],
+      "maximum": [
+        5.386646166374977,
+        4.631851797958697,
+        3.3458720229134555
+      ]
+    },
+    {
+      "node": 13,
+      "group": 6,
+      "minimum": [
+        -5.916977417825702,
+        -5.927751860173037,
+        -21.720638314909166
+      ],
+      "maximum": [
+        6.347478879916876,
+        4.645942135172479,
+        3.625971262639415
+      ]
+    },
+    {
+      "node": 14,
+      "group": 6,
+      "minimum": [
+        -8.254696594483544,
+        -5.3171364684224365,
+        -22.900547327146338
+      ],
+      "maximum": [
+        3.8830679422541623,
+        5.156025074058414,
+        6.451469049639847
+      ]
+    },
+    {
+      "node": 15,
+      "group": 6,
+      "minimum": [
+        -14.574115332245736,
+        -4.717553377186185,
+        -6.1118960324022185
+      ],
+      "maximum": [
+        5.153717243463636,
+        3.789243830765726,
+        3.357966376753194
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "idle",
+      "source_id": "ans.bin:0x7",
+      "frames": 16,
+      "fps": 3.75,
+      "activity": 1,
+      "loop": true,
+      "speed": 0,
+      "events": [],
+      "discarded_root_travel": [
+        0.0,
+        0.3183770003646761
+      ]
+    },
+    {
+      "name": "run1",
+      "source_id": "ans.bin:0xA",
+      "frames": 27,
+      "fps": 30.0,
+      "activity": 3,
+      "loop": true,
+      "speed": 125,
+      "events": [],
+      "discarded_root_travel": [
+        94.53025607880502,
+        0.0
+      ]
+    },
+    {
+      "name": "diesimple",
+      "source_id": "szom.bin:0x11D",
+      "frames": 26,
+      "fps": 37.5,
+      "activity": 36,
+      "loop": false,
+      "speed": 0,
+      "events": [
+        [
+          2001,
+          15
+        ]
+      ],
+      "discarded_root_travel": [
+        -47.31717993364141,
+        3.3797985666886725
+      ]
+    },
+    {
+      "name": "dieforward",
+      "source_id": "zom.bin:0x3CC",
+      "frames": 31,
+      "fps": 52.5,
+      "activity": 38,
+      "loop": false,
+      "speed": 0,
+      "events": [
+        [
+          2001,
+          18
+        ]
+      ],
+      "discarded_root_travel": [
+        -157.01124322196358,
+        0.0
+      ]
+    },
+    {
+      "name": "diebackward",
+      "source_id": "zom.bin:0x3DA",
+      "frames": 50,
+      "fps": 81.66666666666667,
+      "activity": 37,
+      "loop": false,
+      "speed": 0,
+      "events": [
+        [
+          2001,
+          29
+        ]
+      ],
+      "discarded_root_travel": [
+        64.11274585629538,
+        0.6049839103991947
+      ]
+    },
+    {
+      "name": "attack1",
+      "source_id": "ans.bin:0x9+ans.bin:0x8",
+      "frames": 86,
+      "fps": 127.5,
+      "activity": 30,
+      "loop": true,
+      "speed": 0,
+      "events": [
+        [
+          1,
+          24
+        ],
+        [
+          2,
+          66
+        ]
+      ],
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "jumpattack",
+      "source_id": "ans.bin:0x3",
+      "frames": 18,
+      "fps": 17.0,
+      "activity": 28,
+      "loop": false,
+      "speed": 0,
+      "events": [
+        [
+          4,
+          5
+        ]
+      ],
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "climb",
+      "source_id": "szom.bin:0x124",
+      "frames": 248,
+      "fps": 30.000000000000004,
+      "activity": 0,
+      "loop": false,
+      "speed": 0,
+      "events": [
+        [
+          1003,
+          15
+        ],
+        [
+          1003,
+          30
+        ],
+        [
+          1003,
+          45
+        ],
+        [
+          1003,
+          60
+        ],
+        [
+          1003,
+          75
+        ],
+        [
+          1003,
+          90
+        ],
+        [
+          1003,
+          105
+        ],
+        [
+          1003,
+          120
+        ],
+        [
+          1003,
+          135
+        ],
+        [
+          1003,
+          150
+        ],
+        [
+          1003,
+          165
+        ],
+        [
+          1003,
+          180
+        ],
+        [
+          1003,
+          195
+        ]
+      ],
+      "discarded_root_travel": [
+        0.0,
+        1.017998257555405
+      ]
+    },
+    {
+      "name": "climb2",
+      "source_id": "szom.bin:0x134",
+      "frames": 229,
+      "fps": 30.0,
+      "activity": 0,
+      "loop": false,
+      "speed": 0,
+      "events": [
+        [
+          1003,
+          15
+        ],
+        [
+          1003,
+          30
+        ],
+        [
+          1003,
+          45
+        ],
+        [
+          1003,
+          60
+        ],
+        [
+          1003,
+          75
+        ],
+        [
+          1003,
+          90
+        ],
+        [
+          1003,
+          105
+        ],
+        [
+          1003,
+          120
+        ],
+        [
+          1003,
+          135
+        ],
+        [
+          1003,
+          150
+        ],
+        [
+          1003,
+          165
+        ]
+      ],
+      "discarded_root_travel": [
+        0.0,
+        8.638765117116884
+      ]
+    }
+  ],
+  "textures": 17,
+  "main_triangles": 724,
+  "sha256": {
+    "models/cremation/hotd2/randy/randy.mdl": "2c6f8597c5e78ef532e34c05dffa916c634b2e04421f783d638453461a62a8ac",
+    "models/cremation/hotd2/randy/randy_charred.mdl": "98f985fccec3833ad54a546ee1f8074f6225138785a1c52c22f049d762302109",
+    "models/cremation/hotd2/randy/part_02.mdl": "0d2d45c29b84574c6ba6755252d336234345e252dd2836d315abf8f7a1a3f7d5",
+    "models/cremation/hotd2/randy/part_03.mdl": "9f92da35fa40e5fe7b773a71b067153b9a418e2cabb4f48e9b287524f4b8bf32",
+    "models/cremation/hotd2/randy/part_04.mdl": "cb74c9e7561e9b3aa3e0e15d992b95b1ce540512c2f5aef77cacc5bc603b27e2",
+    "models/cremation/hotd2/randy/part_05.mdl": "cedfeef0c6766caef01cae9418583458720b8d03c8e94e8901db96b136e6c6ce",
+    "models/cremation/hotd2/randy/part_06.mdl": "01bf1c9ff817bd3bd03eb65d1ce99eda2606947cbc685715daa17cf38de6ae66",
+    "models/cremation/hotd2/randy/part_07.mdl": "bc85017f19630855bf8b22241cd12a8d4f14f377eaba39c71856d9a2bb8e710b",
+    "models/cremation/hotd2/randy/part_08.mdl": "31719a99e6cf9c877ff922697e5c403ee6e98e8d70d8f6ff947378dd28d148f9",
+    "models/cremation/hotd2/randy/part_10.mdl": "8910493c9a52f57947cc2b02538751ecb52a3d9e6121354a5b0157ce82c999ba",
+    "models/cremation/hotd2/randy/part_11.mdl": "099a6e91a49a92206178760a292054d37699cb7e82a49956d90528237d3828cb",
+    "models/cremation/hotd2/randy/part_12.mdl": "5369f39adfaeeb1e0310e9a3dd11d72d3dc2e4d80002bff049f80755e4cba010",
+    "models/cremation/hotd2/randy/part_13.mdl": "a86822f337bc0f00bae990f8e6b002d58241610fc0c068f51fa562e7db6c4dbd",
+    "models/cremation/hotd2/randy/part_14.mdl": "1d592196c1953b8e872a6c72740d345cffd33e4b86d630747b9dabb65a32b809",
+    "models/cremation/hotd2/randy/part_15.mdl": "3b04c8e16611111391a00f13a180175048be9202ee7626ed2ac57a21169fe685"
+  }
+}

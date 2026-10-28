@@ -18,7 +18,7 @@ static int __fastcall davidProbePlayerClass(void*,void*){return 2;}
 static void davidProbeResult(bool ok,const char* detail){startupTrace(ok?"DavidTest PASS":"DavidTest FAIL",detail);}
 static edict_t* davidProbeSpawn(const Vector& at,bool native=false,bool steve=false){
  auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_zombie"));if(!valid(e))return nullptr;e->v.origin=at;e->v.angles=Vector(0,0,0);
- float enabled=davidEnable.value,chance=steveChance.value;steveChance.value=steve?1.f:0.f;if(native)davidEnable.value=0;hookSpawn(e);davidEnable.value=enabled;steveChance.value=chance;e->v.nextthink=globals->time+100;return e;
+ float enabled=davidEnable.value,chance=steveChance.value,axeChance=johnnyChance.value,armoredChance=kenChance.value;steveChance.value=steve?1.f:0.f;johnnyChance.value=0;kenChance.value=0;if(native)davidEnable.value=0;hookSpawn(e);davidEnable.value=enabled;steveChance.value=chance;johnnyChance.value=axeChance;kenChance.value=armoredChance;e->v.nextthink=globals->time+100;return e;
 }
 static void davidProbeApplyTrace(edict_t* e,int node,float amount,int bits=1<<1){
  auto s=davidState(e);if(!s)return;davidPose(*s);auto p=s->pose[node];const float* box=davidPartBounds(e,node,davidBody(e,node));Vector point=p.origin;
@@ -50,6 +50,8 @@ static void davidProbeBegin(edict_t* list,int count){
  }
  if(!valid(davidProbeA)||!valid(davidProbePlayer)){davidProbeResult(false,"fixture allocation");return;}
  auto player=davidProbePlayer;dmcInstallPlayer(player);player->v.health=player->v.max_health=1000;
+ char randyOnly[8]{};GetEnvironmentVariableA("CREMATION_RANDY_VALIDATE",randyOnly,sizeof randyOnly);
+ if(randyOnly[0]=='1'){randyProbeRun(player,at+Vector(0,160,0));davidLocalizedDamage.value=davidProbeSavedLocalized;davidProbeOverridesActive=false;davidProbePhase=-1;return;}
  davidProbeResult(davidModel(davidProbeA)&&davidState(davidProbeA)&&davidProbeA->v.health>0,"normal zombie receives David model and guarded native hooks");
  // The donor's ordinary health and damage are measured before/after adaptation.
  auto baseline=davidProbeSpawn(at+Vector(0,160,0),true);davidProbeResult(valid(baseline)&&baseline->v.health==davidProbeA->v.health,"normal zombie health unchanged from actual donor Spawn");
@@ -91,6 +93,15 @@ static void davidProbeBegin(edict_t* list,int count){
   davidProbeResult(steveModel(steve)&&ss->saved.variant==1&&std::fabs(ss->saved.initialHealth-expectedHealth)<.001f&&steve->v.health==hurtHealth&&!ss->saved.prone,"real save/restore keeps Steve identity, initial health and damage without multiplying health twice or enabling prone");
   engine.pfnSetModel(steve,SteveCharred);davidProbeResult(davidModel(steve)&&steveModel(steve),"charred Steve retains shared David identity");
   engine.pfnRemoveEntity(steve);engine.pfnSetOrigin(player,&originalPosition.x);player->v.health=1000;
+  auto ken=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_ken"));
+  if(valid(ken)){ken->v.origin=baseline->v.origin;hookSpawn(ken);ken->v.nextthink=globals->time+1000;
+   davidProbeResult(kenModel(ken)&&davidState(ken)&&ken->v.health==expectedHealth/1.1f,"Ken has independent identity and David health");
+   Vector position=ken->v.origin+Vector(42,0,36);engine.pfnSetOrigin(player,&position.x);float damage[2]{};
+   for(int attack=0;attack<2;++attack){player->v.health=1000;player->v.armorvalue=0;davidActivity(ken->pvPrivateData,nullptr,30);MonsterEvent_t event{};event.event=attack?3:1;auto kt=*reinterpret_cast<void***>(ken->pvPrivateData);reinterpret_cast<void(__thiscall*)(void*,MonsterEvent_t*)>(kt[57])(ken->pvPrivateData,&event);damage[attack]=1000-player->v.health;}
+   char kenDetail[180];std::snprintf(kenDetail,sizeof kenDetail,"damage=%.2f/%.2f expected=%.2f/%.2f health=%.2f",damage[0],damage[1],dealt[1][0]*2,dealt[1][1]*2,ken->v.health);startupTrace("KenProbe",kenDetail);
+   davidProbeResult(std::fabs(damage[0]-dealt[1][0]*2)<.001f&&std::fabs(damage[1]-dealt[1][1]*2)<.001f&&davidMeleeScale(&ken->v)==1.f,"Ken single and double melee deal twice David damage and clear the bonus scope");
+   engine.pfnRemoveEntity(ken);engine.pfnSetOrigin(player,&originalPosition.x);player->v.health=1000;
+  }else davidProbeResult(false,"Ken exported entity allocation");
   baseline->v.health=0;baseline->v.deadflag=DEAD_DEAD;baseline->v.solid=SOLID_NOT;baseline->v.effects|=EF_NODRAW;
  }
  auto s=davidState(davidProbeA);s->target=player;s->targetSerial=player->serialnumber;s->movedAt=globals->time;s->clearSince=globals->time-.5f;s->entity->v.sequence=1;
@@ -136,7 +147,7 @@ static void davidProbeBegin(edict_t* list,int count){
  // Real donor named-field serialization, with isolated save buffer/token table.
  char buffer[4096]{};char* tokens[1024]{};SAVERESTOREDATA save{};save.pBaseData=buffer;save.pCurrentData=buffer;save.bufferSize=sizeof buffer;save.tokenCount=1024;save.pTokens=tokens;save.time=globals->time;
  DavidSaved original=s->saved,roundtrip{};original.prone=0;raven.pfnSaveWriteFields(&save,"CremationDavid1",&original,davidSaveFields,ARRAYSIZE(davidSaveFields));save.pCurrentData=buffer;save.size=0;raven.pfnSaveReadFields(&save,"CremationDavid1",&roundtrip,davidSaveFields,ARRAYSIZE(davidSaveFields));
- davidProbeResult(roundtrip.version==5&&roundtrip.variant==original.variant&&roundtrip.severMask==original.severMask&&roundtrip.regional[3]==original.regional[3]&&roundtrip.prone==0,"real donor serializer preserves version-5 anatomy and clears the disabled prone state");
+ davidProbeResult(roundtrip.version==original.version&&roundtrip.variant==original.variant&&roundtrip.severMask==original.severMask&&roundtrip.regional[3]==original.regional[3]&&roundtrip.prone==0,"real donor serializer preserves the current anatomy version and clears the disabled prone state");
  davidProbePhase=0;davidProbeAt=globals->time+.8f;
 }
 static void davidProbeFrame(){

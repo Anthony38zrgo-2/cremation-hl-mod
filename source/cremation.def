@@ -4,6 +4,11 @@ EXPORTS
     GetEntityAPI
     GetEntityAPI2
     monster_quake_zombie
+    monster_max
+    monster_ken
+    monster_randy
+    monster_johnny
+    monster_czero_zombie
     quake_zombie_gib
     weapon_shockrifle
     ammo_shockcore

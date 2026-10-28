@@ -2214,7 +2214,7 @@
     "ammo_buckshot"
   ],
   "textures": 70,
-  "entities": 627,
+  "entities": 748,
   "geometry_unchanged": false,
   "inventory_delivery": "direct",
   "geometry_revision": "reactor",
@@ -4690,12 +4690,12 @@
     "weapon": "Leviathan Axe; Glock after planting",
     "model_folder": "0",
     "smoke_per_spawn": 1,
-    "radar_hidden": true,
     "smoke_trigger": "four_zombies_near_mansion",
     "flash_per_spawn": 1,
     "bomb_seconds": 35,
     "plant_seconds": 3,
     "defuse_seconds": 5,
-    "infinite_glock_reserve": true
+    "infinite_glock_reserve": true,
+    "radar_hidden": true
   }
 }

@@ -1,5 +1,5 @@
 // Scope native gib model selection to the monster currently taking damage/dying.
-static bool humanoidRemains(edict_t* e){if(!e||e->free)return false;const char* n=text(e->v.classname);return std::strstr(n,"zombie")||!std::strcmp(n,"monster_human_grunt");}
+static bool humanoidRemains(edict_t* e){if(!e||e->free)return false;const char* n=text(e->v.classname);return std::strstr(n,"zombie")||!std::strcmp(n,"monster_human_grunt")||!std::strcmp(n,"monster_ken")||!std::strcmp(n,"monster_randy");}
 static bool humanGibContext=false;
 static std::vector<std::pair<edict_t*,int>> humanNativeGibs;
 struct AnatomicalGib{edict_t* entity;int serial;float expires,born,last;Vector velocity;int bounces=0;bool asleep=false;int bloodDecals=5;float nextBlood=0;bool localized=false;};

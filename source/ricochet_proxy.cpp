@@ -42,7 +42,7 @@ static constexpr const char* PipeWrenchViewModel="models/cremation/v_pipe_wrench
 static constexpr const char* PipeWrenchPlayerModel="models/cremation/p_pipe_wrench.mdl";
 static constexpr const char* RicochetRedModel="models/cremation/v_ricochet_red.mdl";
 static int trailSprite=0, flashSprite=0;
-static int msgTacticalHUD=0;
+static int msgTacticalHUD=0,msgJudgmentHUD=0,msgMansionDoors=0,msgCremationWaveHUD=0;
 static int msgLinkMuzzle=0,msgLinkShot=0,msgFlakMuzzle=0;
 static int msgWeaponList=0,msgCurWeapon=0,msgItemPickup=0,msgAmmoX=0,msgSetFov=0;
 static int currentMsg=0,currentByte=0,curWeaponId=0;
@@ -536,9 +536,13 @@ static void hookMoveToOrigin(edict_t* e,const float* goal,float distance,int mod
     engine.pfnMoveToOrigin(e,goal,distance,mode);
 }
 static bool invalidFastSequenceLogged=false;
+static constexpr const char* RandyModel="models/cremation/hotd2/randy/randy.mdl";
+static constexpr const char* RandyCharred="models/cremation/hotd2/randy/randy_charred.mdl";
+static bool randyClass(edict_t* e){return valid(e)&&e->v.classname&&(!std::strcmp(text(e->v.classname),"monster_randy")||!std::strcmp(text(e->v.classname),"monster_fastzombie"));}
+static void randySetModel(edict_t* e,const char* path){Vector lo=e->v.mins,hi=e->v.maxs;engine.pfnSetModel(e,path);engine.pfnSetSize(e,&lo.x,&hi.x);}
 static void* hookModelPtr(edict_t* e) {
     void* model=engine.pfnGetModelPtr(e);
-    if(model && valid(e) && e->v.classname && !std::strcmp(text(e->v.classname),"monster_fastzombie")) {
+    if(model && randyClass(e)) {
         int count=*reinterpret_cast<int*>(static_cast<unsigned char*>(model)+164);
         if(e->v.sequence<0 || e->v.sequence>=count) {
             // Ravenholm can request activities absent from its fast-zombie model.
@@ -588,6 +592,9 @@ static void reactorPrecache();
 static void reactorActivate();
 static void reactorFrame();
 static void tacticalHudFrame();
+static void mansionDoorRepairPostThink(edict_t* player,int buttons);
+static bool judgmentIs(edict_t* e);
+static void judgmentThink(edict_t* e,float dt);
 #include "vostok_cover.inc"
 #ifdef CREMATION_ENABLE_VALIDATION
 static void vostokProbeFrame();
@@ -601,6 +608,7 @@ static void dmcPreviewFrame();
 #endif
 static void hookThink(edict_t* e) {
     enemyCombatClearTargets(e);
+    if(judgmentIs(e)){judgmentThink(e,.05f);e->v.nextthink=0;return;}
     if(vostokCoverThink(e))return;
     if(czThink(e))return;
     if(qzThink(e))return;
@@ -737,6 +745,7 @@ static void hookPostThink(edict_t* p) {
     bool carrier=bounce::isBouncePlayer(p);
     if(shockRifle(p)||winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPostThink(p);
+    mansionDoorRepairPostThink(p,state.buttons);
     dmcPlayerFrame(p);playerDefaults(p);
     rpgNormalize(p);
     rpgPostThink(p,state.buttons);
@@ -971,7 +980,7 @@ static void extensionPrecache(){
             bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
         startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
-        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);
+        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",5);msgCremationWaveHUD=engine.pfnRegUserMsg("CremationWaveHUD",6);
         czPrecache();
         heartPrecache();
         mansionRadarPrecache();
@@ -995,6 +1004,8 @@ static void extensionPrecache(){
         for(auto path:{"sprites/bloodspray.spr","sprites/blood.spr"})engine.pfnPrecacheModel(const_cast<char*>(path));
         shockPrecache();
         qzPrecache();
+        engine.pfnPrecacheModel(const_cast<char*>(RandyModel));
+        engine.pfnPrecacheModel(const_cast<char*>(RandyCharred));
         winchesterPrecache();
         necroPrecache();
         cultistPrecache();
@@ -1012,6 +1023,9 @@ static int hookSpawn(edict_t* e) {
     if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);enemyCombatInstall(e);return result;}
     const char* classname=text(e->v.classname);
     bool johnnyNpc=classname&&!std::strcmp(classname,"monster_johnny");
+    bool maxNpc=classname&&!std::strcmp(classname,"monster_max");
+    bool kenNpc=classname&&!std::strcmp(classname,"monster_ken");
+    bool randyNpc=randyClass(e);
     bool ricochetItem=classname && (!std::strcmp(classname,"weapon_ricochet")||!std::strcmp(classname,"weapon_9mmhandgun")||!std::strcmp(classname,"weapon_glock"));
     bool bounceItem=bounce::isCarrierClass(classname);
     bool nailItem=classname && (!std::strcmp(classname,"weapon_nailgun")||!std::strcmp(classname,"weapon_9mmAR")||!std::strcmp(classname,"weapon_mp5"));
@@ -1024,6 +1038,13 @@ static int hookSpawn(edict_t* e) {
     if(world)extensionPrecache();
     int result=raven.pfnSpawn(e);
     if(johnnyNpc)e->v.classname=engine.pfnAllocString("monster_johnny");
+    if(maxNpc)e->v.classname=engine.pfnAllocString("monster_max");
+    if(kenNpc)e->v.classname=engine.pfnAllocString("monster_ken");
+    if(randyNpc&&valid(e)){
+        e->v.classname=engine.pfnAllocString("monster_randy");randySetModel(e,RandyModel);
+        if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);
+        startupTrace("RandySpawn","original armored zstin model; native fast-zombie AI");
+    }
     if(world)mansionPrecache();
 #ifdef CREMATION_ENABLE_VALIDATION
     if(world)enemyCombatProbePrecache();
@@ -1062,10 +1083,14 @@ static int hookSpawn(edict_t* e) {
     enemyCombatInstall(e);
     return result;
 }
+#include "judgment_boss.inc"
+static void hookSetAbsBox(edict_t* e){if(judgmentIs(e)){judgmentAbsBox(e);return;}if(raven.pfnSetAbsBox)raven.pfnSetAbsBox(e);}
 #include "mansion_waves.inc"
 #ifdef CREMATION_ENABLE_VALIDATION
+#include "judgment_validation.inc"
 #include "hotd2_death_validation.inc"
 #include "enemy_combat_validation.inc"
+#include "randy_validation.inc"
 #include "david_validation.inc"
 #endif
 #include "mansion_radar.inc"
@@ -1094,6 +1119,7 @@ static void playerDefaults(edict_t* p){
 }
 #include "mansion_reactor.inc"
 #include "czero_objective.inc"
+#include "mansion_navigation.inc"
 #include "tactical_hud.inc"
 #ifdef CREMATION_ENABLE_VALIDATION
 #include "tactical_hud_validation.inc"
@@ -1185,6 +1211,12 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(restoringWorld){mansionPrecache();startupInventoryPrecache();reactorPrecache();}
     if(tacticalSaved(e)&&raven.pfnSaveReadFields)raven.pfnSaveReadFields(data,"CremationTactical1",&e->v,tacticalFields,ARRAYSIZE(tacticalFields));
     const char* restoredClass=text(e->v.classname);
+    if(randyClass(e)){
+        const char* model=text(e->v.model);
+        if(model&&!std::strcmp(model,"models/zombie_fast.mdl"))randySetModel(e,RandyModel);
+        else if(model&&!std::strcmp(model,"models/cremation/charred/zombie_fast.mdl"))randySetModel(e,RandyCharred);
+        e->v.classname=engine.pfnAllocString("monster_randy");
+    }
     if(czIs(e)){czInstall(e);enemyCombatInstall(e);e->v.nextthink=globals->time+.05f;return result;}
     if(qzIs(e)){qzInstall(e);weaponBloodInstall(e);enemyCombatInstall(e);Vector mins(-16,-16,0),maxs(16,16,QZHeight);engine.pfnSetSize(e,&mins.x,&maxs.x);e->v.view_ofs=Vector(0,0,QZEye);e->v.nextthink=globals->time+.1f;return result;}
     if(qzGib(e)){e->v.nextthink=std::max(globals->time+.1f,e->v.dmgtime);return result;}
@@ -1275,6 +1307,7 @@ extern "C" void __stdcall GiveFnptrsToDll(enginefuncs_t* incoming,globalvars_t* 
 }
 static void installHooks(DLL_FUNCTIONS* table) {
     raven=*table;
+    table->pfnSetAbsBox=hookSetAbsBox;
     table->pfnTouch=hookTouch;table->pfnSpawn=hookSpawn;table->pfnThink=hookThink;table->pfnStartFrame=hookStartFrame;
     table->pfnPlayerPreThink=hookPreThink;table->pfnPlayerPostThink=hookPostThink;
     table->pfnClientCommand=hookClientCommand;table->pfnServerActivate=hookActivate;table->pfnServerDeactivate=hookDeactivate;
@@ -1339,6 +1372,9 @@ extern "C" void cremation_sentry_base(entvars_t* vars) {
 extern "C" void weapon_necromancer(entvars_t* vars){spawnNativeAlias(vars,"weapon_hornetgun","weapon_necromancer");}
 extern "C" void monster_minion(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_minion");}
 extern "C" void monster_johnny(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_johnny");}
+extern "C" void monster_ken(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_ken");}
+extern "C" void monster_randy(entvars_t* vars){spawnNativeAlias(vars,"monster_fastzombie","monster_randy");}
+extern "C" void monster_max(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_max");}
 extern "C" void monster_quake_zombie(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_quake_zombie");}
 extern "C" void monster_czero_zombie(entvars_t* vars){spawnNativeAlias(vars,"monster_human_grunt","monster_czero_zombie");}
 extern "C" void quake_zombie_gib(entvars_t* vars){spawnNativeAlias(vars,"info_target","quake_zombie_gib");}

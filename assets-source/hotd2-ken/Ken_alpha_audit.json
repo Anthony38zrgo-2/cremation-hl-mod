@@ -1,0 +1,489 @@
+[
+  {
+    "index": 0,
+    "w": 32,
+    "h": 32,
+    "fmt": 256,
+    "offset": 0,
+    "id": 5505,
+    "path": "textures/Ken_tex_00_id5505.png",
+    "alpha_zero": 224,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7616,
+        "material": 0,
+        "tsp": "0x94002452",
+        "uses_texture_alpha": true
+      }
+    ]
+  },
+  {
+    "index": 1,
+    "w": 64,
+    "h": 64,
+    "fmt": 258,
+    "offset": 2048,
+    "id": 5514,
+    "path": "textures/Ken_tex_01_id5514.png",
+    "alpha_zero": 789,
+    "alpha_partial": 651,
+    "material_uses": [
+      {
+        "model": 7616,
+        "material": 3,
+        "tsp": "0x200C245B",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7616,
+        "material": 5,
+        "tsp": "0x9400245B",
+        "uses_texture_alpha": true
+      }
+    ]
+  },
+  {
+    "index": 2,
+    "w": 64,
+    "h": 64,
+    "fmt": 258,
+    "offset": 10240,
+    "id": 5515,
+    "path": "textures/Ken_tex_02_id5515.png",
+    "alpha_zero": 596,
+    "alpha_partial": 1336,
+    "material_uses": [
+      {
+        "model": 7616,
+        "material": 4,
+        "tsp": "0x9400245B",
+        "uses_texture_alpha": true
+      }
+    ]
+  },
+  {
+    "index": 3,
+    "w": 64,
+    "h": 16,
+    "fmt": 3329,
+    "offset": 18432,
+    "id": 5527,
+    "path": "textures/Ken_tex_03_id5527.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7616,
+        "material": 7,
+        "tsp": "0x20082459",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 4,
+    "w": 32,
+    "h": 32,
+    "fmt": 257,
+    "offset": 20480,
+    "id": 5576,
+    "path": "textures/Ken_tex_04_id5576.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7616,
+        "material": 2,
+        "tsp": "0x20080452",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 5,
+    "w": 32,
+    "h": 64,
+    "fmt": 3329,
+    "offset": 22528,
+    "id": 5577,
+    "path": "textures/Ken_tex_05_id5577.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7621,
+        "material": 0,
+        "tsp": "0x20080453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7622,
+        "material": 0,
+        "tsp": "0x20080453",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 6,
+    "w": 64,
+    "h": 256,
+    "fmt": 3329,
+    "offset": 26624,
+    "id": 5581,
+    "path": "textures/Ken_tex_06_id5581.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7613,
+        "material": 0,
+        "tsp": "0x200C045D",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7623,
+        "material": 0,
+        "tsp": "0x200C045D",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7628,
+        "material": 0,
+        "tsp": "0x200C045D",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 7,
+    "w": 32,
+    "h": 128,
+    "fmt": 3329,
+    "offset": 59392,
+    "id": 5582,
+    "path": "textures/Ken_tex_07_id5582.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7613,
+        "material": 1,
+        "tsp": "0x200C0454",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7623,
+        "material": 1,
+        "tsp": "0x200C0454",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7628,
+        "material": 1,
+        "tsp": "0x200C0454",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 8,
+    "w": 32,
+    "h": 64,
+    "fmt": 3329,
+    "offset": 67584,
+    "id": 5583,
+    "path": "textures/Ken_tex_08_id5583.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7731,
+        "material": 2,
+        "tsp": "0x20080453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7732,
+        "material": 2,
+        "tsp": "0x20080453",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 9,
+    "w": 32,
+    "h": 32,
+    "fmt": 258,
+    "offset": 71680,
+    "id": 5584,
+    "path": "textures/Ken_tex_09_id5584.png",
+    "alpha_zero": 254,
+    "alpha_partial": 528,
+    "material_uses": [
+      {
+        "model": 7623,
+        "material": 3,
+        "tsp": "0x94002452",
+        "uses_texture_alpha": true
+      }
+    ]
+  },
+  {
+    "index": 10,
+    "w": 128,
+    "h": 128,
+    "fmt": 256,
+    "offset": 73728,
+    "id": 5585,
+    "path": "textures/Ken_tex_10_id5585.png",
+    "alpha_zero": 185,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7616,
+        "material": 1,
+        "tsp": "0x20080464",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 11,
+    "w": 64,
+    "h": 64,
+    "fmt": 257,
+    "offset": 106496,
+    "id": 5586,
+    "path": "textures/Ken_tex_11_id5586.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7623,
+        "material": 2,
+        "tsp": "0x200C245B",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 12,
+    "w": 64,
+    "h": 128,
+    "fmt": 3329,
+    "offset": 114688,
+    "id": 5587,
+    "path": "textures/Ken_tex_12_id5587.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7624,
+        "material": 0,
+        "tsp": "0x200C245C",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7626,
+        "material": 0,
+        "tsp": "0x200C245C",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 13,
+    "w": 64,
+    "h": 32,
+    "fmt": 3329,
+    "offset": 131072,
+    "id": 5725,
+    "path": "textures/Ken_tex_13_id5725.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7611,
+        "material": 0,
+        "tsp": "0x2008245A",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7611,
+        "material": 1,
+        "tsp": "0x2008245A",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7612,
+        "material": 0,
+        "tsp": "0x2008245A",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7612,
+        "material": 1,
+        "tsp": "0x2008245A",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 14,
+    "w": 16,
+    "h": 64,
+    "fmt": 3329,
+    "offset": 135168,
+    "id": 5726,
+    "path": "textures/Ken_tex_14_id5726.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7629,
+        "material": 1,
+        "tsp": "0x2008244B",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7680,
+        "material": 1,
+        "tsp": "0x2008244B",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 15,
+    "w": 32,
+    "h": 64,
+    "fmt": 3329,
+    "offset": 137216,
+    "id": 5729,
+    "path": "textures/Ken_tex_15_id5729.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7629,
+        "material": 0,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7680,
+        "material": 0,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 16,
+    "w": 32,
+    "h": 64,
+    "fmt": 3328,
+    "offset": 141312,
+    "id": 5730,
+    "path": "textures/Ken_tex_16_id5730.png",
+    "alpha_zero": 262,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7614,
+        "material": 0,
+        "tsp": "0x200C2453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7615,
+        "material": 0,
+        "tsp": "0x200C2453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7731,
+        "material": 0,
+        "tsp": "0x200C2453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7732,
+        "material": 0,
+        "tsp": "0x200C2453",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 17,
+    "w": 64,
+    "h": 64,
+    "fmt": 257,
+    "offset": 145408,
+    "id": 5735,
+    "path": "textures/Ken_tex_17_id5735.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7616,
+        "material": 6,
+        "tsp": "0x2008245B",
+        "uses_texture_alpha": false
+      }
+    ]
+  },
+  {
+    "index": 18,
+    "w": 32,
+    "h": 64,
+    "fmt": 3329,
+    "offset": 153600,
+    "id": 5737,
+    "path": "textures/Ken_tex_18_id5737.png",
+    "alpha_zero": 0,
+    "alpha_partial": 0,
+    "material_uses": [
+      {
+        "model": 7614,
+        "material": 1,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7615,
+        "material": 1,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7731,
+        "material": 1,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7731,
+        "material": 3,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7732,
+        "material": 1,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      },
+      {
+        "model": 7732,
+        "material": 3,
+        "tsp": "0x20082453",
+        "uses_texture_alpha": false
+      }
+    ]
+  }
+]

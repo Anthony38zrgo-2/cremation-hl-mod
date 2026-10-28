@@ -1,0 +1,14 @@
+{
+  "bones": 16,
+  "hitboxes": 15,
+  "sequences": 9,
+  "compiled_triangles": 737,
+  "max_position_error": 0.011400013118553032,
+  "pose_samples": 27,
+  "masked_textures": [
+    "{randy_09.bmp",
+    "{randy_10.bmp",
+    "{randy_11.bmp"
+  ],
+  "native_event_and_activity_contract": true
+}

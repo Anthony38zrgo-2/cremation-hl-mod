@@ -75,9 +75,13 @@ como enemigo y conserva compatibilidad con los efectos de Cremation.
 La primera oleada comienza cinco segundos después de entrar un jugador vivo.
 Se intenta generar un enemigo cada 0,375 segundos, alternando norte, este,
 sur y oeste y rotando los diez puntos de cada frente. Cada frente recibe
-10 enemigos en las dos primeras oleadas y 20 en las dos últimas. Los tipos
-también se reparten: en la cuarta, diez cultistas por frente y dos o tres de
-cada tipo de zombi, rotando el sobrante para mantener iguales los totales.
+10 enemigos en las dos primeras oleadas y 20 en las dos últimas. En la cuarta
+oleada, los 40 cultistas salen desde puntos CT normales elegidos al azar; 20
+inician una ruta alrededor del perímetro y 18 siguen las entradas de puerta
+hacia el jugador. Los otros dos conservan la incursión por la puerta trasera.
+La selección evita puntos ocupados. La composición mantiene 40 cultistas y
+dos o tres de cada tipo de zombi; como los CT de los cultistas se eligen al
+azar, su reparto por frente cambia entre partidas.
 Un punto ocupado retrasa la aparición; no se superponen monstruos ni se omiten
 puntos. La siguiente oleada empieza ocho segundos después de eliminar todos
 los enemigos y agotar las apariciones pendientes de la anterior. La cuarta

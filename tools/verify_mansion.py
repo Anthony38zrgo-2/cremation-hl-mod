@@ -41,6 +41,26 @@ assert [e.get('angle','0') for e in players]==[e.get('angle','0') for e in tt]
 assert all(not e.get('targetname') for e in players)
 assert [e['origin'] for e in entities if e['classname']=='info_player_deathmatch']==[e['origin'] for e in tt]
 markers={e['targetname']:e for e in entities if 'targetname' in e}
+if placement.get('reactor',{}).get('four_fronts'):
+    ramp=markers['mansion_czero_stair_ramp']
+    assert ramp['classname']=='func_wall' and ramp['rendermode']=='1' and ramp['renderamt']=='0',ramp
+    ramp_model=int(ramp['model'][1:])
+    for y in (-224,-184,-136,-88,-40,-17):
+        surface=64+(y+224)*128/208
+        assert bsp.contents((-224,y,surface-2),0,ramp_model)==-2
+        assert bsp.contents((-224,y,surface+2),0,ramp_model)==-1
+    doors=[e for e in entities if e.get('classname')=='func_door_rotating']
+    assert len(doors)==2,doors
+    for wait in ('3','4'):
+        matching=[e for e in doors if e.get('wait')==wait]
+        assert len(matching)==1, (wait,matching)
+        door=matching[0]
+        assert not door.get('targetname') and door.get('health')=='0',door
+        assert door.get('model','').startswith('*')
+    for i in range(40):
+        side=[markers[f'mansion_side_route_{i:02}_{j:02}'] for j in range(3)]
+        assert [node['target'] for node in side[:2]]==[f'mansion_side_route_{i:02}_01',f'mansion_side_route_{i:02}_02']
+        assert 'target' not in side[2]
 if 'portal' in placement.get('reactor',{}):
     assert 'reactor_pickup_1' not in markers
     assert list(map(float,markers['reactor_pickup_0']['origin'].split()))==placement['reactor']['stations'][0]
@@ -125,4 +145,4 @@ assert not any(line.strip().lower() == 'map cs_mansion'
                for line in (MOD/'cremation.cfg').read_text().splitlines())
 for key in ('startmap','trainmap'):
     assert f'{key} "cs_mansion"' in (MOD/'liblist.gam').read_text()
-print(f'PASS: validated geometry, 10 exact TT starts, {len(ct)} CT markers/routes, symmetric hubs/bridges/houses, no ground weapons, textures, original sky and defaults.')
+print(f'PASS: validated geometry, 10 exact TT starts, {len(ct)} CT markers/routes, two native touch-open doors with 1000 HP state, side routes, symmetric hubs/bridges/houses, no ground weapons, textures, original sky and defaults.')

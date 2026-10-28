@@ -3,6 +3,8 @@
 #include "david_assets.h"
 #include "steve_assets.h"
 #include "johnny_assets.h"
+#include "max_assets.h"
+#include "ken_assets.h"
 #include "david_logic.h"
 #include "monsterevent.h"
 #include <cstddef>
@@ -12,12 +14,21 @@ static constexpr const char* SteveModel="models/cremation/hotd2/steve/steve.mdl"
 static constexpr const char* SteveCharred="models/cremation/hotd2/steve/steve_charred.mdl";
 static constexpr const char* JohnnyModel="models/cremation/hotd2/johnny/johnny.mdl";
 static constexpr const char* JohnnyCharred="models/cremation/hotd2/johnny/johnny_charred.mdl";
+static constexpr const char* MaxModel="models/cremation/hotd2/max/max.mdl";
+static constexpr const char* MaxCharred="models/cremation/hotd2/max/max_charred.mdl";
+static constexpr const char* KenModel="models/cremation/hotd2/ken/ken.mdl";
+static constexpr const char* KenCharred="models/cremation/hotd2/ken/ken_charred.mdl";
+static constexpr const char* MaxSawSound="cremation/hotd2/max/chain_saw_22.wav";
 static constexpr const char* JohnnyAxe="models/cremation/hotd2/johnny/axe.mdl";
 static constexpr const char* JohnnyAxeLeft="models/cremation/hotd2/johnny/axe_left.mdl";
 static constexpr bool steveLayoutCompatible(){for(int n=0;n<16;++n)if(steve_assets::bone[n]!=david_assets::bone[n]||steve_assets::parent[n]!=david_assets::parent[n]||steve_assets::bodyBase[n]!=david_assets::bodyBase[n]||steve_assets::bodyCount[n]!=david_assets::bodyCount[n])return false;return true;}
 static_assert(steveLayoutCompatible(),"Steve must retain the shared David rig/bodygroup encoding");
 static constexpr bool johnnyLayoutCompatible(){for(int n=0;n<16;++n)if(johnny_assets::bone[n]!=david_assets::bone[n]||johnny_assets::parent[n]!=david_assets::parent[n])return false;return true;}
 static_assert(johnnyLayoutCompatible(),"Johnny must retain the shared David 16-bone hierarchy");
+static constexpr bool maxLayoutCompatible(){for(int n=0;n<16;++n)if(max_assets::bone[n]!=david_assets::bone[n]||max_assets::parent[n]!=david_assets::parent[n])return false;return true;}
+static_assert(maxLayoutCompatible(),"Max must retain the shared David 16-bone hierarchy");
+static constexpr bool kenLayoutCompatible(){for(int n=0;n<16;++n)if(ken_assets::bone[n]!=david_assets::bone[n]||ken_assets::parent[n]!=david_assets::parent[n]||ken_assets::bodyBase[n]!=david_assets::bodyBase[n]||ken_assets::bodyCount[n]!=david_assets::bodyCount[n])return false;return true;}
+static_assert(kenLayoutCompatible(),"Ken must retain David's rig and bodygroup layout");
 static constexpr const char* DavidGibTag="cremation_david_gib";
 static cvar_t davidEnable={const_cast<char*>("cremation_david"),const_cast<char*>("1"),FCVAR_SERVER,1,nullptr};
 static cvar_t davidRadius={const_cast<char*>("david_crowd_radius"),const_cast<char*>("256"),FCVAR_SERVER,256,nullptr};
@@ -26,9 +37,10 @@ static cvar_t davidHeadThreshold={const_cast<char*>("david_head_fraction"),const
 static cvar_t davidLimbThreshold={const_cast<char*>("david_limb_fraction"),const_cast<char*>("0.25"),FCVAR_SERVER,.25f,nullptr};
 static cvar_t davidLocalizedDamage={const_cast<char*>("cremation_david_local_damage"),const_cast<char*>("0"),FCVAR_SERVER,0,nullptr};
 static cvar_t steveChance={const_cast<char*>("cremation_steve_chance"),const_cast<char*>("0.5"),FCVAR_SERVER,.5f,nullptr};
+static cvar_t kenChance={const_cast<char*>("cremation_ken_chance"),const_cast<char*>("0.3333333"),FCVAR_SERVER,1.f/3.f,nullptr};
 static cvar_t johnnyChance={const_cast<char*>("cremation_johnny_chance"),const_cast<char*>("0.1"),FCVAR_SERVER,.1f,nullptr};
 static bool davidCvarsRegistered=false;
-struct DavidSaved {int version=5;int severMask=0;float regional[16]{};float initialHealth=0;int prone=0;int variant=0;int johnnyAxes=3;int johnnyDefended=0;float johnnyGuardRemaining=0;};
+struct DavidSaved {int version=6;int severMask=0;float regional[16]{};float initialHealth=0;int prone=0;int variant=0;int johnnyAxes=3;int johnnyDefended=0;float johnnyGuardRemaining=0;};
 static TYPEDESCRIPTION davidSaveFields[]={
  {FIELD_INTEGER,const_cast<char*>("version"),offsetof(DavidSaved,version),1,0},
  {FIELD_INTEGER,const_cast<char*>("severMask"),offsetof(DavidSaved,severMask),1,0},
@@ -58,12 +70,16 @@ static std::vector<DavidState> davidStates;
 struct DavidTable {void** source;std::array<void*,125> slots;void* trace;TakeDamageFn damage;void* killed;void* event;void* move;void* activity;void* deathActivity;};
 static std::vector<std::unique_ptr<DavidTable>> davidTables;
 static float davidNextDecision=0;
-static bool davidClass(edict_t* e){return valid(e)&&e->v.classname&&(!std::strcmp(text(e->v.classname),"monster_zombie")||!std::strcmp(text(e->v.classname),"monster_johnny"));}
+static bool davidClass(edict_t* e){return valid(e)&&e->v.classname&&(!std::strcmp(text(e->v.classname),"monster_zombie")||!std::strcmp(text(e->v.classname),"monster_johnny")||!std::strcmp(text(e->v.classname),"monster_max")||!std::strcmp(text(e->v.classname),"monster_ken"));}
 static bool steveModel(edict_t* e){return valid(e)&&e->v.model&&(!std::strcmp(text(e->v.model),SteveModel)||!std::strcmp(text(e->v.model),SteveCharred));}
 static bool johnnyModel(edict_t* e){return valid(e)&&e->v.model&&(!std::strcmp(text(e->v.model),JohnnyModel)||!std::strcmp(text(e->v.model),JohnnyCharred));}
+static bool maxModel(edict_t* e){return valid(e)&&e->v.model&&(!std::strcmp(text(e->v.model),MaxModel)||!std::strcmp(text(e->v.model),MaxCharred));}
+static bool kenModel(edict_t* e){return valid(e)&&e->v.model&&(!std::strcmp(text(e->v.model),KenModel)||!std::strcmp(text(e->v.model),KenCharred));}
+static edict_t* kenMeleeActor=nullptr;
 static edict_t* steveMeleeActor=nullptr;
-static float davidMeleeScale(entvars_t* attacker){return steveMeleeActor&&valid(steveMeleeActor)&&attacker==&steveMeleeActor->v&&steveModel(steveMeleeActor)?1.1f:1.f;}
-static bool davidModel(edict_t* e){return valid(e)&&e->v.model&&(!std::strcmp(text(e->v.model),DavidModel)||!std::strcmp(text(e->v.model),DavidCharred)||steveModel(e)||johnnyModel(e));}
+static edict_t* maxMeleeActor=nullptr;
+static float davidMeleeScale(entvars_t* attacker){if(kenMeleeActor&&valid(kenMeleeActor)&&attacker==&kenMeleeActor->v&&kenModel(kenMeleeActor))return 2.f;if(maxMeleeActor&&valid(maxMeleeActor)&&attacker==&maxMeleeActor->v&&maxModel(maxMeleeActor))return 1.25f;return steveMeleeActor&&valid(steveMeleeActor)&&attacker==&steveMeleeActor->v&&steveModel(steveMeleeActor)?1.1f:1.f;}
+static bool davidModel(edict_t* e){return valid(e)&&e->v.model&&(!std::strcmp(text(e->v.model),DavidModel)||!std::strcmp(text(e->v.model),DavidCharred)||steveModel(e)||johnnyModel(e)||maxModel(e)||kenModel(e));}
 static DavidState* davidState(edict_t* e,bool create=false){
  if(!valid(e)||!engine.pfnIndexOfEdict)return nullptr;int i=engine.pfnIndexOfEdict(e);if(i<1||i>=globals->maxEntities)return nullptr;
  if(i>=int(davidStates.size())){if(!create)return nullptr;davidStates.resize(globals->maxEntities);}
@@ -72,17 +88,18 @@ static DavidState* davidState(edict_t* e,bool create=false){
 }
 static edict_t* davidObject(void* object){auto v=reinterpret_cast<entvars_t**>(object)[1];return v?v->pContainingEntity:nullptr;}
 static DavidTable* davidTable(void* object){auto table=*reinterpret_cast<void***>(object);for(auto& t:davidTables)if(t->slots.data()==table)return t.get();return nullptr;}
-static int davidBodyCount(edict_t* e,int node){return johnnyModel(e)?johnny_assets::bodyCount[node]:(steveModel(e)?steve_assets::bodyCount[node]:david_assets::bodyCount[node]);}
-static int davidBody(edict_t* e,int node){int base=johnnyModel(e)?johnny_assets::bodyBase[node]:(steveModel(e)?steve_assets::bodyBase[node]:david_assets::bodyBase[node]);return base?(e->v.body/base)%davidBodyCount(e,node):0;}
-static void davidSetBody(edict_t* e,int node,int state){int base=johnnyModel(e)?johnny_assets::bodyBase[node]:(steveModel(e)?steve_assets::bodyBase[node]:david_assets::bodyBase[node]);if(base)e->v.body+=(state-davidBody(e,node))*base;}
+static int davidBodyCount(edict_t* e,int node){return maxModel(e)?max_assets::bodyCount[node]:(johnnyModel(e)?johnny_assets::bodyCount[node]:(steveModel(e)?steve_assets::bodyCount[node]:david_assets::bodyCount[node]));}
+static int davidBody(edict_t* e,int node){int base=maxModel(e)?max_assets::bodyBase[node]:(johnnyModel(e)?johnny_assets::bodyBase[node]:(steveModel(e)?steve_assets::bodyBase[node]:david_assets::bodyBase[node]));return base?(e->v.body/base)%davidBodyCount(e,node):0;}
+static void davidSetBody(edict_t* e,int node,int state){int base=maxModel(e)?max_assets::bodyBase[node]:(johnnyModel(e)?johnny_assets::bodyBase[node]:(steveModel(e)?steve_assets::bodyBase[node]:david_assets::bodyBase[node]));if(base)e->v.body+=(state-davidBody(e,node))*base;}
 static bool davidVisiblePart(edict_t* e,int node){return node==1||node==9||davidBody(e,node)<davidBodyCount(e,node)-1;}
-static const float* davidPartBounds(edict_t* e,int node,int state){return johnnyModel(e)?johnny_assets::partBounds[node][state]:(steveModel(e)?steve_assets::partBounds[node][state]:david_assets::partBounds[node][state]);}
+static const float* davidPartBounds(edict_t* e,int node,int state){return kenModel(e)?ken_assets::partBounds[node][state]:maxModel(e)?max_assets::partBounds[node][state]:(johnnyModel(e)?johnny_assets::partBounds[node][state]:(steveModel(e)?steve_assets::partBounds[node][state]:david_assets::partBounds[node][state]));}
 static bool davidCrawling(const DavidState& s){return david_logic::legGone(s.saved.severMask);}
 static void davidPrecache(){
- if(!davidCvarsRegistered&&engine.pfnCVarRegister){for(auto v:{&davidEnable,&davidRadius,&davidClearRadius,&davidHeadThreshold,&davidLimbThreshold,&davidLocalizedDamage,&steveChance,&johnnyChance})engine.pfnCVarRegister(v);davidCvarsRegistered=true;}
- for(auto m:{DavidModel,DavidCharred,SteveModel,SteveCharred,JohnnyModel,JohnnyCharred,JohnnyAxe,JohnnyAxeLeft})engine.pfnPrecacheModel(const_cast<char*>(m));
+ if(!davidCvarsRegistered&&engine.pfnCVarRegister){for(auto v:{&davidEnable,&davidRadius,&davidClearRadius,&davidHeadThreshold,&davidLimbThreshold,&davidLocalizedDamage,&steveChance,&kenChance,&johnnyChance})engine.pfnCVarRegister(v);davidCvarsRegistered=true;}
+ for(auto m:{DavidModel,DavidCharred,SteveModel,SteveCharred,JohnnyModel,JohnnyCharred,JohnnyAxe,JohnnyAxeLeft,MaxModel,MaxCharred,KenModel,KenCharred})engine.pfnPrecacheModel(const_cast<char*>(m));
+ engine.pfnPrecacheSound(const_cast<char*>(MaxSawSound));
  for(auto sound:{"debris/flesh1.wav","debris/flesh2.wav","debris/flesh3.wav"})engine.pfnPrecacheSound(const_cast<char*>(sound));
- for(auto variant:{"david","steve","johnny"})for(int node=2;node<16;++node)if(node!=9){char path[128];std::snprintf(path,sizeof path,"models/cremation/hotd2/%s/part_%02d.mdl",variant,node);engine.pfnPrecacheModel(const_cast<char*>(text(engine.pfnAllocString(path))));}
+ for(auto variant:{"david","steve","johnny","max","ken"})for(int node=2;node<16;++node)if(node!=9){char path[128];std::snprintf(path,sizeof path,"models/cremation/hotd2/%s/part_%02d.mdl",variant,node);engine.pfnPrecacheModel(const_cast<char*>(text(engine.pfnAllocString(path))));}
 }
 static void davidPose(DavidState& s){
  auto e=s.entity;if(!engine.pfnGetBonePosition)return;
@@ -170,14 +187,15 @@ static bool davidCanRun(DavidState& s){
  Vector from=e->v.origin+e->v.view_ofs,to=t->v.origin+t->v.view_ofs;TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,1,e,&tr);return !tr.fStartSolid&&tr.flFraction>=.999f;
 }
 static void davidDecision(){
+ for(auto& s:davidStates)if(valid(s.entity)&&s.entity->serialnumber==s.serial&&maxModel(s.entity))s.running=aliveEnemy(s.entity)&&!s.dying;
  if(globals->time<davidNextDecision)return;davidNextDecision=globals->time+.2f;
  std::array<bool,33> reserved{};
  // Keep a valid existing reservation before assigning newcomers by edict order.
- for(auto& s:davidStates)if(s.running){auto e=s.entity;bool keep=valid(e)&&e->serialnumber==s.serial&&davidEnable.value!=0&&davidCanRun(s)&&!davidCrowded(s,std::max(64.f,davidRadius.value));int target=keep?engine.pfnIndexOfEdict(s.target):0;
+ for(auto& s:davidStates)if(maxModel(s.entity))continue;else if(s.running){auto e=s.entity;bool keep=valid(e)&&e->serialnumber==s.serial&&davidEnable.value!=0&&davidCanRun(s)&&!davidCrowded(s,std::max(64.f,davidRadius.value));int target=keep?engine.pfnIndexOfEdict(s.target):0;
   if(target<1||target>=33||reserved[target])keep=false;
   if(keep)reserved[target]=true;else{s.running=false;s.clearSince=-1;s.cooldown=globals->time+1;}
  }
- for(auto& s:davidStates){if(s.running||!valid(s.entity)||s.entity->serialnumber!=s.serial)continue;
+ for(auto& s:davidStates){if(maxModel(s.entity)||s.running||!valid(s.entity)||s.entity->serialnumber!=s.serial)continue;
   if(davidEnable.value==0||!davidCanRun(s)||davidCrowded(s,std::max(davidRadius.value+16,davidClearRadius.value))){s.clearSince=-1;continue;}
   if(s.clearSince<0)s.clearSince=globals->time;
   int target=engine.pfnIndexOfEdict(s.target);if(target>0&&target<33&&!reserved[target]&&globals->time>=s.cooldown&&globals->time-s.clearSince>=.4f){s.running=true;reserved[target]=true;}
@@ -231,7 +249,7 @@ static void johnnyProjectileFrame(){
  for(int i=globals->maxClients+1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->v.classname&&!std::strcmp(text(e->v.classname),"cremation_johnny_axe")&&globals->time>=e->v.fuser1)engine.pfnRemoveEntity(e);}
 }
 static bool davidDeathActivity(int activity){return (activity>=36&&activity<=39)||(activity>=66&&activity<=69);}
-static bool davidDeathSequence(edict_t* e){return johnnyModel(e)?e->v.sequence>=9&&e->v.sequence<=13:e->v.sequence>=8&&e->v.sequence<=12;}
+static bool davidDeathSequence(edict_t* e){if(maxModel(e))return e->v.sequence>=max_assets::seqDieSimple&&e->v.sequence<=max_assets::seqDieHead;return johnnyModel(e)?e->v.sequence>=9&&e->v.sequence<=13:e->v.sequence>=8&&e->v.sequence<=12;}
 static void davidCancelActions(DavidState& s){
  s.running=false;s.clearSince=-1;s.target=nullptr;s.attackEventConsumed=true;
  s.johnnyThrowing=false;s.johnnyThrowSide=0;s.johnnyThrowTarget=nullptr;s.johnnyThrowTargetSerial=0;
@@ -263,20 +281,22 @@ static void __fastcall davidActivity(void* object,void*,int requested){
   bool alive=aliveEnemy(s->entity),crawl=davidCrawling(*s);
   if(alive&&!death){
   if(requested==3||requested==4||requested==48||requested==49){
-   int desired=johnnyModel(e)?(s->running?johnny_assets::seqRun:johnny_assets::seqWalk):(crawl?david_assets::seqCrawl:(s->running?david_assets::seqRun:david_assets::seqWalk));
+   int desired=maxModel(e)?max_assets::seqRun:(johnnyModel(e)?(s->running?johnny_assets::seqRun:johnny_assets::seqWalk):(crawl?david_assets::seqCrawl:(s->running?david_assets::seqRun:david_assets::seqWalk)));
    // MoveExecute is called for every route step. Reapplying SetActivity there
    // resets the animation timer and made walk/run stutter. Preserve attacks,
    // pain and death clips until they finish; only switch when locomotion changes.
    if(e->v.sequence==desired)return;
    if(davidBusy(e)&&e->v.frame<254)return;
-   requested=crawl?48:(s->running?4:3);
+   requested=maxModel(e)?4:(crawl?48:(s->running?4:3));
   }
   else if(crawl&&(requested==1||requested==47||requested==61||requested==26||requested==27||requested==28||requested==29||requested==70||requested==71||requested==72||requested==73||requested==74||requested==75||requested==76))requested=18;
   // Select strikes for both native melee activities. Each selected sequence
   // owns its own contact event and native animation timing.
   if(requested==30||requested==31){
    ++s->attackRequests[requested-30];
-   if(johnnyModel(e)){
+   if(maxModel(e)){
+    attackSequence=max_assets::seqAttack[engine.pfnRandomLong(0,max_assets::attackCount-1)];
+   }else if(johnnyModel(e)){
     bool right=(s->saved.severMask&((1<<3)|(1<<4)|(1<<5)))==0,left=(s->saved.severMask&((1<<6)|(1<<7)|(1<<8)))==0;
     if(s->saved.johnnyAxes){right=right&&(s->saved.johnnyAxes&1);left=left&&(s->saved.johnnyAxes&2);}
     int choices[3],count=0;if(right)choices[count++]=johnny_assets::seqAttackRight;if(left)choices[count++]=johnny_assets::seqAttackLeft;if(right&&left)choices[count++]=johnny_assets::seqAttackBoth;
@@ -294,9 +314,9 @@ static void __fastcall davidActivity(void* object,void*,int requested){
  reinterpret_cast<void(__thiscall*)(void*,int)>(t->activity)(object,requested);
  if(death&&valid(e)){
   // Standing actors must never randomly select David's retired prone death.
-  int simple=johnnyModel(e)?johnny_assets::seqDieSimple:8;
+  int simple=maxModel(e)?max_assets::seqDieSimple:(johnnyModel(e)?johnny_assets::seqDieSimple:8);
   int sequence=simple+(requested>=36&&requested<=39?requested-36:0);
-  if(requested==66)sequence=johnnyModel(e)?13:12;
+  if(requested==66)sequence=maxModel(e)?max_assets::seqDieHead:(johnnyModel(e)?13:12);
   else if(requested==68)sequence=simple+2;
   else if(requested==69)sequence=simple+1;
   if(e->v.sequence!=sequence){e->v.sequence=sequence;e->v.frame=0;e->v.animtime=globals->time;reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(object);}
@@ -309,7 +329,7 @@ static void __fastcall davidActivity(void* object,void*,int requested){
   // rate, sequence-finished/loop flags and event clock after overriding its pick.
   reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(object);
   s->attackEventConsumed=false;
-  if(johnnyModel(e))++s->attackSelections[0];else ++s->attackSelections[attackSequence-david_assets::seqAttackRight];
+  if(johnnyModel(e)||maxModel(e))++s->attackSelections[0];else ++s->attackSelections[attackSequence-david_assets::seqAttackRight];
  }
  if(slow&&valid(e))e->v.framerate=rate;
 }
@@ -318,7 +338,7 @@ static void __fastcall davidMove(void* object,void*,void* target,const Vector& d
  if(s&&s->dying)return;
  if(s){s->movedAt=globals->time;s->target=nullptr;
   for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->pvPrivateData==target){s->target=e;s->targetSerial=e->serialnumber;break;}}
-  if(!valid(s->target)||!(s->target->v.flags&FL_CLIENT))s->running=false;
+  if(maxModel(s->entity))s->running=true;else if(!valid(s->target)||!(s->target->v.flags&FL_CLIENT))s->running=false;
   if(johnnyModel(s->entity)){
    if(s->johnnyGuarding&&globals->time<s->johnnyGuardUntil)return;
    if(s->johnnyThrowing&&globals->time<s->johnnyThrowUntil)return;
@@ -336,9 +356,9 @@ static void __fastcall davidEvent(void* object,void*,MonsterEvent_t* event){
  if(s&&melee){if(s->attackEventConsumed)return;changed.event=david_logic::attackEvent(event->event,s->saved.severMask);if(!changed.event)return;s->attackEventConsumed=true;++s->meleeEvents;}
  // Scope the bonus to this actor's actual native melee event. Victim damage
  // wrappers apply it before armor/resistance, retaining fractional damage.
- auto previous=steveMeleeActor;if(s&&melee&&steveModel(e))steveMeleeActor=e;
+ auto previous=steveMeleeActor;auto previousMax=maxMeleeActor;auto previousKen=kenMeleeActor;if(s&&melee&&kenModel(e))kenMeleeActor=e;if(s&&melee&&steveModel(e))steveMeleeActor=e;if(s&&melee&&maxModel(e)){maxMeleeActor=e;engine.pfnEmitSound(e,CHAN_WEAPON,MaxSawSound,1,ATTN_NORM,0,100);}
  reinterpret_cast<void(__thiscall*)(void*,MonsterEvent_t*)>(t->event)(object,&changed);
- steveMeleeActor=previous;
+ steveMeleeActor=previous;maxMeleeActor=previousMax;kenMeleeActor=previousKen;
 }
 static void davidPiece(DavidState& s,int node,const Vector& impulse){
  int local=0;for(auto& g:anatomicalGibs)if(g.localized&&valid(g.entity)&&g.entity->serialnumber==g.serial)++local;
@@ -349,7 +369,7 @@ static void davidPiece(DavidState& s,int node,const Vector& impulse){
  if(freeSlots<32)return;auto e=s.entity;Vector at,angles;
  engine.pfnGetBonePosition(e,david_assets::bone[node],&at.x,&angles.x);
  auto gib=engine.pfnCreateNamedEntity(engine.pfnAllocString("info_target"));if(!valid(gib))return;raven.pfnSpawn(gib);
- char model[128];std::snprintf(model,sizeof model,"models/cremation/hotd2/%s/part_%02d.mdl",johnnyModel(e)?"johnny":(steveModel(e)?"steve":"david"),node);engine.pfnSetModel(gib,model);
+ char model[128];std::snprintf(model,sizeof model,"models/cremation/hotd2/%s/part_%02d.mdl",kenModel(e)?"ken":(maxModel(e)?"max":(johnnyModel(e)?"johnny":(steveModel(e)?"steve":"david"))),node);engine.pfnSetModel(gib,model);
  gib->v.targetname=engine.pfnAllocString(DavidGibTag);gib->v.body=std::min(davidBody(e,node),davidBodyCount(e,node)-2);gib->v.sequence=0;gib->v.frame=0;gib->v.framerate=0;gib->v.animtime=globals->time;gib->v.angles=angles;
  gib->v.movetype=MOVETYPE_NONE;gib->v.solid=SOLID_NOT;gib->v.takedamage=DAMAGE_NO;gib->v.nextthink=0;Vector zero(0,0,0);engine.pfnSetSize(gib,&zero.x,&zero.x);engine.pfnSetOrigin(gib,&at.x);
  Vector velocity=e->v.velocity+normal(impulse)*100+Vector(0,0,100);if(length(velocity)>260)velocity=normal(velocity)*260;
@@ -446,25 +466,30 @@ static void davidSpawn(edict_t* e,bool restoring=false){
  if(!davidClass(e)||(!restoring&&davidEnable.value==0)||!davidInstall(e))return;
  auto s=davidState(e,true);
  if(!restoring){s->dying=false;s->deathActivity=0;s->deathStarted=false;}
- if(!restoring){float special=std::max(0.f,std::min(1.f,johnnyChance.value));const char* targetname=text(e->v.targetname);bool fixedWave=targetname&&!std::strncmp(targetname,"mansion_enemy_fixed_",20);bool mansionJohnny=targetname&&!std::strncmp(targetname,"mansion_enemy_johnny_",21);bool fixed=(e->v.classname&&!std::strcmp(text(e->v.classname),"monster_johnny"))||mansionJohnny;bool randomJohnny=!fixed&&!fixedWave&&special>0&&engine.pfnRandomFloat(0,1)<special;
-  if(fixed||randomJohnny){s->saved.variant=2;s->saved.johnnyAxes=3;s->saved.johnnyDefended=0;s->johnnyGuarding=false;s->johnnyThrowing=false;s->johnnyNextThrow=0;}
+ if(!restoring){float special=std::max(0.f,std::min(1.f,johnnyChance.value));const char* targetname=text(e->v.targetname);bool fixedWave=targetname&&!std::strncmp(targetname,"mansion_enemy_fixed_",20);bool mansionJohnny=targetname&&!std::strncmp(targetname,"mansion_enemy_johnny_",21);bool maxNpc=e->v.classname&&!std::strcmp(text(e->v.classname),"monster_max");bool fixed=(e->v.classname&&!std::strcmp(text(e->v.classname),"monster_johnny"))||mansionJohnny;bool kenNpc=e->v.classname&&!std::strcmp(text(e->v.classname),"monster_ken");bool randomJohnny=!fixed&&!fixedWave&&!maxNpc&&!kenNpc&&special>0&&engine.pfnRandomFloat(0,1)<special;
+  if(kenNpc){s->saved.variant=4;}
+  else if(maxNpc){s->saved.variant=3;s->running=true;}
+  else if(fixed||randomJohnny){s->saved.variant=2;s->saved.johnnyAxes=3;s->saved.johnnyDefended=0;s->johnnyGuarding=false;s->johnnyThrowing=false;s->johnnyNextThrow=0;}
+  else if(kenChance.value>0&&engine.pfnRandomFloat(0,1)<std::min(1.f,kenChance.value)){s->saved.variant=4;}
   else {float chance=steveChance.value;s->saved.variant=(chance>=1.f||(chance>0&&engine.pfnRandomFloat(0,1)<chance))?1:0;}
   if(s->saved.variant==1){e->v.health*=1.1f;e->v.max_health=e->v.health;}
-  s->saved.initialHealth=std::max(1.f,e->v.health);s->saved.prone=0;e->v.body=0;engine.pfnSetModel(e,s->saved.variant==2?JohnnyModel:(s->saved.variant==1?SteveModel:DavidModel));e->v.sequence=s->saved.variant==2?johnny_assets::seqIdle:0;e->v.frame=0;e->v.animtime=globals->time;}
+  s->saved.initialHealth=std::max(1.f,e->v.health);s->saved.prone=0;e->v.body=0;engine.pfnSetModel(e,s->saved.variant==4?KenModel:s->saved.variant==3?MaxModel:(s->saved.variant==2?JohnnyModel:(s->saved.variant==1?SteveModel:DavidModel)));e->v.sequence=s->saved.variant==3?max_assets::seqIdle:(s->saved.variant==2?johnny_assets::seqIdle:0);e->v.frame=0;e->v.animtime=globals->time;}
  if(davidLocalizedDamage.value==0){s->saved.severMask=0;std::fill_n(s->saved.regional,16,0.f);e->v.body=0;}
  Vector lo(-16,-16,0),hi(16,16,72);engine.pfnSetSize(e,&lo.x,&hi.x);e->v.view_ofs=Vector(0,0,64);
- startupTrace(johnnyModel(e)?"Johnny":(steveModel(e)?"Steve":"David"),restoring?"restored original wounds/rig":(johnnyModel(e)?"spawn Johnny with two throwable axes":"spawn David/Steve variant"));
+ if(maxModel(e))s->running=true;
+ startupTrace(kenModel(e)?"Ken":maxModel(e)?"Max":(johnnyModel(e)?"Johnny":(steveModel(e)?"Steve":"David")),restoring?"restored original wounds/rig":(maxModel(e)?"spawn Max with two chainsaws":(johnnyModel(e)?"spawn Johnny with two throwable axes":"spawn David/Steve variant")));
 }
 static void davidFrame(){
  johnnyProjectileFrame();davidDecision();for(auto& s:davidStates)if(valid(s.entity)&&s.entity->serialnumber==s.serial&&davidModel(s.entity)&&!s.dying&&aliveEnemy(s.entity)){
   auto e=s.entity;
+  if(maxModel(e))s.running=true;
   if(johnnyModel(e)){
    if(s.johnnyGuarding&&globals->time>=s.johnnyGuardUntil){s.johnnyGuarding=false;s.johnnyThrowing=false;davidActivity(e->pvPrivateData,nullptr,3);}
    if(s.johnnyThrowing&&globals->time>=s.johnnyThrowUntil){johnnyFinishThrow(s);if(e->v.sequence==johnny_assets::seqThrow){davidActivity(e->pvPrivateData,nullptr,s.running?4:3);if(e->v.sequence==johnny_assets::seqThrow){e->v.sequence=s.running?johnny_assets::seqRun:johnny_assets::seqWalk;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);}}}
    if(!s.johnnyGuarding&&s.saved.johnnyAxes&&!s.johnnyThrowing&&aliveEnemy(e)){auto target=johnnyTarget(s);if(target)johnnyStartThrow(s,target);}
   }
-  int seq=e->v.sequence;bool locomotion=johnnyModel(e)?(seq==0||seq==johnny_assets::seqWalk||seq==johnny_assets::seqRun):(seq==0||seq==1||seq==2||seq==20||seq==21);
-  if(locomotion&&globals->time-s.movedAt<.45f){int desired=johnnyModel(e)?(s.running?johnny_assets::seqRun:johnny_assets::seqWalk):(davidCrawling(s)?david_assets::seqCrawl:(s.running?david_assets::seqRun:david_assets::seqWalk));if(seq!=desired)davidActivity(e->pvPrivateData,nullptr,s.running?4:3);}
+  int seq=e->v.sequence;bool locomotion=maxModel(e)?(seq==max_assets::seqIdle||seq==max_assets::seqWalk||seq==max_assets::seqRun):(johnnyModel(e)?(seq==0||seq==johnny_assets::seqWalk||seq==johnny_assets::seqRun):(seq==0||seq==1||seq==2||seq==20||seq==21));
+  if(locomotion&&(maxModel(e)||globals->time-s.movedAt<.45f)){int desired=maxModel(e)?max_assets::seqRun:(johnnyModel(e)?(s.running?johnny_assets::seqRun:johnny_assets::seqWalk):(davidCrawling(s)?david_assets::seqCrawl:(s.running?david_assets::seqRun:david_assets::seqWalk)));if(seq!=desired)davidActivity(e->pvPrivateData,nullptr,s.running?4:3);}
  }
 }
 static void davidSave(edict_t* e,SAVERESTOREDATA* data){auto s=davidState(e);if(s&&davidModel(e)&&raven.pfnSaveWriteFields){s->saved.johnnyGuardRemaining=johnnyModel(e)&&s->johnnyGuarding?std::max(0.f,s->johnnyGuardUntil-globals->time):0.f;raven.pfnSaveWriteFields(data,"CremationDavid1",&s->saved,davidSaveFields,ARRAYSIZE(davidSaveFields));}}
@@ -472,16 +497,19 @@ static void davidRestore(edict_t* e,SAVERESTOREDATA* data){
  if(!davidClass(e))return;bool saved=davidModel(e);
  if(!saved){davidSpawn(e);return;}
  auto s=davidState(e,true);if(raven.pfnSaveReadFields)raven.pfnSaveReadFields(data,"CremationDavid1",&s->saved,davidSaveFields,ARRAYSIZE(davidSaveFields));
- if(s->saved.version<2)s->saved.prone=0;if(s->saved.version<4){s->saved.johnnyAxes=3;s->saved.johnnyDefended=0;}if(s->saved.version<5)s->saved.johnnyGuardRemaining=0;s->saved.variant=johnnyModel(e)?2:(steveModel(e)?1:0);s->saved.version=5;
+ if(s->saved.version<2)s->saved.prone=0;if(s->saved.version<4){s->saved.johnnyAxes=3;s->saved.johnnyDefended=0;}if(s->saved.version<5)s->saved.johnnyGuardRemaining=0;s->saved.variant=kenModel(e)?4:maxModel(e)?3:(johnnyModel(e)?2:(steveModel(e)?1:0));s->saved.version=6;
  if(s->saved.initialHealth<=0)s->saved.initialHealth=std::max(1.f,e->v.max_health>0?e->v.max_health:e->v.health);
  bool alive=aliveEnemy(e),visibleCorpse=!alive&&!(e->v.effects&EF_NODRAW);
  s->dying=!alive;
- s->deathStarted=visibleCorpse&&davidDeathSequence(e);s->deathActivity=s->deathStarted?(e->v.sequence==(johnnyModel(e)?13:12)?66:36+e->v.sequence-(johnnyModel(e)?9:8)):0;
+ s->deathStarted=visibleCorpse&&davidDeathSequence(e);
+ int deathBase=maxModel(e)?max_assets::seqDieSimple:(johnnyModel(e)?johnny_assets::seqDieSimple:8);
+ int headDeath=maxModel(e)?max_assets::seqDieHead:(johnnyModel(e)?johnny_assets::seqDieViolent+1:12);
+ s->deathActivity=s->deathStarted?(e->v.sequence==headDeath?66:36+std::min(3,std::max(0,e->v.sequence-deathBase))):0;
  bool oldPronePose=s->saved.prone||e->v.sequence==david_assets::seqCrawl||e->v.sequence==david_assets::seqCrawlIdle||e->v.sequence==david_assets::seqProneAttackRight||e->v.sequence==david_assets::seqProneAttackLeft||e->v.sequence==david_assets::seqProneAttackBoth||e->v.sequence==david_assets::seqProneDie;
  // Keep the named save field for old CremationDavid1 blocks, but discard its
  // former health-triggered state and restore every David with the standing hull.
  s->saved.prone=0;
- s->running=false;s->target=nullptr;s->movedAt=-100;s->clearSince=-1;s->cooldown=globals->time+1;s->johnnyGuarding=false;s->johnnyThrowing=false;s->johnnyThrowReleased=false;s->johnnyThrowTarget=nullptr;s->johnnyThrowTargetSerial=0;s->johnnyThrowSide=0;davidSpawn(e,true);
+ s->running=maxModel(e);s->target=nullptr;s->movedAt=-100;s->clearSince=-1;s->cooldown=globals->time+1;s->johnnyGuarding=false;s->johnnyThrowing=false;s->johnnyThrowReleased=false;s->johnnyThrowTarget=nullptr;s->johnnyThrowTargetSerial=0;s->johnnyThrowSide=0;davidSpawn(e,true);
  if(johnnyModel(e))for(int hand:{5,8}){int bit=hand==5?1:2;bool lost=false;for(int ancestor=1;ancestor<16;++ancestor)if((s->saved.severMask&(1<<ancestor))&&david_logic::descendant(hand,ancestor,david_assets::parent))lost=true;davidSetBody(e,hand,lost?davidBodyCount(e,hand)-1:((s->saved.johnnyAxes&bit)?0:3));}
  if(johnnyModel(e)&&s->saved.johnnyGuardRemaining>0){s->johnnyGuarding=true;s->johnnyGuardUntil=globals->time+std::min(1.f,s->saved.johnnyGuardRemaining);if(e->v.sequence!=johnny_assets::seqGuard){e->v.sequence=johnny_assets::seqGuard;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;}}
  if(alive&&johnnyModel(e)&&e->v.sequence==johnny_assets::seqThrow){e->v.sequence=johnny_assets::seqWalk;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);}

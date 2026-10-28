@@ -1,0 +1,66 @@
+{
+  "models/cremation/hotd2/max/max.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/max.mdl",
+    "sha256": "a0098fdcbf2e5a7b7f4a1a85c4c1eb92573f43abbbf8ef6d36e4ebc688939fcb"
+  },
+  "models/cremation/hotd2/max/max_charred.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/max_charred.mdl",
+    "sha256": "bd4079fff7fb76e7e0e6ecd1d661d9083bdbb4f7c1500fea3baac6fc0251a72d"
+  },
+  "models/cremation/hotd2/max/part_02.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_02.mdl",
+    "sha256": "53aa8a3ac5501bf2bf603f6fb144a259f7b8d32c3615f43fa67a6279793c0190"
+  },
+  "models/cremation/hotd2/max/part_03.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_03.mdl",
+    "sha256": "f30923ac954c09cd11e2da298b2d8cc55215e26d111d591c12de94aafe0c8078"
+  },
+  "models/cremation/hotd2/max/part_04.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_04.mdl",
+    "sha256": "6a291de7c33aefc13d99c2347e5bf21d77c871d64788e9323a687a9afa3c892b"
+  },
+  "models/cremation/hotd2/max/part_05.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_05.mdl",
+    "sha256": "322acd2e1e56ac20093b3001dceca1217e446ce726261db9c675b0345fb3d569"
+  },
+  "models/cremation/hotd2/max/part_06.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_06.mdl",
+    "sha256": "ceecd02545dbb193ccc97cb01f31a13ecc8a637b1611d409edd880772215269a"
+  },
+  "models/cremation/hotd2/max/part_07.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_07.mdl",
+    "sha256": "b99469bb939d0545b7be1230ff7bc2cb83801a5eca473f447dee91d6de8747d6"
+  },
+  "models/cremation/hotd2/max/part_08.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_08.mdl",
+    "sha256": "625e5bd3c14b52a0f9b0860d6caeadd15200e4d39ea5606405863aecc8a7ff89"
+  },
+  "models/cremation/hotd2/max/part_10.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_10.mdl",
+    "sha256": "1d9bbe23d654e8ddef102151eadfa6c7fa2b80ac61aa670504e48b14db5735bf"
+  },
+  "models/cremation/hotd2/max/part_11.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_11.mdl",
+    "sha256": "516f12ee87a2ea35b1377327f07888d5ea60aba0d5ca25bccb8a5dc512622a70"
+  },
+  "models/cremation/hotd2/max/part_12.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_12.mdl",
+    "sha256": "710a5636323af2459330ac48b73c2a2d2c97403cfa691e0f8d1a99e88cb79286"
+  },
+  "models/cremation/hotd2/max/part_13.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_13.mdl",
+    "sha256": "5a20fbe133fa301a4e62482a466ec6ff26b6be2163d5d0b7c7d583692c108b7e"
+  },
+  "models/cremation/hotd2/max/part_14.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_14.mdl",
+    "sha256": "e0bc777859d68f1f7e86cae4ab92ef7563dfbd280472d5e39dcc4ee4a9c9c034"
+  },
+  "models/cremation/hotd2/max/part_15.mdl": {
+    "source": "assets-source/hotd2-max/goldsrc/part_15.mdl",
+    "sha256": "e18b02f78162b66a68f874de8e2312946ff5d580f6f24de716b0804007d8258b"
+  },
+  "sound/cremation/hotd2/max/chain_saw_22.wav": {
+    "source": "assets-source/hotd2-max/source/F13888_chain_saw_22.wav",
+    "sha256": "44b761052c211d2d5000d452bb412825b1ac5df82319970778789527baee8f6e"
+  }
+}

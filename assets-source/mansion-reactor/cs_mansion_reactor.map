@@ -6483,6 +6483,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_00_00"
+"origin" "-1152 1664 24.1"
+"target" "mansion_side_route_00_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_00_01"
+"origin" "-392.0 1536.0 24.1"
+"target" "mansion_side_route_00_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_00_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_01"
 "origin" "1568 544 64"
 "angles" "0 180 0"
@@ -6533,6 +6550,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_01_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_01_00"
+"origin" "1568 544 24.1"
+"target" "mansion_side_route_01_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_01_01"
+"origin" "1440.0 -216.0 24.1"
+"target" "mansion_side_route_01_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_01_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -6592,6 +6626,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_02_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_02_00"
+"origin" "448 -2176 24.1"
+"target" "mansion_side_route_02_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_02_01"
+"origin" "-312.0 -2048.0 24.1"
+"target" "mansion_side_route_02_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_02_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -6660,6 +6711,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_03_00"
+"origin" "-2272 -1056 24.1"
+"target" "mansion_side_route_03_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_03_01"
+"origin" "-2144.0 -296.0 24.1"
+"target" "mansion_side_route_03_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_03_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_04"
 "origin" "-752 1664 64"
 "angles" "0 270 0"
@@ -6719,6 +6787,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_04_00"
+"origin" "-752 1664 24.1"
+"target" "mansion_side_route_04_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_04_01"
+"origin" "-372.0 1536.0 24.1"
+"target" "mansion_side_route_04_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_04_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_05"
 "origin" "1568 144 64"
 "angles" "0 180 0"
@@ -6769,6 +6854,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_05_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_05_00"
+"origin" "1568 144 24.1"
+"target" "mansion_side_route_05_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_05_01"
+"origin" "1440.0 -236.0 24.1"
+"target" "mansion_side_route_05_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_05_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -6828,6 +6930,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_06_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_06_00"
+"origin" "48 -2176 24.1"
+"target" "mansion_side_route_06_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_06_01"
+"origin" "-332.0 -2048.0 24.1"
+"target" "mansion_side_route_06_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_06_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -6896,6 +7015,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_07_00"
+"origin" "-2272 -656 24.1"
+"target" "mansion_side_route_07_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_07_01"
+"origin" "-2144.0 -276.0 24.1"
+"target" "mansion_side_route_07_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_07_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_08"
 "origin" "-352 1664 64"
 "angles" "0 270 0"
@@ -6955,6 +7091,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_08_00"
+"origin" "-352 1664 24.1"
+"target" "mansion_side_route_08_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_08_01"
+"origin" "-352.0 1536.0 24.1"
+"target" "mansion_side_route_08_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_08_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_09"
 "origin" "1568 -256 64"
 "angles" "0 180 0"
@@ -7005,6 +7158,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_09_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_09_00"
+"origin" "1568 -256 24.1"
+"target" "mansion_side_route_09_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_09_01"
+"origin" "1440.0 -256.0 24.1"
+"target" "mansion_side_route_09_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_09_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -7064,6 +7234,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_10_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_10_00"
+"origin" "-352 -2176 24.1"
+"target" "mansion_side_route_10_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_10_01"
+"origin" "-352.0 -2048.0 24.1"
+"target" "mansion_side_route_10_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_10_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -7132,6 +7319,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_11_00"
+"origin" "-2272 -256 24.1"
+"target" "mansion_side_route_11_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_11_01"
+"origin" "-2144.0 -256.0 24.1"
+"target" "mansion_side_route_11_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_11_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_12"
 "origin" "48 1664 64"
 "angles" "0 270 0"
@@ -7191,6 +7395,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_12_00"
+"origin" "48 1664 24.1"
+"target" "mansion_side_route_12_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_12_01"
+"origin" "-332.0 1536.0 24.1"
+"target" "mansion_side_route_12_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_12_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_13"
 "origin" "1568 -656 64"
 "angles" "0 180 0"
@@ -7241,6 +7462,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_13_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_13_00"
+"origin" "1568 -656 24.1"
+"target" "mansion_side_route_13_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_13_01"
+"origin" "1440.0 -276.0 24.1"
+"target" "mansion_side_route_13_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_13_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -7300,6 +7538,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_14_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_14_00"
+"origin" "-752 -2176 24.1"
+"target" "mansion_side_route_14_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_14_01"
+"origin" "-372.0 -2048.0 24.1"
+"target" "mansion_side_route_14_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_14_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -7368,6 +7623,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_15_00"
+"origin" "-2272 144 24.1"
+"target" "mansion_side_route_15_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_15_01"
+"origin" "-2144.0 -236.0 24.1"
+"target" "mansion_side_route_15_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_15_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_16"
 "origin" "448 1664 64"
 "angles" "0 270 0"
@@ -7427,6 +7699,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_16_00"
+"origin" "448 1664 24.1"
+"target" "mansion_side_route_16_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_16_01"
+"origin" "-312.0 1536.0 24.1"
+"target" "mansion_side_route_16_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_16_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_17"
 "origin" "1568 -1056 64"
 "angles" "0 180 0"
@@ -7477,6 +7766,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_17_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_17_00"
+"origin" "1568 -1056 24.1"
+"target" "mansion_side_route_17_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_17_01"
+"origin" "1440.0 -296.0 24.1"
+"target" "mansion_side_route_17_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_17_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -7536,6 +7842,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_18_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_18_00"
+"origin" "-1152 -2176 24.1"
+"target" "mansion_side_route_18_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_18_01"
+"origin" "-392.0 -2048.0 24.1"
+"target" "mansion_side_route_18_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_18_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -7604,6 +7927,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_19_00"
+"origin" "-2272 544 24.1"
+"target" "mansion_side_route_19_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_19_01"
+"origin" "-2144.0 -216.0 24.1"
+"target" "mansion_side_route_19_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_19_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_20"
 "origin" "-1152 1920 64"
 "angles" "0 270 0"
@@ -7663,6 +8003,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_20_00"
+"origin" "-1152 1920 24.1"
+"target" "mansion_side_route_20_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_20_01"
+"origin" "-392.0 1536.0 24.1"
+"target" "mansion_side_route_20_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_20_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_21"
 "origin" "1824 544 64"
 "angles" "0 180 0"
@@ -7713,6 +8070,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_21_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_21_00"
+"origin" "1824 544 24.1"
+"target" "mansion_side_route_21_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_21_01"
+"origin" "1440.0 -216.0 24.1"
+"target" "mansion_side_route_21_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_21_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -7772,6 +8146,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_22_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_22_00"
+"origin" "448 -2432 24.1"
+"target" "mansion_side_route_22_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_22_01"
+"origin" "-312.0 -2048.0 24.1"
+"target" "mansion_side_route_22_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_22_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -7840,6 +8231,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_23_00"
+"origin" "-2528 -1056 24.1"
+"target" "mansion_side_route_23_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_23_01"
+"origin" "-2144.0 -296.0 24.1"
+"target" "mansion_side_route_23_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_23_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_24"
 "origin" "-752 1920 64"
 "angles" "0 270 0"
@@ -7899,6 +8307,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_24_00"
+"origin" "-752 1920 24.1"
+"target" "mansion_side_route_24_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_24_01"
+"origin" "-372.0 1536.0 24.1"
+"target" "mansion_side_route_24_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_24_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_25"
 "origin" "1824 144 64"
 "angles" "0 180 0"
@@ -7949,6 +8374,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_25_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_25_00"
+"origin" "1824 144 24.1"
+"target" "mansion_side_route_25_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_25_01"
+"origin" "1440.0 -236.0 24.1"
+"target" "mansion_side_route_25_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_25_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -8008,6 +8450,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_26_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_26_00"
+"origin" "48 -2432 24.1"
+"target" "mansion_side_route_26_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_26_01"
+"origin" "-332.0 -2048.0 24.1"
+"target" "mansion_side_route_26_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_26_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -8076,6 +8535,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_27_00"
+"origin" "-2528 -656 24.1"
+"target" "mansion_side_route_27_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_27_01"
+"origin" "-2144.0 -276.0 24.1"
+"target" "mansion_side_route_27_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_27_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_28"
 "origin" "-352 1920 64"
 "angles" "0 270 0"
@@ -8135,6 +8611,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_28_00"
+"origin" "-352 1920 24.1"
+"target" "mansion_side_route_28_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_28_01"
+"origin" "-352.0 1536.0 24.1"
+"target" "mansion_side_route_28_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_28_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_29"
 "origin" "1824 -256 64"
 "angles" "0 180 0"
@@ -8185,6 +8678,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_29_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_29_00"
+"origin" "1824 -256 24.1"
+"target" "mansion_side_route_29_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_29_01"
+"origin" "1440.0 -256.0 24.1"
+"target" "mansion_side_route_29_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_29_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -8244,6 +8754,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_30_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_30_00"
+"origin" "-352 -2432 24.1"
+"target" "mansion_side_route_30_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_30_01"
+"origin" "-352.0 -2048.0 24.1"
+"target" "mansion_side_route_30_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_30_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -8312,6 +8839,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_31_00"
+"origin" "-2528 -256 24.1"
+"target" "mansion_side_route_31_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_31_01"
+"origin" "-2144.0 -256.0 24.1"
+"target" "mansion_side_route_31_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_31_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_32"
 "origin" "48 1920 64"
 "angles" "0 270 0"
@@ -8371,6 +8915,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_32_00"
+"origin" "48 1920 24.1"
+"target" "mansion_side_route_32_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_32_01"
+"origin" "-332.0 1536.0 24.1"
+"target" "mansion_side_route_32_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_32_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_33"
 "origin" "1824 -656 64"
 "angles" "0 180 0"
@@ -8421,6 +8982,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_33_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_33_00"
+"origin" "1824 -656 24.1"
+"target" "mansion_side_route_33_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_33_01"
+"origin" "1440.0 -276.0 24.1"
+"target" "mansion_side_route_33_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_33_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -8480,6 +9058,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_34_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_34_00"
+"origin" "-752 -2432 24.1"
+"target" "mansion_side_route_34_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_34_01"
+"origin" "-372.0 -2048.0 24.1"
+"target" "mansion_side_route_34_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_34_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -8548,6 +9143,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_35_00"
+"origin" "-2528 144 24.1"
+"target" "mansion_side_route_35_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_35_01"
+"origin" "-2144.0 -236.0 24.1"
+"target" "mansion_side_route_35_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_35_02"
+"origin" "-1152 -256 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_36"
 "origin" "448 1920 64"
 "angles" "0 270 0"
@@ -8607,6 +9219,23 @@
 }
 {
 "classname" "info_target"
+"targetname" "mansion_side_route_36_00"
+"origin" "448 1920 24.1"
+"target" "mansion_side_route_36_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_36_01"
+"origin" "-312.0 1536.0 24.1"
+"target" "mansion_side_route_36_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_36_02"
+"origin" "-352 544 24.1"
+}
+{
+"classname" "info_target"
 "targetname" "mansion_ct_37"
 "origin" "1824 -1056 64"
 "angles" "0 180 0"
@@ -8657,6 +9286,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_37_07"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_37_00"
+"origin" "1824 -1056 24.1"
+"target" "mansion_side_route_37_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_37_01"
+"origin" "1440.0 -296.0 24.1"
+"target" "mansion_side_route_37_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_37_02"
+"origin" "448 -256 24.1"
 }
 {
 "classname" "info_target"
@@ -8716,6 +9362,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_38_08"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_38_00"
+"origin" "-1152 -2432 24.1"
+"target" "mansion_side_route_38_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_38_01"
+"origin" "-392.0 -2048.0 24.1"
+"target" "mansion_side_route_38_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_38_02"
+"origin" "-352 -1056 24.1"
 }
 {
 "classname" "info_target"
@@ -8781,6 +9444,23 @@
 "classname" "info_target"
 "targetname" "mansion_route_39_09"
 "origin" "64 -256 56.1"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_39_00"
+"origin" "-2528 544 24.1"
+"target" "mansion_side_route_39_01"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_39_01"
+"origin" "-2144.0 -216.0 24.1"
+"target" "mansion_side_route_39_02"
+}
+{
+"classname" "info_target"
+"targetname" "mansion_side_route_39_02"
+"origin" "-1152 -256 24.1"
 }
 {
 "classname" "info_node"
@@ -9105,6 +9785,21 @@
 {
 "classname" "info_node"
 "origin" "1714.29 -838.86 32.1"
+}
+{
+"classname" "func_wall"
+"targetname" "mansion_czero_stair_ramp"
+"rendermode" "1"
+"renderamt" "0"
+"renderfx" "0"
+{
+( -234 0 0 ) ( -234 0 128 ) ( -234 -128 0 ) crete3_wall02 [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1
+( -214 0 0 ) ( -214 0 -128 ) ( -214 -128 0 ) crete3_wall02 [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1
+( 0 -224 0 ) ( 0 -224 -128 ) ( -128 -224 0 ) crete3_wall02 [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1
+( 0 -16 0 ) ( 0 -16 128 ) ( -128 -16 0 ) crete3_wall02 [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1
+( 0 0 24 ) ( 0 128 24 ) ( -128 0 24 ) crete3_wall02 [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1
+( 0 -90.0944206 146.4034335 ) ( 0 -199.1066851 79.318963 ) ( -128 -90.0944206 146.4034335 ) crete3_wall02 [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1
+}
 }
 {
 "classname" "info_target"

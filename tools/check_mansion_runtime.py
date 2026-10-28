@@ -2,6 +2,7 @@
 from pathlib import Path
 import collections
 import json
+import math
 import os
 import re
 import subprocess
@@ -17,10 +18,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--routes', action='store_true')
 parser.add_argument('--inventory', action='store_true')
 parser.add_argument('--czero-route', action='store_true')
+parser.add_argument('--door-break', action='store_true')
+parser.add_argument('--door-touch', action='store_true')
 args = parser.parse_args()
 if args.czero_route:args.routes=True
+if args.door_break:args.routes=True
+if args.door_touch:assert not args.door_break
 env = dict(os.environ, CREMATION_MANSION_VALIDATE='3' if args.inventory else ('2' if args.routes else '1'))
 if args.czero_route:env['CREMATION_MANSION_VALIDATE']='4'
+if args.door_break:env['CREMATION_MANSION_VALIDATE']='6'
+if args.door_touch:env['CREMATION_MANSION_VALIDATE']='7'
 env['PATH'] = str(Path(os.environ.get('ProgramFiles(x86)', 'C:/Program Files (x86)'))/'Steam') + os.pathsep + env['PATH']
 (MOD/'startup-diagnostics.txt').write_text('')
 with (MOD/('diagnostics/mansion-routes-server.log' if args.routes else 'diagnostics/mansion-server.log')).open('wb') as log:
@@ -31,12 +38,13 @@ with (MOD/('diagnostics/mansion-routes-server.log' if args.routes else 'diagnost
                                stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.PIPE,
                                creationflags=subprocess.CREATE_NO_WINDOW)
     try:
-        deadline = time.monotonic()+(300 if args.routes else 100)
+        deadline = time.monotonic()+(150 if args.door_break else (30 if args.door_touch else (300 if args.routes else 100)))
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 raise RuntimeError(f'GoldSrc exited: {process.returncode}')
             phases = (MOD/'startup-diagnostics.txt').read_text(errors='replace')
-            complete='MansionRouteComplete CZ route reached main door' if args.czero_route else ('InventoryProbeComplete' if args.inventory else ('MansionRouteComplete 20 routes from four fronts reached main door' if args.routes else 'MansionComplete four waves cleared'))
+            complete='MansionDoorTouchComplete both native rotating doors opened through their player touch callback' if args.door_touch else ('MansionDoorBreakComplete both native doors reached zero HP, swung open and remained non-solid' if args.door_break else ('MansionRouteComplete CZ used side stairs and reached upper hostage zone' if args.czero_route else ('InventoryProbeComplete' if args.inventory else ('MansionRouteComplete 20 routes from four fronts reached their assigned door' if args.routes else 'MansionComplete four waves cleared'))))
+            if args.door_break:complete='MansionDoorStableComplete 20 seconds of post-break horde navigation'
             if complete in phases:
                 break
             time.sleep(.5)
@@ -56,38 +64,91 @@ with (MOD/('diagnostics/mansion-routes-server.log' if args.routes else 'diagnost
             print('PASS: real GoldSrc fake client spawned in TT and received all eight weapons directly into native inventory.')
             raise SystemExit(0)
         if args.routes:
-            arrivals = re.findall(r'MansionRouteArrival (\S+) type=(\S+) at=([\d.-]+),([\d.-]+),([\d.-]+)', phases)
+            arrivals = re.findall(r'MansionRouteArrival (\S+) type=(\S+) at=([\d.-]+),([\d.-]+),([\d.-]+) target=(\S*) phase=(\d+)', phases)
+            if args.door_break:
+                door_arrivals=re.findall(r'MansionDoorTestArrival (\S+) door=(\d+) at=([\d.-]+),([\d.-]+),([\d.-]+)',phases)
+                assert {int(row[1]) for row in door_arrivals}=={1,2},(door_arrivals,phases)
+                assert 'MansionDoorBreakComplete both native doors reached zero HP, swung open and remained non-solid' in phases,phases
+                budget=re.search(r'MansionNavBudget started=(\d+) completed=(\d+) failed=(\d+) paths=(\d+) peak_paths=(\d+) peak_edges=(\d+) peak_traces=(\d+) peak_ms=([\d.]+) peak_move_ms=([\d.]+)',phases)
+                assert budget,phases
+                metrics=dict(zip(('started','completed','failed','paths','peak_paths','peak_edges','peak_traces','peak_ms','peak_move_ms'),map(float,budget.groups())))
+                assert metrics['started']>0 and metrics['completed']>0,metrics
+                assert metrics['peak_paths']<=80 and metrics['peak_edges']<=8192 and metrics['peak_traces']<=256,metrics
+                assert metrics['peak_ms']<20 and metrics['peak_move_ms']<25,metrics
+                upper=re.search(r'upper_completed=(\d+) upper_steps=(\d+)',phases)
+                assert upper and int(upper[1])>0 and int(upper[2])>0,phases
+                metrics.update(upper_completed=int(upper[1]),upper_steps=int(upper[2]))
+                assert len(re.findall(r'MansionSpawn wave=3 ',phases))==80,phases
+                assert 'MansionDoorStableComplete 20 seconds of post-break horde navigation' in phases,phases
+                (MOD/'diagnostics/mansion-door-break-runtime.json').write_text(json.dumps(dict(arrivals=door_arrivals,actors=80,post_break_seconds=20,navigation=metrics,completed=True),indent=2)+'\n')
+                print('PASS: 80 actors broke both doors and navigated for 20 seconds afterward; bounded navigation metrics:',metrics)
+                raise SystemExit(0)
             count=1 if args.czero_route else 20
-            assert len(arrivals)==count and len({name for name,kind,x,y,z in arrivals})==count, arrivals
-            if args.czero_route:assert arrivals[0][1]=='monster_czero_zombie',arrivals
-            # Engine logs round coordinates to one decimal; a valid distance
-            # below 20 can therefore appear as exactly 20 in the trace.
-            assert all(((float(x)-64)**2+(float(y)+256)**2)**.5<=20.1 and abs(float(z)-56)<1 for name,kind,x,y,z in arrivals), arrivals
+            assert len(arrivals)==count and len({name for name,*rest in arrivals})==count, arrivals
+            if args.czero_route:
+                name,kind,x,y,z,target,phase=arrivals[0]
+                assert kind=='monster_czero_zombie' and target in ('','none') and phase=='4',arrivals
+                assert 'MansionRouteComplete CZ used side stairs and reached upper hostage zone' in phases,phases
+                assert math.dist((float(x),float(y),float(z)),(-624,-176,192.1))<24.1,arrivals
+            else:
+                for name,kind,x,y,z,target,phase in arrivals:
+                    if target=='mansion_wait_door_1':assert math.dist((float(x),float(y)),(64,-256))<136,arrivals
+                    else:
+                        assert target=='mansion_wait_door_2',arrivals
+                        assert math.dist((float(x),float(y)),(-328,-792))<136,arrivals
             (MOD/'diagnostics/mansion-routes-runtime.json').write_text(json.dumps(dict(arrivals=arrivals, completed=True),indent=2)+'\n')
-            print('PASS: CZ zombie physically followed its random spawn route to the main door.' if args.czero_route else 'PASS: 20 actors from all four symmetric fronts physically reached the main door in GoldSrc.')
+            print('PASS: CZ zombie physically used the side stairs and reached the upper hostage zone in GoldSrc.' if args.czero_route else 'PASS: 20 actors from all four fronts physically reached their assigned doors in GoldSrc.')
+            raise SystemExit(0)
+        if args.door_touch:
+            issued=re.findall(r'MansionDoorTouchIssued door=(\d+) targetname=(\d+)',phases)
+            opened=re.findall(r'MansionDoorTouchOpened door=(\d+) angle=([\d.-]+),([\d.-]+),([\d.-]+)',phases)
+            assert {int(row[0]) for row in issued}=={1,2} and all(row[1]=='0' for row in issued),(issued,phases)
+            assert {int(row[0]) for row in opened}=={1,2},(opened,phases)
+            assert 'MansionDoorTouchComplete both native rotating doors opened through their player touch callback' in phases,phases
+            (MOD/'diagnostics/mansion-door-touch-runtime.json').write_text(json.dumps(dict(issued=issued,opened=opened,completed=True),indent=2)+'\n')
+            print('PASS: fake GoldSrc player touch opened both original rotating doors with targetname unset.')
             raise SystemExit(0)
         spawns = re.findall(r'MansionSpawn wave=(\d+) index=(\d+) ct=(\d+) type=(\S+)', phases)
         assert len(spawns) == 244, len(spawns)
-        expected = [(40,0,0,0,0),(20,20,0,0,0),(20,20,20,20,0),(10,10,10,10,40)]
-        kinds = ['monster_zombie','monster_quake_zombie','monster_fastzombie','monster_poisionzombie','monster_human_grunt']
+        randy_models=re.findall(r'MansionSpawn wave=\d+ index=\d+ ct=\d+ type=monster_randy .*?model=(\S+)', phases)
+        assert len(randy_models)==30 and all(model=='models/cremation/hotd2/randy/randy.mdl' for model in randy_models),randy_models
+        kinds = ['monster_zombie','monster_max','monster_randy','monster_poisionzombie','monster_human_grunt']
+        compositions = []
         for wave in range(1,5):
             rows = [(int(index),int(ct),kind) for w,index,ct,kind in spawns if int(w)==wave]
-            special=[row for row in rows if row[2]=='monster_czero_zombie']
+            special_kind='judgment' if wave==4 else 'monster_czero_zombie'
+            special=[row for row in rows if row[2]==special_kind]
             assert len(special)==1 and 0<=special[0][1]<40 and special[0][0] in (40,80),special
-            rows=[row for row in rows if row[2]!='monster_czero_zombie']
+            rows=[row for row in rows if row[2]!=special_kind]
             counts = collections.Counter(kind for index,ct,kind in rows)
-            assert tuple(counts[k] for k in kinds)==expected[wave-1], counts
-            assert [ct for index,ct,kind in rows] == [i%40 for i in range(len(rows))]
-            for side in range(4):
-                side_counts=collections.Counter(kind for index,ct,kind in rows if ct%4==side)
-                assert sum(side_counts.values())==len(rows)//4
-                assert all(expected[wave-1][k]//4<=side_counts[kind]<=(expected[wave-1][k]+3)//4 for k,kind in enumerate(kinds))
-        assert 'MansionError' not in phases
-        result = dict(map='cs_mansion', native_spawns=244, czero_npcs=4,native_damage_deaths=True,
-                      compositions=expected, round_robin_ct=True, completed=True,
+            expected = []
+            for index in range(40 if wave<=2 else 80):
+                sector,round_number=index%4,index//4
+                kind = (0 if wave==1 else (round_number+sector)%2 if wave==2 else
+                        (round_number+sector)%4 if wave==3 else
+                        4 if round_number%2 else (round_number//2+sector)%4)
+                expected.append('monster_johnny' if index<(10 if wave==1 else 15 if wave==2 else 0) else kinds[kind])
+            assert [kind for index,ct,kind in rows]==expected, (wave,counts,collections.Counter(expected))
+            compositions.append(dict(counts))
+            if wave < 4:
+                assert [ct for index,ct,kind in rows] == [i%40 for i in range(len(rows))]
+            else:
+                assert all(0 <= ct < 40 for index,ct,kind in rows), rows
+                role_counts=re.search(r'MansionCultistRoles perimeter=(\d+) door=(\d+) backdoor=(\d+)',phases)
+                assert role_counts and tuple(map(int,role_counts.groups()))==(20,18,2),phases
+                cultist_roles=re.findall(r'MansionCultistSpawn index=(\d+) role=(perimeter|door|backdoor) ct=(\d+)',phases)
+                assert len(cultist_roles)==40 and len({int(index) for index,role,ct in cultist_roles})==40,cultist_roles
+                assert collections.Counter(role for index,role,ct in cultist_roles)=={'perimeter':20,'door':18,'backdoor':2},cultist_roles
+        assert 'MansionError' not in phases and 'MansionPrecacheCreateFailed' not in phases and 'MansionCreateFailed' not in phases
+        assert 'JudgmentSpawn wave=4' in phases and 'shared_hp=1500' in phases
+        assert phases.count('JudgmentEncounter horde_alive=0 begin_boss_phase') == 1
+        result = dict(map='cs_mansion', native_spawns=243, czero_npcs=3, judgment_pairs=1, judgment_actors=2,
+                      judgment_shared_hp=1500, kuarl_fall_hp=90, native_damage_deaths=True,
+                      compositions=compositions, round_robin_ct_waves_1_3=True, wave4_cultist_spawns_random=True,
+                      cultist_roles=dict(perimeter=20,door=18,backdoor=2), completed=True,
                       interactive_visual_acceptance=False)
         (MOD/'diagnostics/mansion-runtime.json').write_text(json.dumps(result,indent=2)+'\n')
-        print('PASS: 244 native spawns/deaths; original hordes balanced and exactly one random-spawn CZ NPC per wave.')
+        print('PASS: 243 horde/CZero spawns plus Judgment pair; compositions and all four waves completed in GoldSrc.')
     finally:
         if process.poll() is None:
             process.terminate()

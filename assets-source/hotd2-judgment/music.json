@@ -1,0 +1,11 @@
+{
+  "source": "C:\\Users\\bill\\Downloads\\Death - Leprosy (Instrumental Cover With Oscar Padilla).mp3",
+  "source_sha256": "20f676e9ff7a0b2262b8c255d6e7a3d32cc4396cd270093219972684f82d8ab7",
+  "installed": "sound/music/judgment_leprosy.wav",
+  "installed_sha256": "c6e038886194b5d44a43fff058d121e0cdb771180c86b89d03774f471c0fc95f",
+  "duration_seconds": 388.37696145124715,
+  "rate": 44100,
+  "channels": 2,
+  "pcm_bits": 16,
+  "trigger": "Judgment encounter active; returns to normal music after defeat"
+}

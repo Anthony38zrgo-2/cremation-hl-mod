@@ -1,0 +1,672 @@
+{
+  "source": "HOTD2 PC Max kind 0x02; geometry/textures znchain.bin; chainsaws are integrated in hand models 7123/7117; motions zom.bin/cha.bin",
+  "scale": 4.2498701667158185,
+  "floor": 2.2446308353015962,
+  "bones": {
+    "Root": 0,
+    "Torso": 1,
+    "Head": 2,
+    "UpperArm_R": 3,
+    "Forearm_R": 4,
+    "Hand_R": 5,
+    "UpperArm_L": 6,
+    "Forearm_L": 7,
+    "Hand_L": 8,
+    "Pelvis": 9,
+    "Thigh_R": 10,
+    "Shin_R": 11,
+    "Foot_R": 12,
+    "Thigh_L": 13,
+    "Shin_L": 14,
+    "Foot_L": 15
+  },
+  "bodygroups": [
+    {
+      "node": 1,
+      "base": 1,
+      "count": 4,
+      "models": [
+        7112,
+        7112,
+        7112,
+        null
+      ]
+    },
+    {
+      "node": 2,
+      "base": 4,
+      "count": 4,
+      "models": [
+        7098,
+        7098,
+        7098,
+        null
+      ]
+    },
+    {
+      "node": 3,
+      "base": 16,
+      "count": 4,
+      "models": [
+        7104,
+        7104,
+        7104,
+        null
+      ]
+    },
+    {
+      "node": 4,
+      "base": 64,
+      "count": 4,
+      "models": [
+        7131,
+        7131,
+        7131,
+        null
+      ]
+    },
+    {
+      "node": 5,
+      "base": 256,
+      "count": 4,
+      "models": [
+        7123,
+        7123,
+        7123,
+        null
+      ]
+    },
+    {
+      "node": 6,
+      "base": 1024,
+      "count": 4,
+      "models": [
+        7101,
+        7101,
+        7101,
+        null
+      ]
+    },
+    {
+      "node": 7,
+      "base": 4096,
+      "count": 4,
+      "models": [
+        7128,
+        7128,
+        7128,
+        null
+      ]
+    },
+    {
+      "node": 8,
+      "base": 16384,
+      "count": 4,
+      "models": [
+        7117,
+        7117,
+        7117,
+        null
+      ]
+    },
+    {
+      "node": 9,
+      "base": 65536,
+      "count": 1,
+      "models": [
+        7107
+      ]
+    },
+    {
+      "node": 10,
+      "base": 65536,
+      "count": 4,
+      "models": [
+        7110,
+        7110,
+        7110,
+        null
+      ]
+    },
+    {
+      "node": 11,
+      "base": 262144,
+      "count": 4,
+      "models": [
+        7096,
+        7096,
+        7096,
+        null
+      ]
+    },
+    {
+      "node": 12,
+      "base": 1048576,
+      "count": 2,
+      "models": [
+        7092,
+        null
+      ]
+    },
+    {
+      "node": 13,
+      "base": 2097152,
+      "count": 4,
+      "models": [
+        7108,
+        7108,
+        7108,
+        null
+      ]
+    },
+    {
+      "node": 14,
+      "base": 8388608,
+      "count": 4,
+      "models": [
+        7094,
+        7094,
+        7094,
+        null
+      ]
+    },
+    {
+      "node": 15,
+      "base": 33554432,
+      "count": 2,
+      "models": [
+        7091,
+        null
+      ]
+    }
+  ],
+  "hitboxes": [
+    {
+      "node": 1,
+      "group": 2,
+      "minimum": [
+        -6.092113700340478,
+        -11.475263765542527,
+        -1.3625541955005787
+      ],
+      "maximum": [
+        7.9750593219185575,
+        11.475263765542527,
+        19.611044401786145
+      ]
+    },
+    {
+      "node": 2,
+      "group": 1,
+      "minimum": [
+        -7.510463326099517,
+        -4.295870950743841,
+        -4.190892124468897
+      ],
+      "maximum": [
+        1.9943909544428657,
+        4.287371319841194,
+        7.243938063841938
+      ]
+    },
+    {
+      "node": 3,
+      "group": 5,
+      "minimum": [
+        -4.503106005900223,
+        -4.063366503552993,
+        -13.711214353486193
+      ],
+      "maximum": [
+        4.089697019562281,
+        3.7932857540405545,
+        4.409073297839656
+      ]
+    },
+    {
+      "node": 4,
+      "group": 5,
+      "minimum": [
+        -2.86636267800106,
+        -2.9829051971503504,
+        -12.627637816087521
+      ],
+      "maximum": [
+        3.732680604338904,
+        3.41015185820126,
+        1.7259244356608061
+      ]
+    },
+    {
+      "node": 5,
+      "group": 5,
+      "minimum": [
+        -5.145280554284976,
+        -6.0226423772698245,
+        -32.637399276960885
+      ],
+      "maximum": [
+        5.63666834726827,
+        2.662623581779154,
+        1.9006789393763603
+      ]
+    },
+    {
+      "node": 6,
+      "group": 4,
+      "minimum": [
+        -4.503107525772234,
+        -3.9462796169122023,
+        -13.711216379982206
+      ],
+      "maximum": [
+        4.089695246378269,
+        3.910373147305348,
+        4.4090712713436435
+      ]
+    },
+    {
+      "node": 7,
+      "group": 4,
+      "minimum": [
+        -2.8663639445610682,
+        -3.5631477475689213,
+        -12.6276499750636
+      ],
+      "maximum": [
+        3.732679084466894,
+        2.8299093077826893,
+        1.7259124033407285
+      ]
+    },
+    {
+      "node": 8,
+      "group": 4,
+      "minimum": [
+        -5.1452552230848125,
+        -5.325634139828528,
+        -32.63739522396886
+      ],
+      "maximum": [
+        5.636693678468433,
+        3.35963181922045,
+        1.9006808392163728
+      ]
+    },
+    {
+      "node": 9,
+      "group": 3,
+      "minimum": [
+        -5.775122607870438,
+        -9.558208669697148,
+        -11.993305047337186
+      ],
+      "maximum": [
+        5.63065522697361,
+        7.7176391062475185,
+        4.435437251033159
+      ]
+    },
+    {
+      "node": 10,
+      "group": 7,
+      "minimum": [
+        -5.708788300627953,
+        -3.9225159114154176,
+        -20.745434313463512
+      ],
+      "maximum": [
+        4.556191588833529,
+        5.144601171496608,
+        3.4439370931064763
+      ]
+    },
+    {
+      "node": 11,
+      "group": 7,
+      "minimum": [
+        -3.191725478812925,
+        -3.7507698676872057,
+        -23.098001640972946
+      ],
+      "maximum": [
+        5.598418741646351,
+        4.262531544961491,
+        1.9210687823234536
+      ]
+    },
+    {
+      "node": 12,
+      "group": 7,
+      "minimum": [
+        -11.025318829273683,
+        -3.0662488986781944,
+        -3.1042079554342457
+      ],
+      "maximum": [
+        4.002674974458787,
+        3.5904122249282135,
+        2.1355659125985262
+      ]
+    },
+    {
+      "node": 13,
+      "group": 6,
+      "minimum": [
+        -4.525969693855222,
+        -4.467804951977262,
+        -20.7454322869675
+      ],
+      "maximum": [
+        4.5561910822095255,
+        4.143508341380251,
+        3.443939372914491
+      ]
+    },
+    {
+      "node": 14,
+      "group": 6,
+      "minimum": [
+        -4.1062405730766445,
+        -4.732243683277425,
+        -21.093517427637455
+      ],
+      "maximum": [
+        5.457020995585258,
+        3.8468014607526246,
+        1.9210716954114724
+      ]
+    },
+    {
+      "node": 15,
+      "group": 6,
+      "minimum": [
+        -11.025318829273683,
+        -3.3694167552193606,
+        -3.104203649130218
+      ],
+      "maximum": [
+        4.0026742145227825,
+        3.2872448750110506,
+        2.1355705988705567
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "idle",
+      "source_id": 975,
+      "frames": 46,
+      "activity": 1,
+      "loop": true,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -0.14874544063633355,
+        -0.07692264600256109
+      ]
+    },
+    {
+      "name": "walk",
+      "source_id": 1022,
+      "frames": 31,
+      "activity": 3,
+      "loop": true,
+      "speed": 42,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        40.77112597502703,
+        0.0
+      ]
+    },
+    {
+      "name": "run",
+      "source_id": 968,
+      "frames": 31,
+      "activity": 4,
+      "loop": true,
+      "speed": 130,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        127.49610500147456,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_00",
+      "source_id": 193,
+      "frames": 24,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 14,
+      "discarded_root_travel": [
+        55.418728323025306,
+        -0.09179719006619444
+      ]
+    },
+    {
+      "name": "attack_01",
+      "source_id": 194,
+      "frames": 66,
+      "activity": 31,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 40,
+      "discarded_root_travel": [
+        59.49818233402146,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_02",
+      "source_id": 195,
+      "frames": 24,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 14,
+      "discarded_root_travel": [
+        97.01347901963568,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_03",
+      "source_id": 196,
+      "frames": 24,
+      "activity": 31,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 14,
+      "discarded_root_travel": [
+        -55.418728323025306,
+        0.12027131930926402
+      ]
+    },
+    {
+      "name": "attack_04",
+      "source_id": 197,
+      "frames": 30,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 18,
+      "discarded_root_travel": [
+        0.3178902867478216,
+        -0.006374804810735725
+      ]
+    },
+    {
+      "name": "attack_05",
+      "source_id": 198,
+      "frames": 30,
+      "activity": 31,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 18,
+      "discarded_root_travel": [
+        0.3178902867478216,
+        -0.008499739747647634
+      ]
+    },
+    {
+      "name": "attack_06",
+      "source_id": 199,
+      "frames": 45,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 27,
+      "discarded_root_travel": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_07",
+      "source_id": 200,
+      "frames": 51,
+      "activity": 31,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 31,
+      "discarded_root_travel": [
+        50.99844200058982,
+        0.0
+      ]
+    },
+    {
+      "name": "attack_08",
+      "source_id": 201,
+      "frames": 51,
+      "activity": 30,
+      "loop": false,
+      "speed": 0,
+      "event": 3,
+      "event_frame": 31,
+      "discarded_root_travel": [
+        50.99844200058982,
+        0.0
+      ]
+    },
+    {
+      "name": "pain",
+      "source_id": 1008,
+      "frames": 38,
+      "activity": 26,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -40.95472246081543,
+        0.0
+      ]
+    },
+    {
+      "name": "die_simple",
+      "source_id": 987,
+      "frames": 40,
+      "activity": 36,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -34.83065961542581,
+        -0.3255400242210043
+      ]
+    },
+    {
+      "name": "die_back",
+      "source_id": 986,
+      "frames": 50,
+      "activity": 37,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        40.3087403797342,
+        0.3803633591494816
+      ]
+    },
+    {
+      "name": "die_forward",
+      "source_id": 972,
+      "frames": 31,
+      "activity": 38,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -98.7155573389309,
+        0.0
+      ]
+    },
+    {
+      "name": "die_violent",
+      "source_id": 988,
+      "frames": 82,
+      "activity": 39,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        -10.739421700535289,
+        2.4933986679348834
+      ]
+    },
+    {
+      "name": "die_head",
+      "source_id": 990,
+      "frames": 43,
+      "activity": 66,
+      "loop": false,
+      "speed": 0,
+      "event": 0,
+      "event_frame": 0,
+      "discarded_root_travel": [
+        39.65681255935074,
+        0.9196718933368743
+      ]
+    }
+  ],
+  "textures": 40,
+  "main_triangles": 1285,
+  "integrated_saw_triangles": {
+    "5": 298,
+    "8": 298
+  },
+  "sha256": {
+    "models/cremation/hotd2/max/max.mdl": "a0098fdcbf2e5a7b7f4a1a85c4c1eb92573f43abbbf8ef6d36e4ebc688939fcb",
+    "models/cremation/hotd2/max/max_charred.mdl": "bd4079fff7fb76e7e0e6ecd1d661d9083bdbb4f7c1500fea3baac6fc0251a72d",
+    "models/cremation/hotd2/max/part_02.mdl": "53aa8a3ac5501bf2bf603f6fb144a259f7b8d32c3615f43fa67a6279793c0190",
+    "models/cremation/hotd2/max/part_03.mdl": "f30923ac954c09cd11e2da298b2d8cc55215e26d111d591c12de94aafe0c8078",
+    "models/cremation/hotd2/max/part_04.mdl": "6a291de7c33aefc13d99c2347e5bf21d77c871d64788e9323a687a9afa3c892b",
+    "models/cremation/hotd2/max/part_05.mdl": "322acd2e1e56ac20093b3001dceca1217e446ce726261db9c675b0345fb3d569",
+    "models/cremation/hotd2/max/part_06.mdl": "ceecd02545dbb193ccc97cb01f31a13ecc8a637b1611d409edd880772215269a",
+    "models/cremation/hotd2/max/part_07.mdl": "b99469bb939d0545b7be1230ff7bc2cb83801a5eca473f447dee91d6de8747d6",
+    "models/cremation/hotd2/max/part_08.mdl": "625e5bd3c14b52a0f9b0860d6caeadd15200e4d39ea5606405863aecc8a7ff89",
+    "models/cremation/hotd2/max/part_10.mdl": "1d9bbe23d654e8ddef102151eadfa6c7fa2b80ac61aa670504e48b14db5735bf",
+    "models/cremation/hotd2/max/part_11.mdl": "516f12ee87a2ea35b1377327f07888d5ea60aba0d5ca25bccb8a5dc512622a70",
+    "models/cremation/hotd2/max/part_12.mdl": "710a5636323af2459330ac48b73c2a2d2c97403cfa691e0f8d1a99e88cb79286",
+    "models/cremation/hotd2/max/part_13.mdl": "5a20fbe133fa301a4e62482a466ec6ff26b6be2163d5d0b7c7d583692c108b7e",
+    "models/cremation/hotd2/max/part_14.mdl": "e0bc777859d68f1f7e86cae4ab92ef7563dfbd280472d5e39dcc4ee4a9c9c034",
+    "models/cremation/hotd2/max/part_15.mdl": "e18b02f78162b66a68f874de8e2312946ff5d580f6f24de716b0804007d8258b"
+  }
+}

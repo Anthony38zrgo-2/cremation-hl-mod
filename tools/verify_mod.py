@@ -12,8 +12,9 @@ source=BSP(ROOT/'valve/maps/rapidcore.bsp')
 output=BSP(MOD/'maps/rapidcore.bsp')
 report=json.loads((MOD/'placement.json').read_text())
 counts=Counter(e['classname'] for e in output.entities)
-assert counts['monster_quake_zombie']==10 and counts['monster_zombie']==10
-assert counts['monster_fastzombie']==10 and counts['monster_poisionzombie']==10
+assert counts['monster_max']==10 and counts['monster_zombie']==10
+assert counts['monster_quake_zombie']==0
+assert counts['monster_randy']==10 and counts['monster_poisionzombie']==10
 assert counts['aiscripted_sequence']==0
 assert not any(e['classname']=='trigger_auto' and e.get('target','').startswith('cremation_patrol_') for e in output.entities)
 assert sum(e.get('targetname','').startswith('cremation_metal_') for e in output.entities)==6
@@ -27,7 +28,7 @@ spawn=next(e for e in output.entities if e['classname']=='info_player_start')
 sp=tuple(map(float,spawn['origin'].split()))
 assert output.clear(sp,1)
 assert abs(output.floor(*sp[:2])+36-sp[2])<.1
-zombies=[e for e in output.entities if e['classname'] in ('monster_zombie','monster_quake_zombie','monster_fastzombie','monster_poisionzombie')]
+zombies=[e for e in output.entities if e['classname'] in ('monster_zombie','monster_max','monster_quake_zombie','monster_randy','monster_poisionzombie')]
 for e in zombies:
     goals=[g for g in output.entities if g.get('netname')==e['targetname']]
     assert len(goals)==2

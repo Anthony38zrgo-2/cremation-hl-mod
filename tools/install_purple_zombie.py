@@ -38,7 +38,7 @@ def install():
     print('Installed purple normal zombie, associated normal headcrab and matching burned-corpse model.')
 
 if __name__=='__main__':
-    from install_quake_zombie import replace_map
+    from install_hotd2_max import replace_map
     # Back up map/model state before installing the replacement assets.
     replace_map()
     install()

@@ -41,6 +41,20 @@ def sprite_square(name,color):
     data.extend(struct.pack('<5i',0,-8,8,size,size));data.extend(bytes([255]*256))
     (MOD/f'sprites/cremation/{name}.spr').write_bytes(data)
 
+def cz_stair_ramp():
+    # Hidden collision-only center strip over the original 16-unit risers.
+    # GoldSrc monsters stop at an exact 16-unit step despite a connected nav
+    # graph, so this shallow plane lets the narrow CZero hull walk the same
+    # lateral staircase with native collision and gravity.
+    x0,x1=-234.0,-214.0;y0,y1=-224.0,-16.0;z0=24.0
+    slope=128.0/(y1-y0);intercept=64.0-slope*y0
+    top_normal=np.array([0.,slope,-1.]);top_length=np.linalg.norm(top_normal)
+    top_normal/=top_length;top_distance=-intercept/top_length
+    faces=[Face(np.array([1.,0,0]),x0,'crete3_wall02'),Face(np.array([-1.,0,0]),-x1,'crete3_wall02'),
+           Face(np.array([0,1.,0]),y0,'crete3_wall02'),Face(np.array([0,-1.,0]),-y1,'crete3_wall02'),
+           Face(np.array([0,0,1.]),z0,'crete3_wall02'),Face(top_normal,top_distance,'crete3_wall02')]
+    return Brush(faces)
+
 def construct():
     original=read_map(SOURCE/'cs_mansion.map')
     house_clip=box((-736,-800,-176),(208,288,600),'NULL')
@@ -68,6 +82,9 @@ def construct():
     for old in original[1:]:
         keys=copy.deepcopy(old['keys']);cls=keys['classname']
         if old['brushes']:
+            # Preserve the native rotating doors and their touch-to-open
+            # behavior. Mansion damage/repair HP belongs to the wave state;
+            # assigning targetname disables GoldSrc's native DoorTouch.
             physical=[];origins=[]
             for brush in old['brushes']:
                 if any(f.texture.split()[0].upper()=='ORIGIN' for f in brush.faces):origins.append(brush);continue
@@ -153,6 +170,15 @@ def construct():
                 keys=dict(classname='info_target',targetname=f'mansion_route_{index:02}_{j:02}',origin=' '.join(map(str,p)))
                 if j+1<len(route):keys['target']=f'mansion_route_{index:02}_{j+1:02}'
                 entities.append(entity(keys))
+            # Back-door approach: share each CT's verified exterior funnel,
+            # then hand off to collision-tested mansion navigation at the
+            # central yard instead of forcing every horde route through the
+            # front porch.
+            side_route=[(x,y,24.1),funnel,inner]
+            for j,p in enumerate(side_route):
+                keys=dict(classname='info_target',targetname=f'mansion_side_route_{index:02}_{j:02}',origin=' '.join(map(str,p)))
+                if j+1<len(side_route):keys['target']=f'mansion_side_route_{index:02}_{j+1:02}'
+                entities.append(entity(keys))
             for a,b in zip(route,route[1:]):
                 steps=max(1,int(np.ceil(np.linalg.norm(np.array(b)-a)/128)))
                 for k in range(steps):node_points.add(tuple(round(a[i]+(b[i]-a[i])*k/steps,2) for i in range(3)))
@@ -165,6 +191,7 @@ def construct():
         if min(sum((p[k]-q[k])**2 for k in range(3)) for q in selected)<192**2:break
         selected.append(p);candidates.remove(p)
     for p in selected:entities.append(entity(dict(classname='info_node',origin=f'{p[0]} {p[1]} {p[2]+8}')))
+    entities.append(entity(dict(classname='func_wall',targetname='mansion_czero_stair_ramp',rendermode='1',renderamt='0',renderfx='0'),[cz_stair_ramp()]))
     exterior_materials(entities,MOD)
     add_garden(entities,MOD,entity)
     add_perimeter(entities,world,ARENA,entity)

@@ -1,5 +1,7 @@
 struct RadarPoint{float x,y;};
 static RadarPoint radarEnemies[512];static int radarCount=0;static bool radarEnabled=false;static float radarReceived=-100;
+struct WaveHudState { int wave=0,alive=0,state=0;bool pending=false;float received=-100; };
+static WaveHudState waveHud;
 #include "radar_geometry.h"
 static int radarMessage(const char*,int size,void* ptr){
     if(size<3)return 1;auto b=static_cast<unsigned char*>(ptr);int count=b[2];if(count>40||size!=3+count*4)return 1;
@@ -8,6 +10,22 @@ static int radarMessage(const char*,int size,void* ptr){
     return 1;
 }
 static void radarClear(){radarCount=0;radarEnabled=false;radarReceived=-100;}
+static void waveHudClear(){waveHud=WaveHudState{};}
+static int waveHudMessage(const char*,int size,void* ptr){
+    if(size!=6||!ptr)return 1;auto b=static_cast<unsigned char*>(ptr);if(b[0]!=1||b[1]>4||b[5]>2)return 1;
+    waveHud.wave=b[1];waveHud.alive=int(b[2]|(b[3]<<8));waveHud.pending=b[4]!=0;waveHud.state=b[5];waveHud.received=eng.GetClientTime();return 1;
+}
+static void drawWaveHud(){
+    if(eng.pfnGetCvarFloat("hud_draw")==0||waveHud.received<0||eng.GetClientTime()-waveHud.received>1.5f)return;
+    SCREENINFO screen{};screen.iSize=sizeof screen;if(!eng.pfnGetScreenInfo(&screen))return;
+    char line[128];
+    if(waveHud.state==2)std::snprintf(line,sizeof line,"GAME OVER | LA BOMBA HA EXPLOTADO");
+    else if(waveHud.state==1)std::snprintf(line,sizeof line,"OLEADAS COMPLETADAS | ENEMIGOS VIVOS: 0");
+    else std::snprintf(line,sizeof line,"OLEADA %d/4 | ENEMIGOS VIVOS: %d%s",waveHud.wave,waveHud.alive,waveHud.pending?" | REFUERZOS EN CAMINO":"");
+    const int pixels=std::max(18,std::min(38,screen.iHeight*25/1080));
+    drawCremationFontText(line,"Butcherman",pixels,screen.iWidth/2,int(screen.iHeight*.86f),235,210,150);
+    if(waveHud.state==2)drawCremationFontText("GAME OVER","Nosifer",std::max(28,pixels*2),screen.iWidth/2,int(screen.iHeight*.22f),255,55,40);
+}
 static void drawRadar(){
     if(!radarEnabled||eng.GetClientTime()-radarReceived>1.5f)return;
     SCREENINFO screen{};screen.iSize=sizeof screen;if(!eng.pfnGetScreenInfo(&screen))return;
@@ -31,4 +49,4 @@ static void drawRadar(){
     }
     eng.pfnDrawCharacter(cx-4,top+3,'N',130,225,145);
 }
-extern "C" int HUD_Redraw(float time,int intermission){int result=reinterpret_cast<int(*)(float,int)>(GetProcAddress(donor,"HUD_Redraw"))(time,intermission);if(!intermission)drawRadar();drawTacticalHud();return result;}
+extern "C" int HUD_Redraw(float time,int intermission){int result=reinterpret_cast<int(*)(float,int)>(GetProcAddress(donor,"HUD_Redraw"))(time,intermission);if(!intermission)drawRadar();drawTacticalHud();drawJudgmentHud();if(!intermission)drawWaveHud();return result;}

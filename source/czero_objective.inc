@@ -8,6 +8,12 @@ static int czNearest(const Vector& p){int best=0;float distance=1e9f;for(int i=0
 struct CZPath{edict_t* npc;int serial;std::vector<int> nodes;size_t cursor=0;Vector goal{0,0,0};float replan=0,progressAt=0;Vector last{0,0,0};};
 static std::vector<CZPath> czPaths;
 static CZPath& czPath(edict_t* e){for(auto& p:czPaths)if(p.npc==e&&p.serial==e->serialnumber)return p;czPaths.push_back({e,e->serialnumber});return czPaths.back();}
+struct CZStairHull{edict_t* npc=nullptr;int serial=0;Vector mins{0,0,0},maxs{0,0,0};bool narrowed=false;};
+static std::vector<CZStairHull> czStairHulls;
+static CZStairHull& czStairHull(edict_t* e){for(auto& h:czStairHulls)if(h.npc==e&&h.serial==e->serialnumber)return h;czStairHulls.push_back({e,e->serialnumber,e->v.mins,e->v.maxs,false});return czStairHulls.back();}
+static void czSetStairHull(edict_t* e,bool narrow){auto& h=czStairHull(e);if(h.narrowed==narrow)return;
+    if(narrow){Vector lo(-8,-8,0),hi(8,8,72);engine.pfnSetSize(e,&lo.x,&hi.x);h.narrowed=true;}
+    else{engine.pfnSetSize(e,&h.mins.x,&h.maxs.x);h.narrowed=false;}}
 static void czPlan(edict_t* e,CZPath& path,const Vector& goal){
     int start=czNearest(e->v.origin),end=czNearest(goal);std::vector<float> costs(CZNavCount,1e9f);std::vector<int> previous(CZNavCount,-1);
     using Item=std::pair<float,int>;std::priority_queue<Item,std::vector<Item>,std::greater<Item>> queue;costs[start]=0;queue.push({0,start});
@@ -26,8 +32,8 @@ static void czPlan(edict_t* e,CZPath& path,const Vector& goal){
     if(end==start)path.nodes.push_back(end);
     else if(previous[end]>=0){for(int n=end;n!=start;n=previous[n])path.nodes.push_back(n);std::reverse(path.nodes.begin(),path.nodes.end());}
 }
-static bool czWalkToward(edict_t* e,const Vector& to,float dt,float reach=10.f){
-    if(length2d(to-e->v.origin)<reach&&std::fabs(to.z-e->v.origin.z)<20)return true;
+static bool czWalkToward(edict_t* e,const Vector& to,float dt,float reach=10.f,float verticalReach=20.f){
+    if(length2d(to-e->v.origin)<reach&&std::fabs(to.z-e->v.origin.z)<verticalReach)return true;
     Vector delta=to-e->v.origin;float yaw=std::atan2(delta.y,delta.x)*180/3.14159265f;
     Vector a=e->v.origin+Vector(0,0,36),b=to+Vector(0,0,36);TraceResult tr{};engine.pfnTraceHull(&a.x,&b.x,0,1,e,&tr);
     if(valid(tr.pHit)&&tr.pHit!=e&&length(tr.vecEndPos-a)<120){const char* cls=text(tr.pHit->v.classname);
@@ -43,6 +49,20 @@ static bool czWalkToward(edict_t* e,const Vector& to,float dt,float reach=10.f){
     if(moved){e->v.angles.y=yaw;czSequence(e,3);e->v.fuser1=globals->time+.15f;}
     return false;
 }
+static bool czWalkStairTread(edict_t* e,const Vector& to,float dt){
+    // The flight is only 32 units wide. Center the NPC first, then walk along
+    // its axis so the generic A* turn corrections cannot push it into rails.
+    float dx=-224.f-e->v.origin.x;
+    float yaw=std::fabs(dx)>1.f?(dx>0?0.f:180.f):(to.y>=e->v.origin.y?90.f:270.f);
+    float remaining=std::fabs(dx)>1.f?std::fabs(dx):std::fabs(to.y-e->v.origin.y);
+    if(remaining<2.5f&&std::fabs(to.z-e->v.origin.z)<8.f)return true;
+    float distance=std::min(remaining,110.f*dt);Vector before=e->v.origin;
+    bool moved=hookWalkMove(e,yaw,distance,0)!=0;
+    if(moved){e->v.angles.y=yaw;czSequence(e,3);e->v.fuser1=globals->time+.15f;}
+    if(globals->time>=e->v.fuser4){e->v.fuser4=globals->time+3.f;char row[160];
+        std::snprintf(row,sizeof row,"at=%.1f,%.1f,%.1f next=%.0f,%.0f,%.0f walked=%.1f",e->v.origin.x,e->v.origin.y,e->v.origin.z,to.x,to.y,to.z,length2d(e->v.origin-before));startupTrace("CZStairProgress",row);}
+    return length2d(to-e->v.origin)<2.5f&&std::fabs(to.z-e->v.origin.z)<8.f;
+}
 static bool czNavigate(edict_t* e,const Vector& goal,float dt){
     auto& p=czPath(e);if(length2d(e->v.origin-goal)<18&&std::fabs(e->v.origin.z-goal.z)<20)return true;
     if(globals->time>=p.replan||length(p.goal-goal)>4)czPlan(e,p,goal);
@@ -54,13 +74,34 @@ static int czDoorCrowd(edict_t* e,const Vector& at){int count=0;for(int i=1;i<gl
 static bool czDoorBlocked(edict_t* e,int door){
     Vector a=door?Vector(-312,-820,92):Vector(96,-256,92),b=door?Vector(-312,-704,92):Vector(-64,-256,92);TraceResult tr{};
     engine.pfnTraceHull(&a.x,&b.x,1,1,e,&tr);
+    // The south mansion entrance is a native rotating door with state-owned
+    // durability. Treat it as an intentional entrance in route selection.
+    if(valid(tr.pHit)&&std::strstr(text(tr.pHit->v.classname),"func_door_rotating")){
+        Vector origin=tr.pHit->v.origin;
+        if(std::fabs(origin.x+360.f)<1.f&&std::fabs(origin.y+768.f)<1.f&&std::fabs(origin.z-104.f)<1.f)return false;
+    }
     return tr.flFraction<.99f&&(!valid(tr.pHit)||!std::strstr(text(tr.pHit->v.classname),"door"));
 }
+static float czNearestPlayerDistance(const Vector& at){
+    float nearest=1e9f;
+    for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!valid(p)||!(p->v.flags&FL_CLIENT)||p->v.health<=0||p->v.deadflag!=DEAD_NO)continue;
+        nearest=std::min(nearest,length2d(p->v.origin-at));}
+    return nearest;
+}
 static void czChooseEntrance(edict_t* e){
-    const Vector outside[]={Vector(224,-256,24.1f),Vector(-328,-880,24.1f)};
-    float score[2];for(int i=0;i<2;++i)score[i]=czDoorBlocked(e,i)||czDoorCrowd(e,i?Vector(-312,-768,56):Vector(0,-256,56))>3?1e8f:length2d(e->v.origin-outside[i]);
-    if(score[0]>=1e8f&&score[1]>=1e8f){e->v.iuser1=6;startupTrace("CZObjective","ladder: doors obstructed/crowded");}
-    else{e->v.iuser2=score[0]<=score[1]?0:1;e->v.iuser1=1;startupTrace("CZObjective",e->v.iuser2?"south door":"front door");}
+    const Vector front(0,-256,56),south(-312,-768,56),stairs(-224,-96,136);
+    float nearDoor=std::min(czNearestPlayerDistance(front),czNearestPlayerDistance(south));
+    float nearStairs=czNearestPlayerDistance(stairs);
+    bool sideBlocked=czDoorBlocked(e,1)||czDoorCrowd(e,south)>3;
+    // Keep the front door out of the objective routes. When players are
+    // closer to either door, take the lateral stairs; when they hold the
+    // stair side, enter through the south breakable door instead.
+    bool useStairs=sideBlocked||nearDoor<=nearStairs;
+    // Both variants enter through the south rotating door. The stair
+    // variant then climbs from inside; the other continues to the lower
+    // hostage objective. Neither route funnels the NPC through the front.
+    e->v.iuser2=1;e->v.iuser3=useStairs?1:0;e->v.iuser4=0;e->v.iuser1=1;
+    startupTrace("CZObjective",useStairs?"south door, then lateral stairs":"south door route");
     czPath(e).replan=0;e->v.fuser3=globals->time;e->v.target=0;
 }
 static bool czObjectiveOwns(edict_t* e){return czIs(e)&&e->v.iuser1>0;}
@@ -100,11 +141,7 @@ static void czCover(edict_t* e,const Vector& threat){
     e->v.fuser3=globals->time+3;e->v.fuser4=globals->time+1;czPath(e).replan=0;
 }
 static bool czObjectiveThink(edict_t* e,float dt){
-    if(e->v.weapons<0||!mansionActor(e)
-#ifdef CREMATION_ENABLE_VALIDATION
-       ||mansionCZRouteTest
-#endif
-       )return false;
+    if(e->v.weapons<0||!mansionActor(e))return false;
     if(!e->v.iuser1){if(e->v.origin.x>=-1160&&e->v.origin.x<=456&&e->v.origin.y>=-1064&&e->v.origin.y<=552)czChooseEntrance(e);else{
         auto close=czEnemy(e);if(valid(close)&&length2d(close->v.origin-e->v.origin)<=64&&length(center(close)-(e->v.origin+Vector(0,0,40)))<=90)czFire(e,close);
         return true;}}
@@ -121,9 +158,9 @@ static bool czObjectiveThink(edict_t* e,float dt){
         const Vector front[]={Vector(176,-256,40.1f),Vector(160,-256,48.1f),Vector(64,-256,56.1f),Vector(-64,-256,56.1f)};
         const Vector south[]={Vector(-328,-824,32.1f),Vector(-328,-808,40.1f),Vector(-328,-792,48.1f),Vector(-328,-760,56.1f),Vector(-328,-704,56.1f)};
         int count=e->v.iuser2?5:4;Vector goal=e->v.iuser2?south[std::min(count-1,e->v.iuser4)]:front[std::min(count-1,e->v.iuser4)];
-        if(czWalkToward(e,goal,dt)){if(++e->v.iuser4>=count){e->v.iuser1=3;czPath(e).replan=0;}}
-        else if(globals->time-e->v.fuser3>12){e->v.iuser1=6;czPath(e).replan=0;}}
-    else if(e->v.iuser1==3){Vector goal=e->v.origin.z>140?Vector(-624,-176,192.1f):Vector(-304,-272,56.1f);
+        if(czWalkToward(e,goal,dt)){if(++e->v.iuser4>=count){e->v.iuser1=e->v.iuser3?6:3;e->v.iuser4=0;if(e->v.iuser1==6)e->v.iuser2=0;czPath(e).replan=0;}}
+        else if(globals->time-e->v.fuser3>12){e->v.iuser1=1;e->v.iuser4=0;e->v.fuser3=globals->time;czPath(e).replan=0;}}
+    else if(e->v.iuser1==3){Vector goal=e->v.iuser3?Vector(-624,-176,192.1f):Vector(-304,-272,56.1f);
         if(czNavigate(e,goal,dt)){e->v.iuser1=4;e->v.teleport_time=globals->time+3;e->v.vuser4=e->v.origin;czSequence(e,61);e->v.frame=0;startupTrace("CZObjective","planting at hostage zone");}}
     else if(e->v.iuser1==4){if(length(e->v.origin-e->v.vuser4)>24){e->v.iuser1=3;return true;}czSequence(e,61);if(globals->time>=e->v.teleport_time)czPlant(e);}
     else if(e->v.iuser1==5){
@@ -133,15 +170,16 @@ static bool czObjectiveThink(edict_t* e,float dt){
         bool peek=std::fmod(globals->time,2.8f)>1.5f;Vector goal=peek?e->v.vuser2:e->v.vuser1;
         if(!czNavigate(e,goal,dt)&&globals->time>e->v.dmgtime)czSequence(e,3);
         else if(globals->time>e->v.dmgtime)czSequence(e,19);
-    }else if(e->v.iuser1==6){if(czNavigate(e,Vector(-328,288,24.1f),dt)){e->v.iuser1=7;e->v.movetype=MOVETYPE_FLY;e->v.flags&=~FL_ONGROUND;}}
-    else if(e->v.iuser1==7){Vector delta=Vector(-328,280,228.1f)-e->v.origin;e->v.velocity=Vector(std::max(-60.f,std::min(60.f,delta.x*5)),std::max(-60.f,std::min(60.f,delta.y*5)),std::max(-90.f,std::min(90.f,delta.z*5)));czSequence(e,75);
-        if(std::fabs(delta.z)<.25f){Vector lo(-16,-16,0),hi(16,16,36);engine.pfnSetSize(e,&lo.x,&hi.x);e->v.iuser1=8;czSequence(e,73);}}
-    else if(e->v.iuser1==8){
-        Vector a=e->v.origin+Vector(0,0,18),b=a+Vector(0,-40,0);TraceResult window{};engine.pfnTraceHull(&a.x,&b.x,1,3,e,&window);
-        if(valid(window.pHit)&&!std::strcmp(text(window.pHit->v.classname),"func_breakable")&&window.pHit->pvPrivateData&&globals->time>=e->v.dmgtime){auto t=*reinterpret_cast<void***>(window.pHit->pvPrivateData);reinterpret_cast<TakeDamageFn>(t[11])(window.pHit->pvPrivateData,&e->v,&e->v,40,1<<7);e->v.dmgtime=globals->time+.65f;}
-        e->v.velocity=Vector(0,slowed(e)?-60*balance::SlowFactor:-60,0);czSequence(e,73);if(e->v.origin.y<=196){e->v.velocity=Vector(0,0,0);e->v.movetype=MOVETYPE_STEP;e->v.iuser1=9;}}
-    else if(e->v.iuser1==9){Vector p=e->v.origin+Vector(0,0,36);TraceResult tr{};engine.pfnTraceHull(&p.x,&p.x,1,1,e,&tr);
-        if(!tr.fStartSolid&&!tr.fAllSolid&&(e->v.flags&FL_ONGROUND)){Vector lo(-16,-16,0),hi(16,16,72);engine.pfnSetSize(e,&lo.x,&hi.x);e->v.iuser1=3;czPath(e).replan=0;}}
+    }else if(e->v.iuser1==6){
+        // Reach the lower landing through the south entrance, then follow
+        // each BSP-verified tread. The narrow, aligned steps avoid the
+        // diagonal oscillation of a straight-to-upper-floor path.
+        static const float stairY[]={-224,-184,-160,-136,-112,-88,-64,-40,-16,8};
+        constexpr int stairCount=sizeof(stairY)/sizeof(stairY[0]);
+        auto stairPoint=[](int i){float y=stairY[i];float z=y>=8.f?192.1f:64.f+(y+224.f)*(128.f/208.f)+.1f;return Vector(-224,y,z);};
+        if(e->v.iuser4==0){if(czNavigate(e,stairPoint(0),dt)){czSetStairHull(e,true);e->v.iuser4=1;czPath(e).replan=0;}}
+        else if(e->v.iuser4<stairCount){int step=e->v.iuser4;if(czWalkStairTread(e,stairPoint(step),dt)){++e->v.iuser4;char report[120];std::snprintf(report,sizeof report,"step=%d at=%.0f,%.0f,%.0f",step,e->v.origin.x,e->v.origin.y,e->v.origin.z);startupTrace("CZStairStep",report);}}
+        else{czSetStairHull(e,false);e->v.iuser1=3;czPath(e).replan=0;startupTrace("CZObjective","reached upper floor via side stairs");}}
     return true;
 }
 static void czBombFrame(){

@@ -1,4 +1,6 @@
 static const char* necroCharred[][2]={
+{"models/cremation/hotd2/randy/randy.mdl","models/cremation/hotd2/randy/randy_charred.mdl"},
+{"models/cremation/hotd2/ken/ken.mdl","models/cremation/hotd2/ken/ken_charred.mdl"},
 {"models/cremation/hotd2/steve/steve.mdl","models/cremation/hotd2/steve/steve_charred.mdl"},
 {"models/cremation/hotd2/david/david.mdl","models/cremation/hotd2/david/david_charred.mdl"},
 {"models/cremation/hotd2/johnny/johnny.mdl","models/cremation/hotd2/johnny/johnny_charred.mdl"},
