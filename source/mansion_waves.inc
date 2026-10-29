@@ -14,6 +14,8 @@ static bool mansionInvaded=false;
 static float mansionScientistAppearAt=0;
 static float mansionScientistKnockAt=0,mansionScientistVoiceAt=0,mansionScientistThankUntil=0;
 static int mansionScientistVoiceLine=0;
+static bool mansionScientistFemale=false;
+static float mansionScientistLastHealth=0,mansionScientistPainAt=0;
 static int mansionGroundAssigned=0;
 static MansionScientistRef mansionRaiders[2];
 static float mansionRaidHitAt[2]{};
@@ -546,7 +548,7 @@ static void mansionPrecache(){
     for(int type=0;type<6;++type){auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString(mansion::classname(type)));if(!valid(e)){startupTrace("MansionPrecacheCreateFailed",mansion::classname(type));continue;}
         e->v.origin=Vector(1336,392,24);hookSpawn(e);engine.pfnRemoveEntity(e);}
     auto scientist=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_scientist"));if(valid(scientist)){hookSpawn(scientist);engine.pfnRemoveEntity(scientist);}
-    for(auto path:{"debris/wood1.wav","cremation/scientist_rescue/help.wav","cremation/scientist_rescue/dontwantdie.wav","cremation/scientist_rescue/thankyou.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
+    for(auto path:{"debris/wood1.wav","cremation/scientist_rescue/male_help.wav","cremation/scientist_rescue/male_fear.wav","cremation/scientist_rescue/male_thanks.wav","cremation/scientist_rescue/male_pain.wav","cremation/scientist_rescue/female_help.wav","cremation/scientist_rescue/female_fear.wav","cremation/scientist_rescue/female_thanks.wav","cremation/scientist_rescue/female_pain.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
     judgmentPrecache();
 }
 static void mansionScientistMessage(const char* message){
@@ -557,7 +559,11 @@ static bool mansionScientistSpawn(int wave){
     if(valid(mansionScientist.entity)&&mansionScientist.entity->serialnumber==mansionScientist.serial)return true;
     static const char* models[]={"models/cremation/scientists/valve_hd/models/scientist.mdl","models/cremation/scientists/bshift_hd/models/scientist.mdl","models/cremation/scientists/female_valve/scientist.mdl","models/cremation/scientists/female_gearbox/scientist.mdl"};
     static const int skins[]={2,2,3,3};
-    int choice=engine.pfnRandomLong(0,3);auto scientist=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_scientist"));
+    int choice=engine.pfnRandomLong(0,3);
+#ifdef CREMATION_ENABLE_VALIDATION
+    char forced[8]{};GetEnvironmentVariableA("CREMATION_SCIENTIST_VARIANT",forced,sizeof forced);if(forced[0]=='0'||forced[0]=='2')choice=forced[0]-'0';
+#endif
+    auto scientist=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_scientist"));
     if(!valid(scientist)){startupTrace("MansionScientistSpawnFailed","monster_scientist allocation failed");return false;}
     scientist->v.origin=Vector(64,-256,56.1f);scientist->v.targetname=engine.pfnAllocString("mansion_rescue_scientist");
     hookSpawn(scientist);
@@ -570,6 +576,7 @@ static bool mansionScientistSpawn(int wave){
     scientist->v.origin=Vector(64,-256,56.1f);scientist->v.angles.y=180.f;scientist->v.movetype=MOVETYPE_NONE;scientist->v.velocity=Vector(0,0,0);scientist->v.sequence=13;scientist->v.frame=0;scientist->v.animtime=globals->time;scientist->v.nextthink=globals->time+.2f;
     engine.pfnSetOrigin(scientist,&scientist->v.origin.x);
     mansionScientist={scientist,scientist->serialnumber,wave,false};
+    mansionScientistFemale=choice>=2;mansionScientistLastHealth=scientist->v.health;mansionScientistPainAt=0;
     mansionScientistKnockAt=globals->time+2.f;mansionScientistVoiceAt=globals->time+.4f;mansionScientistVoiceLine=0;mansionScientistThankUntil=0;
     char detail[128];std::snprintf(detail,sizeof detail,"wave=%d variant=%d skin=%d front_door=64,-256,56",wave,choice,int(scientist->v.skin));startupTrace("MansionScientistSpawn",detail);
     return true;
@@ -608,17 +615,23 @@ static void mansionScientistFrame(float dt){
     auto door=mansionDoor(1);
     if(valid(door)&&(std::fabs(door->v.angles.x)>30.f||std::fabs(door->v.angles.y)>30.f||std::fabs(door->v.angles.z)>30.f||door->v.solid==SOLID_NOT)){
         Vector inside(-64,-256,56.1f);engine.pfnSetOrigin(e,&inside.x);
-        engine.pfnEmitSound(e,CHAN_VOICE,"cremation/scientist_rescue/thankyou.wav",1.f,ATTN_NORM,0,100);
+        engine.pfnEmitSound(e,CHAN_VOICE,mansionScientistFemale?"cremation/scientist_rescue/female_thanks.wav":"cremation/scientist_rescue/male_thanks.wav",1.f,ATTN_NORM,0,100);
         mansionScientistThankUntil=globals->time+1.5f;startupTrace("MansionScientistThank", "inside before teleport");return;
     }
     if(globals->time>=mansionScientistKnockAt){engine.pfnEmitSound(e,CHAN_BODY,"debris/wood1.wav",1.f,ATTN_NORM,0,100);mansionScientistKnockAt=globals->time+engine.pfnRandomFloat(2.f,3.5f);}
-    if(globals->time>=mansionScientistVoiceAt){const char* line=mansionScientistVoiceLine++%2?"cremation/scientist_rescue/dontwantdie.wav":"cremation/scientist_rescue/help.wav";
+    if(globals->time>=mansionScientistVoiceAt){bool fear=(mansionScientistVoiceLine++%2)!=0;const char* line=mansionScientistFemale?(fear?"cremation/scientist_rescue/female_fear.wav":"cremation/scientist_rescue/female_help.wav"):(fear?"cremation/scientist_rescue/male_fear.wav":"cremation/scientist_rescue/male_help.wav");
         engine.pfnEmitSound(e,CHAN_VOICE,line,1.f,ATTN_NORM,0,100);mansionScientistVoiceAt=globals->time+engine.pfnRandomFloat(3.5f,5.f);}
 
 }
 static void mansionEventFrame(){
     auto state=mansionState();if(!valid(state))return;
     auto sc=mansionScientist.entity;
+    if(valid(sc)&&sc->serialnumber==mansionScientist.serial){
+        if(sc->v.health<mansionScientistLastHealth&&globals->time>=mansionScientistPainAt){
+            engine.pfnEmitSound(sc,CHAN_VOICE,mansionScientistFemale?"cremation/scientist_rescue/female_pain.wav":"cremation/scientist_rescue/male_pain.wav",1.f,ATTN_NORM,0,100);
+            mansionScientistPainAt=globals->time+1.5f;startupTrace("MansionScientistPain",mansionScientistFemale?"female":"male");
+        }mansionScientistLastHealth=sc->v.health;
+    }
     if(mansionScientist.entity&&(!valid(sc)||sc->serialnumber!=mansionScientist.serial||sc->v.health<=0||sc->v.deadflag!=DEAD_NO)){
         if(state->v.impulse!=2){state->v.impulse=2;mansionScientistMessage("GAME OVER - Cientifico muerto. Reinicia o sal desde el menu.");startupTrace("MansionGameOver","scientist died");
             for(auto e:getActiveEnemies())if(mansionActor(e)){e->v.velocity=Vector(0,0,0);e->v.flags|=FL_FROZEN;}}
@@ -784,7 +797,7 @@ static void mansionActivate(){
     mansionAliveAt=-1;mansionAliveCached=0;mansionHordeAliveAt=-1;mansionHordeAliveCached=0;
     mansionCultists.clear();mansionDoorStrikes.clear();mansionSense.assign(globals->maxEntities,MansionSense{});mansionRouteIntents.assign(globals->maxEntities,MansionRouteIntent{});
     mansionController={};for(auto& door:mansionDoors)door={};for(auto& target:mansionUpperTargets)target=0;
-    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistVoiceLine=0;mansionGroundAssigned=0;for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;
+    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistVoiceLine=0;mansionScientistFemale=false;mansionScientistLastHealth=0;mansionScientistPainAt=0;mansionGroundAssigned=0;for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;
     mansionNavReset();mansionAssignCultistRoles();
     mansionLightsReset();
 #ifdef CREMATION_ENABLE_VALIDATION

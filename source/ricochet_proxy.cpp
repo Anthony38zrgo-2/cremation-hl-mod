@@ -124,6 +124,7 @@ static void sound(edict_t* e,const char* name) { engine.pfnEmitSound(e,CHAN_WEAP
 #include "blood_cultist_voices.h"
 #include "blood_zombie_voices.inc"
 static void hookEmitSound(edict_t* entity,int channel,const char* sample,float volume,float attenuation,int flags,int pitch) {
+    if(valid(entity)&&entity->v.targetname&&sample&&!std::strcmp(text(entity->v.targetname),"mansion_rescue_scientist")&&(!std::strncmp(sample,"scientist/",10)||!std::strncmp(sample,"!SC_",4)))return;
     if(cultistVoiceSound(entity,channel,sample,flags))return;
     if(zombieVoiceSound(entity,sample,flags))return;
     const char* replacement=sample;

@@ -18,6 +18,10 @@ with using_validation_dll(MOD):
             print(text[-2500:])
             assert 'MansionRescueProbe PASS native_private=1' in text, 'Native rescue fixture failed; inspect diagnostics/scientist-event-server.log'
             assert 'same_entity=1 raiders=2 ground=3 defeat=1 paths=2' in text
+            variant=os.environ.get('CREMATION_SCIENTIST_VARIANT')
+            if variant in ('0','2'):
+                assert f'variant={variant}' in text
+                assert f'MansionScientistPain {"female" if variant == "2" else "male"}' in text
         finally:
             if process.poll() is None:process.terminate()
             process.wait(timeout=5)
