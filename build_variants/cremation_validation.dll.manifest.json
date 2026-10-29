@@ -1,0 +1,36 @@
+{
+  "profile": "validation",
+  "input_sha256": "f4b085ae715b12eda94b5651ad5eed4dadb56d7caa93573c9e7df8cc95f834e6",
+  "output_sha256": "950e71f34086f815a8eb8fc7bf4ce4ab8c1ed75aca2cc61478a262c7fc7e9397",
+  "file_size": 951808,
+  "image_base": "0x10000000",
+  "text_original_vsize": 592485,
+  "text_patched_vsize": 592603,
+  "patches": [
+    {
+      "name": "QuakeZombie_idempotent_noncombat_state_guard",
+      "hook_rva": "0x4e7ae",
+      "trampoline_rva": "0x91a70",
+      "trampoline_length": 41,
+      "behavior": "skip reset only when state 0/1, sequence same and stored state same"
+    },
+    {
+      "name": "FastZombie_Randy_invalid_sequence_fallback_continuity",
+      "fallback_rva": "0x2c2fd",
+      "hook_rva": "0x2c307",
+      "trampoline_rva": "0x91aa0",
+      "trampoline_length": 59,
+      "behavior": "fallback to sequence 0 remains; preserve valid frame and animtime, sanitize negative/NaN/>255 frame or zero animtime"
+    },
+    {
+      "name": "CZero_duplicate_frame_zero_elimination",
+      "early_reset_rvas": [
+        "0x12a0e",
+        "0x14af8"
+      ],
+      "behavior": "remove duplicate first frame=0 on two actions, retain unconditional later frame=0 to restart each attack"
+    }
+  ],
+  "num_changed_bytes": 121,
+  "PE_checksum": "0xf217b"
+}
