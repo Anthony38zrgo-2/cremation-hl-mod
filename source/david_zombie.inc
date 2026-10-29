@@ -121,11 +121,16 @@ static void davidTraceLine(const float* from,const float* to,int flags,edict_t* 
  if(!davidOriginalTrace)return;
  if(davidTracing||(flags&1)||davidStates.empty()||(davidLocalizedDamage.value!=0&&!engine.pfnGetBonePosition)){davidOriginalTrace(from,to,flags,skip,tr);return;}
  davidTracing=true;
- // Engine studio hitboxes are independent of bodygroups. Remove only Davids
- // from this synchronous broad phase, then test either the single general hull
- // or the optional localized bone boxes.
+ // Engine studio hitboxes are independent of bodygroups. First use a cheap
+ // segment/AABB test so only Davids along this trace leave the engine's broad
+ // phase; exact hull or localized bone checks run only for those candidates.
  std::vector<std::pair<edict_t*,int>> solids;
  for(auto& s:davidStates)if(valid(s.entity)&&s.entity->serialnumber==s.serial&&s.entity!=skip&&s.entity->v.solid!=SOLID_NOT&&davidModel(s.entity)){
+  float broad[6];
+  if(davidLocalizedDamage.value==0){Vector lo=s.entity->v.origin+s.entity->v.mins,hi=s.entity->v.origin+s.entity->v.maxs;broad[0]=lo.x;broad[1]=lo.y;broad[2]=lo.z;broad[3]=hi.x;broad[4]=hi.y;broad[5]=hi.z;}
+  else {Vector o=s.entity->v.origin;broad[0]=o.x-160;broad[1]=o.y-160;broad[2]=o.z-80;broad[3]=o.x+160;broad[4]=o.y+160;broad[5]=o.z+160;}
+  float fraction,sign;int axis;
+  if(!david_logic::segmentBox(from,to,broad,fraction,axis,sign))continue;
   solids.push_back({s.entity,s.entity->v.solid});s.entity->v.solid=SOLID_NOT;
  }
  davidOriginalTrace(from,to,flags,skip,tr);
@@ -171,7 +176,7 @@ static bool davidHostile(edict_t* enemy,edict_t* player){
 }
 static bool davidCrowded(DavidState& s,float radius){
  auto target=s.target;if(!valid(target))return true;
- for(int i=1;i<globals->maxEntities;++i){auto other=engine.pfnPEntityOfEntIndex(i);if(other==s.entity||other==target||!aliveEnemy(other))continue;
+ for(auto other:getActiveEnemies()){if(other==s.entity||other==target||!aliveEnemy(other))continue;
   Vector delta=other->v.origin-target->v.origin;if(length2d(delta)>radius||std::fabs(delta.z)>80)continue;
   if(!davidHostile(other,target))continue;
   TraceResult tr{};Vector from=target->v.origin+target->v.view_ofs,to=center(other);
@@ -179,11 +184,18 @@ static bool davidCrowded(DavidState& s,float radius){
   engine.pfnTraceLine(&from.x,&to.x,1,target,&tr);if(!tr.fStartSolid&&tr.flFraction>=.999f)return true;
  }return false;
 }
-static bool davidBusy(edict_t* e){int seq=e->v.sequence;return seq>=3&&seq<=19;}
+static bool davidBusy(edict_t* e){
+ int seq=e->v.sequence;
+ if(johnnyModel(e))return seq>=3&&seq<=20;
+ return (seq>=3&&seq<=19)||(seq>=22&&seq<=25);
+}
 static bool davidCanRun(DavidState& s){
  auto e=s.entity,t=s.target;bool player=valid(t)&&t->serialnumber==s.targetSerial&&(t->v.flags&FL_CLIENT)&&t->v.health>0&&t->v.deadflag==DEAD_NO;
  if(!aliveEnemy(e)||!player)return false;
- if(!david_logic::runnerEligible(aliveEnemy(e),player,true,globals->time-s.movedAt<.45f,!davidCrawling(s)&&!(s.saved.severMask&(1<<2)),davidBusy(e),length2d(t->v.origin-e->v.origin)))return false;
+ float dist=length2d(t->v.origin-e->v.origin);
+ float minDist=s.running?80.f:128.f;
+ if(!david_logic::runnerEligible(aliveEnemy(e),player,true,globals->time-s.movedAt<.45f,!davidCrawling(s)&&!(s.saved.severMask&(1<<2)),davidBusy(e),s.running?std::max(dist,128.f):dist))return false;
+ if(dist<minDist)return false;
  Vector from=e->v.origin+e->v.view_ofs,to=t->v.origin+t->v.view_ofs;TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,1,e,&tr);return !tr.fStartSolid&&tr.flFraction>=.999f;
 }
 static void davidDecision(){
@@ -202,10 +214,10 @@ static void davidDecision(){
  }
 }
 static bool johnnyPlayerAlive(edict_t* p){return valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO;}
-static bool johnnyCanSee(edict_t* e,edict_t* p){if(!johnnyPlayerAlive(p))return false;Vector from=e->v.origin+e->v.view_ofs,to=p->v.origin+p->v.view_ofs;TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,1,e,&tr);return !tr.fStartSolid&&(tr.flFraction>=.999f||tr.pHit==p);}
+static bool johnnyCanSee(edict_t* e,edict_t* p){if(!johnnyPlayerAlive(p)||length(p->v.origin-e->v.origin)>MansionZombieNoticeRange)return false;Vector from=e->v.origin+e->v.view_ofs,to=p->v.origin+p->v.view_ofs;TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,1,e,&tr);return !tr.fStartSolid&&(tr.flFraction>=.999f||tr.pHit==p);}
 static edict_t* johnnyTarget(DavidState& s){
  if(valid(s.target)&&s.target->serialnumber==s.targetSerial&&johnnyCanSee(s.entity,s.target))return s.target;
- edict_t* best=nullptr;float bestDistance=2048.f;
+ edict_t* best=nullptr;float bestDistance=MansionZombieNoticeRange;
  for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!johnnyCanSee(s.entity,p))continue;float d=length(p->v.origin-s.entity->v.origin);if(d<bestDistance){bestDistance=d;best=p;}}
  if(best){s.target=best;s.targetSerial=best->serialnumber;}return best;
 }
@@ -216,7 +228,7 @@ static void johnnyStartThrow(DavidState& s,edict_t* target){
  if(!(s.saved.johnnyAxes&side))return;
  s.johnnyThrowSide=side;s.johnnyThrowTarget=target;s.johnnyThrowTargetSerial=target->serialnumber;s.johnnyThrowAim=target->v.origin+target->v.view_ofs;s.johnnyThrowReleased=false;
  s.johnnyThrowing=true;s.johnnyThrowUntil=globals->time+johnny_assets::duration[johnny_assets::seqThrow];s.johnnyNextThrow=s.johnnyThrowUntil+.25f;
- Vector toward=target->v.origin-e->v.origin;e->v.angles.y=std::atan2(toward.y,toward.x)*180.f/3.14159265f;e->v.velocity.x=0;e->v.velocity.y=0;e->v.sequence=johnny_assets::seqThrow;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;
+ Vector toward=target->v.origin-e->v.origin;e->v.angles.y=std::atan2(toward.y,toward.x)*180.f/3.14159265f;e->v.velocity.x=0;e->v.velocity.y=0;e->v.sequence=johnny_assets::seqThrow;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=slowed(e)?balance::SlowFactor:1.f;
  if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);
 }
 static bool johnnyLaunchAxe(DavidState& s){
@@ -241,7 +253,7 @@ static void johnnyFinishThrow(DavidState& s){
 static bool johnnyBeginGuard(DavidState& s){
  if(s.dying||!aliveEnemy(s.entity)||!johnnyModel(s.entity)||!s.saved.johnnyAxes||s.saved.johnnyDefended)return false;
  auto e=s.entity;s.saved.johnnyDefended=1;s.saved.johnnyGuardRemaining=1.f;s.johnnyGuarding=true;s.johnnyGuardUntil=globals->time+1.f;s.johnnyThrowing=false;s.johnnyThrowTarget=nullptr;s.johnnyThrowTargetSerial=0;s.johnnyThrowSide=0;s.johnnyThrowReleased=false;s.johnnyNextThrow=s.johnnyGuardUntil;
- e->v.velocity.x=0;e->v.velocity.y=0;e->v.sequence=johnny_assets::seqGuard;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;
+ e->v.velocity.x=0;e->v.velocity.y=0;e->v.sequence=johnny_assets::seqGuard;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=slowed(e)?balance::SlowFactor:1.f;
  if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);
  return true;
 }
@@ -310,6 +322,8 @@ static void __fastcall davidActivity(void* object,void*,int requested){
 
   }
  }
+ bool wasLoco=valid(e)&&(maxModel(e)?(e->v.sequence==max_assets::seqWalk||e->v.sequence==max_assets::seqRun):(johnnyModel(e)?(e->v.sequence==johnny_assets::seqWalk||e->v.sequence==johnny_assets::seqRun):(e->v.sequence==1||e->v.sequence==2)));
+ float oldFrame=valid(e)?e->v.frame:0.f;
  bool slow=!death&&valid(e)&&slowed(e);float rate=slow?e->v.framerate:0;
  reinterpret_cast<void(__thiscall*)(void*,int)>(t->activity)(object,requested);
  if(death&&valid(e)){
@@ -330,21 +344,27 @@ static void __fastcall davidActivity(void* object,void*,int requested){
   reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(object);
   s->attackEventConsumed=false;
   if(johnnyModel(e)||maxModel(e))++s->attackSelections[0];else ++s->attackSelections[attackSequence-david_assets::seqAttackRight];
+ }else if(valid(e)&&!death&&s&&aliveEnemy(e)){
+  bool isLoco=maxModel(e)?(e->v.sequence==max_assets::seqWalk||e->v.sequence==max_assets::seqRun):(johnnyModel(e)?(e->v.sequence==johnny_assets::seqWalk||e->v.sequence==johnny_assets::seqRun):(e->v.sequence==1||e->v.sequence==2));
+  if(wasLoco&&isLoco){e->v.frame=oldFrame;e->v.animtime=globals->time;}
  }
  if(slow&&valid(e))e->v.framerate=rate;
 }
 static void __fastcall davidMove(void* object,void*,void* target,const Vector& dir,float interval){
  auto t=davidTable(object);auto s=davidState(davidObject(object));if(!t)return;
  if(s&&s->dying)return;
- if(s){s->movedAt=globals->time;s->target=nullptr;
-  for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->pvPrivateData==target){s->target=e;s->targetSerial=e->serialnumber;break;}}
-  if(maxModel(s->entity))s->running=true;else if(!valid(s->target)||!(s->target->v.flags&FL_CLIENT))s->running=false;
+ if(s){s->movedAt=globals->time;
+  if(target){s->target=nullptr;
+   for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->pvPrivateData==target){s->target=e;s->targetSerial=e->serialnumber;break;}}
+  }
+  if(maxModel(s->entity))s->running=true;else if(s->target&&!(s->target->v.flags&FL_CLIENT))s->running=false;
   if(johnnyModel(s->entity)){
    if(s->johnnyGuarding&&globals->time<s->johnnyGuardUntil)return;
    if(s->johnnyThrowing&&globals->time<s->johnnyThrowUntil)return;
    if(s->saved.johnnyAxes){johnnyStartThrow(*s,s->target);if(s->johnnyThrowing)return;}
   }
   davidActivity(object,nullptr,s->running?4:3);
+  if(mansionMap()&&mansionActor(s->entity))return;
  }
  reinterpret_cast<void(__thiscall*)(void*,void*,const Vector&,float)>(t->move)(object,target,dir,interval);
 }
@@ -485,11 +505,12 @@ static void davidFrame(){
   if(maxModel(e))s.running=true;
   if(johnnyModel(e)){
    if(s.johnnyGuarding&&globals->time>=s.johnnyGuardUntil){s.johnnyGuarding=false;s.johnnyThrowing=false;davidActivity(e->pvPrivateData,nullptr,3);}
-   if(s.johnnyThrowing&&globals->time>=s.johnnyThrowUntil){johnnyFinishThrow(s);if(e->v.sequence==johnny_assets::seqThrow){davidActivity(e->pvPrivateData,nullptr,s.running?4:3);if(e->v.sequence==johnny_assets::seqThrow){e->v.sequence=s.running?johnny_assets::seqRun:johnny_assets::seqWalk;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);}}}
+   if(s.johnnyThrowing&&globals->time>=s.johnnyThrowUntil){johnnyFinishThrow(s);if(e->v.sequence==johnny_assets::seqThrow){davidActivity(e->pvPrivateData,nullptr,s.running?4:3);if(e->v.sequence==johnny_assets::seqThrow){e->v.sequence=s.running?johnny_assets::seqRun:johnny_assets::seqWalk;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=slowed(e)?balance::SlowFactor:1.f;if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);}}}
    if(!s.johnnyGuarding&&s.saved.johnnyAxes&&!s.johnnyThrowing&&aliveEnemy(e)){auto target=johnnyTarget(s);if(target)johnnyStartThrow(s,target);}
   }
-  int seq=e->v.sequence;bool locomotion=maxModel(e)?(seq==max_assets::seqIdle||seq==max_assets::seqWalk||seq==max_assets::seqRun):(johnnyModel(e)?(seq==0||seq==johnny_assets::seqWalk||seq==johnny_assets::seqRun):(seq==0||seq==1||seq==2||seq==20||seq==21));
-  if(locomotion&&(maxModel(e)||globals->time-s.movedAt<.45f)){int desired=maxModel(e)?max_assets::seqRun:(johnnyModel(e)?(s.running?johnny_assets::seqRun:johnny_assets::seqWalk):(davidCrawling(s)?david_assets::seqCrawl:(s.running?david_assets::seqRun:david_assets::seqWalk)));if(seq!=desired)davidActivity(e->pvPrivateData,nullptr,s.running?4:3);}
+  int seq=e->v.sequence;bool locomotion=maxModel(e)?(seq==max_assets::seqWalk||seq==max_assets::seqRun):(johnnyModel(e)?(seq==johnny_assets::seqWalk||seq==johnny_assets::seqRun):(seq==1||seq==2||seq==20));
+  bool moving=length2d(e->v.velocity)>1.0f||(globals->time-s.movedAt<.15f);
+  if((locomotion||(moving&&seq==0))&&(maxModel(e)||globals->time-s.movedAt<.45f)){int desired=maxModel(e)?max_assets::seqRun:(johnnyModel(e)?(s.running?johnny_assets::seqRun:johnny_assets::seqWalk):(davidCrawling(s)?david_assets::seqCrawl:(s.running?david_assets::seqRun:david_assets::seqWalk)));if(seq!=desired)davidActivity(e->pvPrivateData,nullptr,s.running?4:3);}
  }
 }
 static void davidSave(edict_t* e,SAVERESTOREDATA* data){auto s=davidState(e);if(s&&davidModel(e)&&raven.pfnSaveWriteFields){s->saved.johnnyGuardRemaining=johnnyModel(e)&&s->johnnyGuarding?std::max(0.f,s->johnnyGuardUntil-globals->time):0.f;raven.pfnSaveWriteFields(data,"CremationDavid1",&s->saved,davidSaveFields,ARRAYSIZE(davidSaveFields));}}
@@ -511,8 +532,8 @@ static void davidRestore(edict_t* e,SAVERESTOREDATA* data){
  s->saved.prone=0;
  s->running=maxModel(e);s->target=nullptr;s->movedAt=-100;s->clearSince=-1;s->cooldown=globals->time+1;s->johnnyGuarding=false;s->johnnyThrowing=false;s->johnnyThrowReleased=false;s->johnnyThrowTarget=nullptr;s->johnnyThrowTargetSerial=0;s->johnnyThrowSide=0;davidSpawn(e,true);
  if(johnnyModel(e))for(int hand:{5,8}){int bit=hand==5?1:2;bool lost=false;for(int ancestor=1;ancestor<16;++ancestor)if((s->saved.severMask&(1<<ancestor))&&david_logic::descendant(hand,ancestor,david_assets::parent))lost=true;davidSetBody(e,hand,lost?davidBodyCount(e,hand)-1:((s->saved.johnnyAxes&bit)?0:3));}
- if(johnnyModel(e)&&s->saved.johnnyGuardRemaining>0){s->johnnyGuarding=true;s->johnnyGuardUntil=globals->time+std::min(1.f,s->saved.johnnyGuardRemaining);if(e->v.sequence!=johnny_assets::seqGuard){e->v.sequence=johnny_assets::seqGuard;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;}}
- if(alive&&johnnyModel(e)&&e->v.sequence==johnny_assets::seqThrow){e->v.sequence=johnny_assets::seqWalk;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);}
+ if(johnnyModel(e)&&s->saved.johnnyGuardRemaining>0){s->johnnyGuarding=true;s->johnnyGuardUntil=globals->time+std::min(1.f,s->saved.johnnyGuardRemaining);if(e->v.sequence!=johnny_assets::seqGuard){e->v.sequence=johnny_assets::seqGuard;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=slowed(e)?balance::SlowFactor:1.f;}}
+ if(alive&&johnnyModel(e)&&e->v.sequence==johnny_assets::seqThrow){e->v.sequence=johnny_assets::seqWalk;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=slowed(e)?balance::SlowFactor:1.f;if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);}
  if(oldPronePose&&alive){e->v.sequence=0;e->v.frame=0;e->v.animtime=globals->time;}
  else if(oldPronePose&&visibleCorpse){e->v.sequence=8;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;}
 }

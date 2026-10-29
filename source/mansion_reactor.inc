@@ -11,10 +11,8 @@ static std::array<bool,33> reactorInFlight{};
 static void reactorTestFrame();
 static void reactorPreviewFrame();
 #endif
-static const char* reactorWeapons[]={"weapon_bounce_shotgun","weapon_nailgun","weapon_shockrifle","weapon_rpg","weapon_handgrenade"};
-static const char* reactorWorldModels[]={"models/cremation/w_bounce_shotgun.mdl","models/cremation/w_nailgun.mdl","models/cremation/w_shockrifle.mdl","models/w_rpg.mdl","models/w_grenade.mdl"};
-static const char** reactorPowerups=dmcNames;
-static const char** reactorPowerupModels=dmcModels;
+static const char* reactorWeapons[]={"weapon_bounce_shotgun","weapon_nailgun","weapon_shockrifle","weapon_rpg"};
+static const char* reactorWorldModels[]={"models/cremation/w_bounce_shotgun.mdl","models/cremation/w_nailgun.mdl","models/cremation/w_shockrifle.mdl","models/w_rpg.mdl"};
 static bool reactorInside(float x,float y){
     bool inside=false;const int n=sizeof(reactorOutline)/sizeof(reactorOutline[0]);
     for(int i=0,j=n-1;i<n;j=i++){
@@ -43,10 +41,10 @@ static void reactorKill(edict_t* victim){
     startupTrace("ReactorKill",text(victim->v.classname));
 }
 static bool reactorGive(edict_t* player,int kind){
-    if(kind<0||kind>=5||!valid(player)||!player->pvPrivateData||ammoOffset<0)return false;
+    if(kind<0||kind>=4||!valid(player)||!player->pvPrivateData||ammoOffset<0)return false;
     int* ammo=reinterpret_cast<int*>(static_cast<char*>(player->pvPrivateData)+ammoOffset);
-    const int indices[]={shotgunAmmoIndex,nailAmmoIndex,shockAmmoIndex,rpgAmmoIndex,grenadeAmmoIndex};
-    const int caps[]={125,250,50,30,10},packs[]={12,50,15,3,3};
+    const int indices[]={shotgunAmmoIndex,nailAmmoIndex,shockAmmoIndex,rpgAmmoIndex};
+    const int caps[]={125,250,50,30},packs[]={12,50,15,3};
     int index=indices[kind];bool owned=false;
     for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->v.aiment==player&&!std::strcmp(text(e->v.classname),reactorWeapons[kind])){owned=true;break;}}
     if(owned&&index>=0&&index<32&&ammo[index]>=caps[kind])return false;
@@ -56,7 +54,7 @@ static bool reactorGive(edict_t* player,int kind){
         if(raven.pfnTouch)raven.pfnTouch(item,player);
         if(!valid(item)||item->v.aiment!=player){if(valid(item))engine.pfnRemoveEntity(item);return false;}
         // Message hooks can discover an index while adding the first weapon.
-        int updated[]={shotgunAmmoIndex,nailAmmoIndex,shockAmmoIndex,rpgAmmoIndex,grenadeAmmoIndex};index=updated[kind];
+        int updated[]={shotgunAmmoIndex,nailAmmoIndex,shockAmmoIndex,rpgAmmoIndex};index=updated[kind];
     }
     if(index>=0&&index<32){ammo[index]=std::min(caps[kind],std::max(0,ammo[index])+packs[kind]);
         if(msgAmmoX){engine.pfnMessageBegin(MSG_ONE,msgAmmoX,nullptr,player);engine.pfnWriteByte(index);engine.pfnWriteByte(ammo[index]);engine.pfnMessageEnd();}
@@ -65,7 +63,6 @@ static bool reactorGive(edict_t* player,int kind){
     if(msgItemPickup){engine.pfnMessageBegin(MSG_ONE,msgItemPickup,nullptr,player);engine.pfnWriteString(reactorWeapons[kind]);engine.pfnMessageEnd();}
     startupTrace("ReactorPickup",reactorWeapons[kind]);return true;
 }
-static bool reactorGivePowerup(edict_t* player,int kind){return dmcGive(player,kind);}
 static bool reactorReturn(edict_t* player){
     auto exit=mansionFind("reactor_return_exit");if(!valid(exit))return false;
     static const Vector offsets[]={Vector(0,0,0),Vector(0,48,0),Vector(0,-48,0),Vector(-48,0,0),Vector(0,96,0),Vector(0,-96,0)};
@@ -104,7 +101,7 @@ static void reactorPortalFrame(){
 static void reactorActivate(){
     reactorActive=mansionMap()&&valid(mansionFind("reactor_jump_pad"));
     reactorJumpCooldown.fill(0);reactorInFlight.fill(false);reactorPortalCooldown.fill(0);reactorPortalLightAt.fill(0);
-    if(reactorActive)startupTrace("ReactorActivate","depth=448 bridge=central island=small_house rewards=1 portal=rear_yard pickup_pool=5");
+    if(reactorActive)startupTrace("ReactorActivate","depth=448 bridge=central island=small_house rewards=1 portal=rear_yard pickup_pool=4 stations=2 cooldown=10");
 }
 static void reactorFrame(){
     if(!reactorActive)return;
@@ -147,20 +144,22 @@ static void reactorFrame(){
             display->v.targetname=engine.pfnAllocString(marker);display->v.owner=station;display->v.solid=SOLID_NOT;display->v.movetype=MOVETYPE_NOCLIP;
             display->v.impulse=0;display->v.effects|=EF_NODRAW;
         }
-        if(globals->time>=station->v.dmgtime&&(display->v.impulse==0||(display->v.effects&EF_NODRAW))){
-            int kind=engine.pfnRandomLong(0,powerup?3:4);display->v.impulse=kind+1;engine.pfnSetModel(display,powerup?reactorPowerupModels[kind]:reactorWorldModels[kind]);
-            display->v.effects&=~EF_NODRAW;display->v.rendermode=kRenderNormal;display->v.renderfx=kRenderFxGlowShell;display->v.rendercolor=powerup?Vector(55,170,255):Vector(255,190,35);display->v.renderamt=4;
-            if(powerup){display->v.rendercolor=kind==0?Vector(128,128,255):kind==1?Vector(255,128,0):Vector(128,128,128);
-                display->v.rendermode=kind==2?kRenderTransColor:kRenderNormal;display->v.renderamt=kind==2?30:kind==3?255:100;display->v.renderfx=kind==3?kRenderFxNone:kRenderFxGlowShell;}
-            startupTrace(powerup?"ReactorPowerupSpawn":"ReactorRewardSpawn",powerup?reactorPowerups[kind]:reactorWeapons[kind]);
+        if(!(display->v.effects&EF_NODRAW)&&display->v.impulse>0){
+            int kind=display->v.impulse-1;
+            if(kind>=4){display->v.impulse=0;display->v.effects|=EF_NODRAW;station->v.dmgtime=globals->time;}
+            else if(std::strcmp(text(display->v.model),reactorWorldModels[kind])){engine.pfnSetModel(display,reactorWorldModels[kind]);display->v.rendermode=kRenderNormal;display->v.renderamt=4;display->v.renderfx=kRenderFxGlowShell;display->v.rendercolor=Vector(255,190,35);}
         }
-        if(powerup){auto h=static_cast<unsigned char*>(engine.pfnGetModelPtr(display));if(h){int seq=*reinterpret_cast<int*>(h+168);float fps=*reinterpret_cast<float*>(h+seq+32);int frames=*reinterpret_cast<int*>(h+seq+56);display->v.frame=frames>1?std::fmod(globals->time*fps*256.f/(frames-1),256.f):0;display->v.animtime=globals->time;}}
+        if(globals->time>=station->v.dmgtime&&(display->v.impulse==0||(display->v.effects&EF_NODRAW))){
+            int kind=engine.pfnRandomLong(0,3);display->v.impulse=kind+1;engine.pfnSetModel(display,reactorWorldModels[kind]);
+            display->v.effects&=~EF_NODRAW;display->v.rendermode=kRenderNormal;display->v.renderfx=kRenderFxGlowShell;display->v.rendercolor=Vector(255,190,35);display->v.renderamt=4;
+            startupTrace("ReactorRewardSpawn",reactorWeapons[kind]);
+        }
         Vector at=station->v.origin+Vector(0,0,std::sin(globals->time*2+stationIndex)*5);engine.pfnSetOrigin(display,&at.x);display->v.angles.y=std::fmod(globals->time*35+stationIndex*90,360.f);
         for(int j=0;j<6;++j){
             char name[48];std::snprintf(name,sizeof name,"reactor_square_%d_%d",stationIndex,j);auto square=mansionFind(name);
             if(!valid(square)){square=engine.pfnCreateNamedEntity(engine.pfnAllocString("info_target"));if(!valid(square))continue;raven.pfnSpawn(square);
                 square->v.targetname=engine.pfnAllocString(name);square->v.owner=station;square->v.solid=SOLID_NOT;square->v.movetype=MOVETYPE_NOCLIP;
-                engine.pfnSetModel(square,powerup?"sprites/cremation/powerup_blue_square.spr":"sprites/cremation/pickup_gold_square.spr");square->v.rendermode=kRenderTransAdd;square->v.renderamt=230;square->v.rendercolor=Vector(255,255,255);square->v.scale=.12f;
+                engine.pfnSetModel(square,"sprites/cremation/pickup_gold_square.spr");square->v.rendermode=kRenderTransAdd;square->v.renderamt=230;square->v.rendercolor=Vector(255,255,255);square->v.scale=.12f;
                 Vector lo(-3,-3,-3),hi(3,3,3);engine.pfnSetSize(square,&lo.x,&hi.x);
             }
             float angle=globals->time*1.5f+j*1.047198f;
@@ -170,8 +169,8 @@ static void reactorFrame(){
         }
         if(display->v.effects&EF_NODRAW)continue;
         for(int i=1;i<=globals->maxClients;++i){auto player=engine.pfnPEntityOfEntIndex(i);if(!valid(player)||!(player->v.flags&FL_CLIENT)||player->v.health<=0)continue;
-            if(length2d(player->v.origin-at)<36&&std::fabs(player->v.origin.z-at.z)<52&&(powerup?reactorGivePowerup(player,display->v.impulse-1):reactorGive(player,display->v.impulse-1))){
-                display->v.effects|=EF_NODRAW;station->v.dmgtime=globals->time+(powerup?((display->v.impulse==2||display->v.impulse==3)?300.f:60.f):15.f);break;
+            if(length2d(player->v.origin-at)<36&&std::fabs(player->v.origin.z-at.z)<52&&reactorGive(player,display->v.impulse-1)){
+                display->v.effects|=EF_NODRAW;station->v.dmgtime=globals->time+10.f;break;
             }
         }
     }

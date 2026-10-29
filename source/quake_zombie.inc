@@ -39,8 +39,8 @@ static bool qzVisible(edict_t* e,edict_t* target){
 }
 static edict_t* qzEnemy(edict_t* e){
     auto target=e->v.enemy;
-    if(qzTarget(target)&&target->serialnumber==int(e->v.dmg_save))return target;
-    e->v.enemy=nullptr;float closest=2048;
+    if(qzTarget(target)&&target->serialnumber==int(e->v.dmg_save)&&length(target->v.origin-e->v.origin)<=MansionZombieNoticeRange)return target;
+    e->v.enemy=nullptr;float closest=MansionZombieNoticeRange;
     for(int i=1;i<globals->maxEntities;++i){auto t=engine.pfnPEntityOfEntIndex(i);
         if(!qzTarget(t))continue;float d=length(t->v.origin-e->v.origin);
         if(d<closest&&qzVisible(e,t)){closest=d;e->v.enemy=t;e->v.dmg_save=float(t->serialnumber);}}

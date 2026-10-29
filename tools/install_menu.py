@@ -11,11 +11,19 @@ SOURCE = MOD / 'assets-source/menu'
 RESOURCE = MOD / 'resource'
 BACKGROUND = RESOURCE / 'background'
 TILE = 256
+TITLE = 'HALF - DEATH'
 
 
 def _fit_image(path, size):
     from PIL import Image
     image = Image.open(path).convert('RGB')
+    from PIL import ImageDraw, ImageFont
+    draw = ImageDraw.Draw(image)
+    font_path = RESOURCE / 'fonts' / 'Nosifer-Regular.ttf'
+    font = ImageFont.truetype(str(font_path), 70)
+    draw.text((image.width // 2, image.height - 58), TITLE, font=font,
+              anchor='mm', fill=(205, 16, 28),
+              stroke_width=3, stroke_fill=(12, 0, 0))
     image.thumbnail(size, Image.Resampling.LANCZOS)
     canvas = Image.new('RGB', size, (0, 0, 0))
     canvas.paste(image, ((size[0] - image.width) // 2, (size[1] - image.height) // 2))

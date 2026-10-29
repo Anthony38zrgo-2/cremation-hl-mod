@@ -22,7 +22,7 @@ inline float GrenadeUpwardBoost = 120.f;
 // classname, HUD name, HUD id bytes, icon, models and ammo are ours.
 constexpr int CarrierWeaponId = 6;   // WEAPON_CROSSBOW.
 constexpr int HudSlot = 2;           // 0-based bucket 3, the shotgun bucket.
-constexpr int HudSlotPos = 3;        // mp5=0, shotgun=1, crossbow=2; 3 is free.
+constexpr int HudSlotPos = 1;        // Link Gun=0, Flak=1.
 // Shell index is replaced at runtime by the native shotgun WeaponList index.
 // The fallback index is only used by the isolated module tests.
 constexpr int HudAmmoShells = 20;

@@ -13,6 +13,8 @@ EXPORTS
     weapon_shockrifle
     ammo_shockcore
     weapon_winchester1887
+    weapon_awp
+    weapon_deagle
     weapon_necromancer
     monster_minion
     weapon_ricochet

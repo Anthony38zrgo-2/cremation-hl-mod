@@ -124,8 +124,10 @@ static void drawCremationFontText(const char* text, const char* family, int pixe
     SCREENINFO screen{};
     screen.iSize = sizeof(screen);
     if (!eng.pfnGetScreenInfo(&screen) || screen.iWidth <= 0 || screen.iHeight <= 0) return;
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
     CremationFontTexture* item = cremationFontTexture(family, text, pixels);
     if (!item) {
+        glPopAttrib();
         int width = 0, height = 0;
         eng.pfnDrawConsoleStringLen(text, &width, &height);
         eng.pfnDrawSetTextColor(r / 255.f, g / 255.f, b / 255.f);
@@ -135,7 +137,6 @@ static void drawCremationFontText(const char* text, const char* family, int pixe
 
     GLint oldMatrixMode = GL_MODELVIEW;
     glGetIntegerv(GL_MATRIX_MODE, &oldMatrixMode);
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
     glViewport(0, 0, screen.iWidth, screen.iHeight);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_ALPHA_TEST);

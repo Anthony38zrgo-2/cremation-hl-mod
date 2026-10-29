@@ -23,7 +23,7 @@ static void drawWaveHud(){
     else if(waveHud.state==1)std::snprintf(line,sizeof line,"OLEADAS COMPLETADAS | ENEMIGOS VIVOS: 0");
     else std::snprintf(line,sizeof line,"OLEADA %d/4 | ENEMIGOS VIVOS: %d%s",waveHud.wave,waveHud.alive,waveHud.pending?" | REFUERZOS EN CAMINO":"");
     const int pixels=std::max(18,std::min(38,screen.iHeight*25/1080));
-    drawCremationFontText(line,"Butcherman",pixels,screen.iWidth/2,int(screen.iHeight*.86f),235,210,150);
+    if(waveHud.state!=0)drawCremationFontText(line,"Butcherman",pixels,screen.iWidth/2,int(screen.iHeight*.86f),235,210,150);
     if(waveHud.state==2)drawCremationFontText("GAME OVER","Nosifer",std::max(28,pixels*2),screen.iWidth/2,int(screen.iHeight*.22f),255,55,40);
 }
 static void drawRadar(){
@@ -49,4 +49,4 @@ static void drawRadar(){
     }
     eng.pfnDrawCharacter(cx-4,top+3,'N',130,225,145);
 }
-extern "C" int HUD_Redraw(float time,int intermission){int result=reinterpret_cast<int(*)(float,int)>(GetProcAddress(donor,"HUD_Redraw"))(time,intermission);if(!intermission)drawRadar();drawTacticalHud();drawJudgmentHud();if(!intermission)drawWaveHud();return result;}
+extern "C" int HUD_Redraw(float time,int intermission){int result=reinterpret_cast<int(*)(float,int)>(GetProcAddress(donor,"HUD_Redraw"))(time,intermission);if(!intermission)drawRadar();drawTacticalHud();drawJudgmentHud();if(!intermission){drawWaveHud();restoreRevolverCrosshair();}return result;}

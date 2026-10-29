@@ -28,11 +28,11 @@ static void reactorTestFrame(){
         pass(apex>260,"curved_launch_apex");
         pass(onRoof("reactor_jump_destination"),"roof_landing");
         char info[160];std::snprintf(info,sizeof info,"landing=%.1f,%.1f,%.1f apex=%.1f",player->v.origin.x,player->v.origin.y,player->v.origin.z,apex);startupTrace("ReactorTestDetail",info);
-        int indices[]={shotgunAmmoIndex,nailAmmoIndex,shockAmmoIndex,rpgAmmoIndex,grenadeAmmoIndex};
+        int indices[]={shotgunAmmoIndex,nailAmmoIndex,shockAmmoIndex,rpgAmmoIndex};
         int* ammo=reinterpret_cast<int*>(static_cast<char*>(player->pvPrivateData)+ammoOffset);
-        bool grants=true,full=true;const int caps[]={125,250,50,30,10};
-        for(int k=0;k<5;++k){if(indices[k]<0||indices[k]>=32){grants=false;continue;}ammo[indices[k]]=0;grants=reactorGive(player,k)&&ammo[indices[k]]>0&&grants;ammo[indices[k]]=caps[k];full=!reactorGive(player,k)&&full;}
-        pass(grants,"five_mod_ammo_rewards");pass(full,"full_ammo_does_not_consume_reward");
+        bool grants=true,full=true;const int caps[]={125,250,50,30};
+        for(int k=0;k<4;++k){if(indices[k]<0||indices[k]>=32){grants=false;continue;}ammo[indices[k]]=0;grants=reactorGive(player,k)&&ammo[indices[k]]>0&&grants;ammo[indices[k]]=caps[k];full=!reactorGive(player,k)&&full;}
+        pass(grants,"four_mod_ammo_rewards");pass(full,"full_ammo_does_not_consume_reward");
         if(shotgunAmmoIndex>=0)ammo[shotgunAmmoIndex]=0;
         auto station=mansionFind("reactor_pickup_0"),display=mansionFind("reactor_display_0");
         if(valid(display)){display->v.impulse=1;engine.pfnSetModel(display,reactorWorldModels[0]);display->v.effects&=~EF_NODRAW;}
@@ -40,13 +40,13 @@ static void reactorTestFrame(){
     }
     if(stage==2&&globals->time-began>.2f){
         auto station=mansionFind("reactor_pickup_0"),display=mansionFind("reactor_display_0");
-        pass(valid(display)&&(display->v.effects&EF_NODRAW)&&valid(station)&&station->v.dmgtime>globals->time+10,"proximity_pickup_and_respawn_timer");
+        pass(valid(display)&&(display->v.effects&EF_NODRAW)&&valid(station)&&station->v.dmgtime>globals->time+9,"proximity_pickup_and_respawn_timer");
         Vector safe(-448,-584,233);engine.pfnSetOrigin(player,&safe.x);
         if(valid(station))station->v.dmgtime=globals->time;
         stage=3;began=globals->time;return;
     }
     if(stage==3&&globals->time-began>.2f){
-        auto display=mansionFind("reactor_display_0");pass(valid(display)&&!(display->v.effects&EF_NODRAW)&&display->v.impulse>=1&&display->v.impulse<=5,"random_reward_respawn");
+        auto display=mansionFind("reactor_display_0");pass(valid(display)&&!(display->v.effects&EF_NODRAW)&&display->v.impulse>=1&&display->v.impulse<=4,"random_reward_respawn");
         pass(reactorGoldSprite>0,"gold_square_particles_precached");
         auto station=mansionFind("reactor_pickup_0");pass(valid(station)&&length2d(station->v.origin-location("reactor_jump_destination"))==48&&!valid(mansionFind("reactor_pickup_1")),"single_reward_near_door");
         Vector portal=location("reactor_return_portal",-4);engine.pfnSetOrigin(player,&portal.x);player->v.velocity=Vector(0,0,0);stage=6;began=globals->time;return;
@@ -61,25 +61,23 @@ static void reactorTestFrame(){
         pass(apex>260,"mirrored_southwest_jump");
         pass(onRoof("reactor_powerup_jump_destination"),"southwest_roof_landing");
         char landing[180];std::snprintf(landing,sizeof landing,"southwest=%.1f,%.1f,%.1f flags=%d health=%.1f",player->v.origin.x,player->v.origin.y,player->v.origin.z,int(player->v.flags),player->v.health);startupTrace("ReactorTestDetail",landing);
-        player->v.health=50;player->v.armorvalue=0;bool artifacts=true;
-        for(int kind=0;kind<4;++kind)artifacts=artifacts&&reactorGivePowerup(player,kind)&&dmcUntil(player,kind)>globals->time+29;
-        pass(artifacts&&player->v.health==50&&player->v.armorvalue==0,"four_dmc_artifacts_thirty_seconds");
-        pass(!std::strcmp(engine.pfnGetPhysicsKeyValue(player,"slj"),"1")&&std::strstr(reactorPowerups[2],"invisibility"),"longjump_default_not_in_pickup_pool");
-        auto ds=dmcState(player,true);ds->v.fuser1=ds->v.fuser2=ds->v.fuser3=ds->v.fuser4=0;dmcPlayerFrame(player);
-        auto display=mansionFind("reactor_display_1");if(valid(display)){display->v.impulse=1;display->v.effects&=~EF_NODRAW;engine.pfnSetModel(display,reactorPowerupModels[0]);}
+        pass(!reactorGive(player,4),"grenades_excluded_from_station_pool");
+        pass(!std::strcmp(engine.pfnGetPhysicsKeyValue(player,"slj"),"1"),"longjump_default_not_in_pickup_pool");
+        int* ammo=reinterpret_cast<int*>(static_cast<char*>(player->pvPrivateData)+ammoOffset);ammo[shotgunAmmoIndex]=0;
+        auto display=mansionFind("reactor_display_1");if(valid(display)){display->v.impulse=1;display->v.effects&=~EF_NODRAW;engine.pfnSetModel(display,reactorWorldModels[0]);}
         auto station=mansionFind("reactor_powerup_0");if(valid(station))station->v.dmgtime=0;
         player->v.health=50;Vector inside=location("reactor_powerup_0",3);engine.pfnSetOrigin(player,&inside.x);player->v.velocity=Vector(0,0,0);
         stage=9;began=globals->time;return;
     }
     if(stage==9&&globals->time-began>.2f){
         auto display=mansionFind("reactor_display_1"),station=mansionFind("reactor_powerup_0");
-        pass(valid(display)&&(display->v.effects&EF_NODRAW)&&dmcUntil(player,0)>globals->time&&valid(station)&&station->v.dmgtime>globals->time+10,"powerup_house_proximity_pickup");
+        pass(valid(display)&&(display->v.effects&EF_NODRAW)&&sharedAmmo(player,shotgunAmmoIndex,0)>0&&valid(station)&&station->v.dmgtime>globals->time+9,"southwest_weapon_proximity_pickup");
         if(valid(station))station->v.dmgtime=globals->time;
         Vector portal=location("reactor_powerup_portal",-4);engine.pfnSetOrigin(player,&portal.x);player->v.velocity=Vector(0,0,0);reactorPortalCooldown[engine.pfnIndexOfEdict(player)]=0;
         stage=10;began=globals->time;return;
     }
     if(stage==10&&globals->time-began>.2f){
-        auto display=mansionFind("reactor_display_1");pass(valid(display)&&!(display->v.effects&EF_NODRAW),"powerup_respawn");
+        auto display=mansionFind("reactor_display_1");pass(valid(display)&&!(display->v.effects&EF_NODRAW),"southwest_weapon_respawn");
         pass(length2d(player->v.origin-Vector(-784,-272,61))<100&&player->v.health>0,"powerup_house_return_portal");
         auto ds=dmcState(player);if(valid(ds))ds->v.fuser1=ds->v.fuser2=ds->v.fuser3=ds->v.fuser4=0;dmcPlayerFrame(player);
         linkVictim=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_zombie"));

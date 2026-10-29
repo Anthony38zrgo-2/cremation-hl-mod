@@ -12,12 +12,14 @@ static void czAnimationProbeFrame();
 static constexpr const char* CZModel="models/cremation/czero/zombie_knife.mdl";
 static constexpr const char* CZGun="models/cremation/czero/p_knife.mdl";
 static bool czIs(edict_t* e){return valid(e)&&!std::strcmp(text(e->v.classname),CZClass);}
+static void mansionCZDeath(edict_t* e);
 static int __fastcall czClassify(void*,void*){return 7;}
 static edict_t* czObject(void* object){for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(czIs(e)&&e->pvPrivateData==object)return e;}return nullptr;}
 static void __fastcall czKilled(void* object,void*,entvars_t* attacker,int gib){
     auto e=czObject(object);if(!valid(e))return;
     bool first=e->v.deadflag==DEAD_NO;e->v.health=std::min(0.f,e->v.health);e->v.deadflag=DEAD_DYING;
     e->v.enemy=nullptr;e->v.solid=SOLID_NOT;e->v.sequence=101;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;e->v.nextthink=globals->time+.05f;
+    if(first)mansionCZDeath(e);
     if(first&&attacker&&(attacker->flags&FL_CLIENT))attacker->frags+=1;
     if(gib==2||(gib!=1&&e->v.health<-35)){
         if(engine.pfnCVarGetFloat("violence_hgibs")!=0)humanGibSpawn(center(e),e->v.velocity);
@@ -47,9 +49,9 @@ static void czInstall(edict_t* e){
     humanGibInstall(e);weaponBloodInstall(e);
 }
 static void czSequence(edict_t* e,int sequence){
-    e->v.gaitsequence=0;if(e->v.sequence==sequence)return;e->v.sequence=sequence;e->v.frame=0;e->v.animtime=globals->time;
+    e->v.gaitsequence=0;if(e->v.sequence==sequence)return;bool wasLoco=(e->v.sequence==3||e->v.sequence==4);bool newLoco=(sequence==3||sequence==4);float preserved=(wasLoco&&newLoco)?e->v.frame:0.f;e->v.sequence=sequence;e->v.frame=preserved;e->v.animtime=globals->time;
 }
-static bool czMeleeBusy(edict_t* e){return e->v.sequence==76&&globals->time<e->v.dmgtime;}
+static bool czMeleeBusy(edict_t* e){return e->v.sequence==76&&(globals->time<e->v.dmgtime||e->v.frame<250.f);}
 static void czPrecache(){
     czFadeMessage=engine.pfnRegUserMsg("ScreenFade",10);
     for(auto p:{CZModel,CZGun,CZSmokeModel,CZSmokeSprite,"models/cremation/czero/zombie_glock.mdl","models/cremation/czero/p_glock18.mdl","models/cremation/czero/w_c4.mdl","models/cremation/czero/w_flashbang.mdl"})engine.pfnPrecacheModel(const_cast<char*>(p));
@@ -66,7 +68,7 @@ static void czSpawn(edict_t* e){
     e->v.framerate=1;e->v.sequence=-1;czSequence(e,75);e->v.nextthink=globals->time+.05f;
 }
 static edict_t* czEnemy(edict_t* e){
-    edict_t* best=nullptr;float closest=2048;
+    edict_t* best=nullptr;float closest=MansionZombieNoticeRange;
     for(int i=1;i<globals->maxEntities;++i){auto p=engine.pfnPEntityOfEntIndex(i);
         if(!valid(p)||dmcInvisible(p)||p->v.health<=0||p->v.deadflag!=DEAD_NO||(!(p->v.flags&FL_CLIENT)&&!necroMinion(p)&&!bounce::isSentry(p)))continue;
         float dist=length(center(p)-(e->v.origin+e->v.view_ofs));if(dist>closest)continue;
@@ -130,8 +132,8 @@ static bool czThink(edict_t* e){
             Vector top=next+Vector(0,0,16),bottom=next-Vector(0,0,22);TraceResult ground{};engine.pfnTraceLine(&top.x,&bottom.x,1,e,&ground);
             if(ground.flFraction<1&&ground.vecPlaneNormal.z>.65f&&engine.pfnWalkMove(e,yaw,140*dt*rate,0)){czSequence(e,4);e->v.fuser1=globals->time+.15f;}
         }
-        if(globals->time>e->v.fuser1&&globals->time>e->v.dmgtime)czSequence(e,75);
-    }else if(globals->time>e->v.fuser1&&globals->time>e->v.dmgtime+.3f)czSequence(e,75);
+        if(!czMeleeBusy(e)&&globals->time>e->v.fuser1&&globals->time>e->v.dmgtime)czSequence(e,75);
+    }else if(!czMeleeBusy(e)&&globals->time>e->v.fuser1&&globals->time>e->v.dmgtime+.3f)czSequence(e,75);
     e->v.nextthink=globals->time+.05f;return true;
 }
 static void czVisualCleanup(){

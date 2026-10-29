@@ -46,5 +46,5 @@ static void musicUpdate(){
  if(musicThread.joinable()&&path!=musicCurrentPath)musicShutdown();
  if(!musicThread.joinable()){musicStop=false;musicCurrentPath=path;musicThread=std::thread(musicWorker,path);}
 }
-extern "C" void HUD_Frame(double time){musicUpdate();auto fn=reinterpret_cast<void(*)(double)>(GetProcAddress(donor,"HUD_Frame"));if(fn)fn(time);}
+extern "C" void HUD_Frame(double time){musicUpdate();weatherFrame(time);auto fn=reinterpret_cast<void(*)(double)>(GetProcAddress(donor,"HUD_Frame"));if(fn)fn(time);}
 extern "C" void HUD_Shutdown(){musicShutdown();auto fn=reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_Shutdown"));if(fn)fn();}

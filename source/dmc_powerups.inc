@@ -19,14 +19,25 @@ static bool dmcGive(edict_t* p,int kind){
 }
 struct DMCPlayerTable{void** base;TakeDamageFn damage;};
 static std::vector<std::unique_ptr<DMCPlayerTable>> dmcPlayerTables;
+static bool dmcPoisonHeadcrabHit(entvars_t* inflictor,entvars_t* attacker){
+    for(auto vars:{inflictor,attacker})if(vars){auto e=engine.pfnFindEntityByVars(vars);if(valid(e)&&!std::strcmp(text(e->v.classname),"monster_poison_headcrab"))return true;}
+    return false;
+}
 static int __fastcall dmcPlayerDamage(void* object,void*,entvars_t* inflictor,entvars_t* attacker,float amount,int bits){
     DMCPlayerTable* entry=nullptr;auto table=*reinterpret_cast<void***>(object);
     for(auto& t:dmcPlayerTables)if(t->base==table){entry=t.get();break;}if(!entry)return 0;
-    for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!valid(p)||p->pvPrivateData!=object)continue;
+    edict_t* victim=nullptr;
+    for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!valid(p)||p->pvPrivateData!=object)continue;victim=p;
         // Objective floor and bomb remain lethal, even under artifacts.
         if(amount<99999){if(dmcUntil(p,1)>globals->time)return 0;
             if(dmcUntil(p,3)>globals->time&&(bits&((1<<3)|(1<<14)|(1<<16)|(1<<17)|(1<<18)|(1<<20))))return 0;}break;
-    }return entry->damage(object,inflictor,attacker,amount*dmcDamageScale(attacker)*davidMeleeScale(attacker),bits);
+    }
+    float scaled=amount*dmcDamageScale(attacker)*davidMeleeScale(attacker);
+    // A poison headcrab should leave the player at critical health, not kill
+    // them. In this single-player-only mod a death issues `reload`, which can
+    // dump a player back to the main menu when there is no save to load.
+    if(victim&&victim->v.health>1.f&&dmcPoisonHeadcrabHit(inflictor,attacker))scaled=std::min(scaled,victim->v.health-1.f);
+    return entry->damage(object,inflictor,attacker,scaled,bits);
 }
 static void dmcInstallPlayer(edict_t* p){
     if(!valid(p)||!p->pvPrivateData)return;auto base=*reinterpret_cast<void***>(p->pvPrivateData);

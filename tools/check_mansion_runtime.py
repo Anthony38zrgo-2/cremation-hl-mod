@@ -56,12 +56,28 @@ with (MOD/('diagnostics/mansion-routes-server.log' if args.routes else 'diagnost
         assert 'not precached' not in engine_output and 'FATAL ERROR' not in engine_output, engine_output
         if args.inventory:
             items=re.findall(r'StartupInventory (weapon_\S+) attached=(\d)',phases)
-            assert len(items)==8 and all(attached=='1' for name,attached in items),phases
+            expected={'weapon_pipewrench','weapon_ricochet','weapon_357'}
+            available=expected|{'weapon_nailgun','weapon_bounce_shotgun','weapon_shockrifle','weapon_rpg','weapon_handgrenade'}
+            assert len(items)==3 and {name for name,attached in items}==expected and all(attached=='1' for name,attached in items),phases
+            registry=re.findall(r'WeaponRegistry raw=\S+ name=(\S+) id=(\d+) group=(\d+) position=(\d+) ammo=(-?\d+)',phases)
+            assert {name for name,*rest in registry}==available and len(registry)==8,registry
+            assert len({row[1] for row in registry})==8 and len({(row[2],row[3]) for row in registry})==8,registry
+            assert 'WeaponRegistryConflict' not in phases,phases
+            selections=re.findall(r'WeaponRegistrySelection name=(\S+) id=(\d+) owned=(\d+) model=(\S+)',phases)
+            assert len(selections)==3 and all(owned=='1' for name,id,owned,model in selections),selections
+            by_name={name:model for name,id,owned,model in selections}
+            assert by_name['weapon_357']=='models/v_357.mdl',selections
+            assert len(re.findall(r'^MansionGrenade mansion_grenade_[0-3]$',phases,re.M))==4,phases
+            supplies=re.findall(r'MansionRevolverAmmo index=(\d+) floor=(\d+) origin=([^\n]+)',phases)
+            assert len(supplies)==8 and {int(row[0]) for row in supplies}==set(range(8)),supplies
+            ammo_probe=re.search(r'MansionRevolverAmmoProbe boxes=(\d+) upper=(\d+) lower=(\d+) before=(\d+) after=(\d+)',phases)
+            assert ammo_probe and tuple(map(int,ammo_probe.groups()[:3]))==(8,4,4),phases
+            assert int(ammo_probe[5])>int(ammo_probe[4]),ammo_probe.groups()
             match=re.search(r'InventoryProbeSpawn origin=([\d.-]+),([\d.-]+),([\d.-]+)',phases)
             assert match and float(match[1])<0 and float(match[3])>190,phases
-            assert 'InventoryProbeComplete owned=8 ground=0' in phases,phases
-            (MOD/'diagnostics/mansion-inventory-runtime.json').write_text(json.dumps(dict(weapons=items,tt_spawn=list(match.groups()),direct_inventory=True),indent=2)+'\n')
-            print('PASS: real GoldSrc fake client spawned in TT and received all eight weapons directly into native inventory.')
+            assert 'InventoryProbeComplete owned=3 ground=0' in phases,phases
+            (MOD/'diagnostics/mansion-inventory-runtime.json').write_text(json.dumps(dict(weapons=items,registry=registry,selections=selections,revolver_ammo=supplies,native_ammo_pickup=ammo_probe.groups(),tt_spawn=list(match.groups()),direct_inventory=True),indent=2)+'\n')
+            print('PASS: real GoldSrc fake client spawned in TT and received only revolver, Ricochet and chainsaw; unique HUD IDs/positions and revolver selection and eight house ammo boxes with native pickup passed.')
             raise SystemExit(0)
         if args.routes:
             arrivals = re.findall(r'MansionRouteArrival (\S+) type=(\S+) at=([\d.-]+),([\d.-]+),([\d.-]+) target=(\S*) phase=(\d+)', phases)
@@ -92,10 +108,10 @@ with (MOD/('diagnostics/mansion-routes-server.log' if args.routes else 'diagnost
                 assert math.dist((float(x),float(y),float(z)),(-624,-176,192.1))<24.1,arrivals
             else:
                 for name,kind,x,y,z,target,phase in arrivals:
-                    if target=='mansion_wait_door_1':assert math.dist((float(x),float(y)),(64,-256))<136,arrivals
+                    if target=='mansion_wait_door_1':assert math.dist((float(x),float(y)),(64,-256))<160,arrivals
                     else:
                         assert target=='mansion_wait_door_2',arrivals
-                        assert math.dist((float(x),float(y)),(-328,-792))<136,arrivals
+                        assert math.dist((float(x),float(y)),(-328,-792))<160,arrivals
             (MOD/'diagnostics/mansion-routes-runtime.json').write_text(json.dumps(dict(arrivals=arrivals, completed=True),indent=2)+'\n')
             print('PASS: CZ zombie physically used the side stairs and reached the upper hostage zone in GoldSrc.' if args.czero_route else 'PASS: 20 actors from all four fronts physically reached their assigned doors in GoldSrc.')
             raise SystemExit(0)

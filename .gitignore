@@ -21,3 +21,6 @@ __pycache__/
 /server-startup-check.txt
 /server-startup-result.json
 /validation-*.txt
+*.obj
+/scratch/
+Thumbs.db

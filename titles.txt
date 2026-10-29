@@ -374,7 +374,7 @@ $fadeout 1.5
 
 GAMETITLE
 {
-Half-Life 2: Classic
+HALF - DEATH
 }
 
 //HAZARD COURSE TEXT

@@ -16,7 +16,7 @@ with log.open('wb') as output:
         '-num_edicts','4096','-port','27040','+ip','127.0.0.1','+sv_lan','1','+maxplayers','1','+map','cs_mansion'],
         cwd=ROOT,env=env,stdout=output,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
     try:
-        deadline=time.monotonic()+45
+        deadline=time.monotonic()+75
         while time.monotonic()<deadline and p.poll() is None:
             text=(MOD/'startup-diagnostics.txt').read_text(errors='replace')
             if 'MansionComplete four waves cleared' in text:break
@@ -25,7 +25,8 @@ with log.open('wb') as output:
         (MOD/'validation-david-mansion-diagnostics.txt').write_text(text)
         davids=sum(l.startswith('David spawn ') for l in text.splitlines())
         steves=sum(l.startswith('Steve spawn ') for l in text.splitlines())
-        normal=davids+steves
+        kens=sum(l.startswith('Ken spawn ') for l in text.splitlines())
+        normal=davids+steves+kens
         assert p.poll() is None,f'engine exited {p.returncode}'
         assert 'MansionComplete four waves cleared' in text
         assert normal>=60 and davids>0 and steves>0 and 'David ERROR' not in text

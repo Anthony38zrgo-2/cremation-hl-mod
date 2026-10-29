@@ -12,7 +12,7 @@ Se conservan el cliente Ravenholm, sus exports, el radar y los indicadores de sa
 
 ## Presentación
 
-La bomba plantada muestra aviso temporal, icono animado y temporizador inferior central. El contador pasa a rojo en los últimos diez segundos. Todos los jugadores vivos muestran su kit de desactivación. Solo el jugador que está desactivando ve la barra de progreso CS; al soltar USAR, moverse o perder la acción se cancela. La desactivación y la explosión muestran confirmaciones de seis segundos. La antigua impresión numérica en el centro se sustituye por esta UI.
+La bomba plantada muestra un aviso «BOMBA PLANTADA» durante tres segundos, en rojo y por debajo del centro para que no se cruce con el aviso de puerta destruida; también presenta icono animado y temporizador inferior central. El contador pasa a rojo en los últimos diez segundos. Todos los jugadores vivos muestran su kit de desactivación. Solo el jugador que está desactivando ve la barra de progreso CS; al soltar USAR, moverse o perder la acción se cancela. La desactivación y la explosión muestran confirmaciones de seis segundos. La antigua impresión numérica en el centro se sustituye por esta UI.
 
 Los artefactos muestran su icono, color y tiempo restante. Desaparecen al expirar, al morir, al cambiar de mapa o cuando el servidor deja de enviar el estado. `hud_draw 0` también los oculta. Los relojes se reconstruyen desde la autoridad del servidor al cargar una partida.
 

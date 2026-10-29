@@ -44,22 +44,23 @@ static constexpr const char* RicochetRedModel="models/cremation/v_ricochet_red.m
 static int trailSprite=0, flashSprite=0;
 static int msgTacticalHUD=0,msgJudgmentHUD=0,msgMansionDoors=0,msgCremationWaveHUD=0;
 static int msgLinkMuzzle=0,msgLinkShot=0,msgFlakMuzzle=0;
-static int msgWeaponList=0,msgCurWeapon=0,msgItemPickup=0,msgAmmoX=0,msgSetFov=0;
+static int msgWeaponList=0,msgCurWeapon=0,msgItemPickup=0,msgAmmoX=0,msgSetFov=0,msgAmmoPickup=0;
+static bool singleGrenadePickup=false;
 static int currentMsg=0,currentByte=0,curWeaponId=0;
-static bool customWeaponList=false,customBounceList=false,customNailWeaponList=false,carrierCurWeapon=false;
+static bool carrierCurWeapon=false;
 static edict_t* messagePlayer=nullptr;
 static bool ownAnimation=false;
 static int shotgunAmmoIndex=-1,nailAmmoIndex=-1, ammoOffset=-1;
-static bool shotgunList=false,rpgList=false,necroList=false,winchesterList=false,shockList=false;
-static bool grenadeList=false;
 static int grenadeAmmoIndex=-1;
 static float lastFrame=0;
+static float lastDroppedItemCleanup=0;
 static float firstPlayerPostThinkTime=0;
 struct HordeProbe {edict_t* entity; int serial; Vector origin; Vector previous; float previousTime; bool jumped=false; float walked=0; Vector patrol{0,0,0}; bool fallback=false,returning=false,combat=false; float initialHealth=0;};
 static std::vector<HordeProbe> hordeProbes;
 static float hordeReportAt=0;
 static int hordeReportsRemaining=0;
 static float hordeStartedAt=0;
+static constexpr float MansionZombieNoticeRange=640.f;
 static void startupTrace(const char* stage,const char* detail="") {
     if(FILE* file=std::fopen("Cremation/startup-diagnostics.txt","a")) {
         std::fprintf(file,"%s %s\n",stage,detail);std::fclose(file);
@@ -70,6 +71,24 @@ static const char* text(string_t s) { return engine.pfnSzFromIndex(s); }
 static bool valid(edict_t* e) { return e && !e->free && !(e->v.flags&FL_KILLME); }
 static bool aliveEnemy(edict_t* e) {
     return valid(e) && (e->v.flags&FL_MONSTER) && e->v.deadflag==DEAD_NO && e->v.health>0;
+}
+static std::vector<edict_t*> g_activeEnemies;
+static float g_activeEnemiesTime = -1.f;
+static void invalidateActiveEnemies() {
+    g_activeEnemiesTime = -1.f;
+}
+static const std::vector<edict_t*>& getActiveEnemies() {
+    if (g_activeEnemiesTime != globals->time) {
+        g_activeEnemiesTime = globals->time;
+        g_activeEnemies.clear();
+        for (int i = globals->maxClients + 1; i < globals->maxEntities; ++i) {
+            auto e = engine.pfnPEntityOfEntIndex(i);
+            if (aliveEnemy(e)) {
+                g_activeEnemies.push_back(e);
+            }
+        }
+    }
+    return g_activeEnemies;
 }
 static float length(const Vector& a) { return std::sqrt(a.x*a.x+a.y*a.y+a.z*a.z); }
 static float length2d(const Vector& a) { return std::sqrt(a.x*a.x+a.y*a.y); }
@@ -87,7 +106,9 @@ static bool nailgun(edict_t* e) {
 }
 // Temporary availability switch: keep implementations/assets for reactivation.
 static constexpr bool ShotgunsPlayable=false;
-static bool disabledShotgunClass(const char* n){return !ShotgunsPlayable&&n&&(!std::strcmp(n,"weapon_shotgun")||!std::strcmp(n,"weapon_winchester1887")||!std::strcmp(n,"weapon_357")||!std::strcmp(n,"weapon_python"));}
+static bool mansionGrenadePickup(edict_t* e){return valid(e)&&e->v.targetname&&!std::strcmp(text(e->v.classname),"weapon_handgrenade")&&!std::strncmp(text(e->v.targetname),"mansion_grenade_",16);}
+static bool mansionTouchGrenade(edict_t* item,edict_t* player);
+static bool disabledShotgunClass(const char* n){return !ShotgunsPlayable&&n&&(!std::strcmp(n,"weapon_shotgun")||!std::strcmp(n,"weapon_winchester1887"));}
 static bool pipeWrench(edict_t* e) {
     if(!valid(e)||e->v.health<=0||!e->v.viewmodel)return false;
     const char* model=text(e->v.viewmodel);
@@ -460,17 +481,29 @@ static int sharedShells(edict_t* p,int spend) {
     if(spend>0) {if(*ammo<spend)return -1;*ammo-=spend;}
     return *ammo;
 }
-#include "winchester1887.inc"
 #include "shockrifle.inc"
 #include "quake_zombie.inc"
 #ifdef CREMATION_ENABLE_VALIDATION
 #include "quake_zombie_validation.inc"
 #endif
+static bool inMansionMove = false;
+static int mansionStartWave(){
+    if(!globals||!globals->mapname)return 0;
+    const char* name=text(globals->mapname);
+    if(!name)return 0;
+    if(!std::strcmp(name,"cs_mansion"))return 1;
+    constexpr char prefix[]="cs_mansion_wave";
+    if(std::strncmp(name,prefix,sizeof(prefix)-1))return 0;
+    char* end=nullptr;long wave=std::strtol(name+sizeof(prefix)-1,&end,10);
+    return end&&!*end&&wave>=1&&wave<=4?int(wave):0;
+}
+static bool mansionMap(){return mansionStartWave()!=0;}
+static bool mansionActor(edict_t* e){return valid(e)&&e->v.targetname&&!std::strncmp(text(e->v.targetname),"mansion_enemy_",14);}
 #include "czero_smoke.inc"
 #include "czero_zombie.inc"
 #include "david_zombie.inc"
 #include "heart_pickups.inc"
-static bool disabledShotgunActive(edict_t* p){return !ShotgunsPlayable&&(winchester(p)||bounce::isTfcPlayer(p));}
+static bool disabledShotgunActive(edict_t* p){return !ShotgunsPlayable&&bounce::isTfcPlayer(p);}
 static void attachBounce() {
     bounce::Host host{};
     host.engine=&engine;host.globals=globals;
@@ -528,6 +561,7 @@ static bool fire(edict_t* p,bool secondary) {
 static int hookWalkMove(edict_t* e,float yaw,float distance,int mode) {
     if(pushed(e))distance=0;
     else if(slowed(e))distance*=balance::SlowFactor;
+    if(mansionMap()&&mansionActor(e)&&!inMansionMove)return 1;
     return engine.pfnWalkMove(e,yaw,distance,mode);
 }
 static void hookMoveToOrigin(edict_t* e,const float* goal,float distance,int mode) {
@@ -563,7 +597,7 @@ static bool hordeAlert(HordeProbe& probe) {
         if(!valid(player)||!(player->v.flags&FL_CLIENT)||player->v.health<=0||player->v.deadflag!=DEAD_NO)continue;
         float distance=length(player->v.origin-probe.entity->v.origin);
         if(distance<384)return true;
-        if(distance>2048)continue;
+        if(distance>MansionZombieNoticeRange)continue;
         Vector eye=probe.entity->v.origin+Vector(0,0,48);
         Vector target=player->v.origin+player->v.view_ofs;
         TraceResult tr{};engine.pfnTraceLine(&eye.x,&target.x,1,probe.entity,&tr);
@@ -571,14 +605,75 @@ static bool hordeAlert(HordeProbe& probe) {
     }
     return false;
 }
+static bool zombieBusy(edict_t* e){
+    if(!valid(e)||!aliveEnemy(e))return false;
+    if(auto s=davidState(e)){
+        if(s->dying||s->johnnyGuarding||s->johnnyThrowing)return true;
+        if(davidBusy(e)&&e->v.frame<250.f)return true;
+    }
+    if(czIs(e))return czMeleeBusy(e);
+    if(qzIs(e))return e->v.impulse==QZAttack||e->v.impulse==QZPain||e->v.impulse==QZDown||e->v.impulse==QZRise||e->v.impulse==QZDead;
+    if(!engine.pfnGetModelPtr)return false;
+    auto data=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!data)return false;
+    int count=*reinterpret_cast<int*>(data+164),offset=*reinterpret_cast<int*>(data+168);
+    int seq=e->v.sequence;
+    if(seq<0||seq>=count)return false;
+    int flags=*reinterpret_cast<int*>(data+offset+seq*176+36);
+    int act=*reinterpret_cast<int*>(data+offset+seq*176+40);
+    if(act==28||act==29||act==30||act==31||act==26||act==27||(act>=70&&act<=76)||act==100||(act>=36&&act<=39)||act==66){
+        if(e->v.frame<250.f)return true;
+    }
+    if(!(flags&1)&&e->v.frame<250.f)return true;
+    return false;
+}
+static void safeSetLocomotionSequence(edict_t* e, int sequence, float preservedFrame = 0.0f, float baseFramerate = 1.0f) {
+    if (!valid(e)) return;
+    float rate = slowed(e) ? (baseFramerate * balance::SlowFactor) : baseFramerate;
+    if (e->v.sequence != sequence) {
+        e->v.sequence = sequence;
+        e->v.frame = preservedFrame;
+        e->v.animtime = globals->time;
+        if (e->pvPrivateData) {
+            reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule, ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);
+        }
+    }
+    e->v.framerate = rate;
+}
+static void safeSetSequence(edict_t* e, int sequence, float baseFramerate = 1.0f) {
+    safeSetLocomotionSequence(e, sequence, 0.0f, baseFramerate);
+}
 static void hordeWalkAnimation(edict_t* e) {
-    if(davidState(e)){if(aliveEnemy(e)&&!davidBusy(e))davidActivity(e->pvPrivateData,nullptr,3);return;}
+    if(zombieBusy(e))return;
+    if(auto state=davidState(e)){if(aliveEnemy(e))davidActivity(e->pvPrivateData,nullptr,state->running?4:3);return;}
     if(!engine.pfnGetModelPtr)return;
     auto data=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!data)return;
     int count=*reinterpret_cast<int*>(data+164),offset=*reinterpret_cast<int*>(data+168);
     for(int i=0;i<count;++i)if(*reinterpret_cast<int*>(data+offset+i*176+40)==3) {
-        if(e->v.sequence!=i){e->v.sequence=i;e->v.frame=0;e->v.animtime=globals->time;}
-        e->v.framerate=1;return;
+        int oldAct=(e->v.sequence>=0&&e->v.sequence<count)?*reinterpret_cast<int*>(data+offset+e->v.sequence*176+40):-1;
+        float preserved=(oldAct==3||oldAct==4)?e->v.frame:0.f;
+        safeSetLocomotionSequence(e,i,preserved,1.0f);
+        return;
+    }
+}
+static void hordeRunAnimation(edict_t* e) {
+    if(zombieBusy(e))return;
+    if(auto state=davidState(e)){if(aliveEnemy(e))davidActivity(e->pvPrivateData,nullptr,state->running?4:3);return;}
+    if(!engine.pfnGetModelPtr)return;
+    auto data=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!data)return;
+    int count=*reinterpret_cast<int*>(data+164),offset=*reinterpret_cast<int*>(data+168);
+    int run=-1,locomotion=-1;
+    for(int i=0;i<count;++i){int activity=*reinterpret_cast<int*>(data+offset+i*176+40);
+        if(activity==4){run=i;break;}
+        if(activity==3&&locomotion<0)locomotion=i;
+    }
+    // Several original GoldSrc zombie models mark their authored run cycle as
+    // ACT_WALK (3), and some have no ACT_RUN entry at all. Keep those models'
+    // original locomotion cycle instead of leaving a stale sequence selected.
+    if(run<0)run=locomotion;
+    if(run>=0){
+        int oldAct=(e->v.sequence>=0&&e->v.sequence<count)?*reinterpret_cast<int*>(data+offset+e->v.sequence*176+40):-1;
+        float preserved=(oldAct==3||oldAct==4)?e->v.frame:0.f;
+        safeSetLocomotionSequence(e,run,preserved,1.0f);
     }
 }
 static void mansionFrame(float dt);
@@ -591,6 +686,10 @@ static void startupInventoryGive(edict_t* player);
 static void reactorPrecache();
 static void reactorActivate();
 static void reactorFrame();
+static void mansionCZRespawnFrame();
+#ifdef CREMATION_ENABLE_VALIDATION
+static void mansionRulesProbeFrame();
+#endif
 static void tacticalHudFrame();
 static void mansionDoorRepairPostThink(edict_t* player,int buttons);
 static bool judgmentIs(edict_t* e);
@@ -655,7 +754,6 @@ static void hookStartFrame() {
     zombieVoiceFrame();
     rpgFrame();
     linkFrame();
-    necroFrame();
     anatomicalGibFrame();
     davidFrame();
 #ifdef CREMATION_ENABLE_VALIDATION
@@ -663,21 +761,27 @@ static void hookStartFrame() {
     enemyCombatProbeFrame();
 #endif
     if(raven.pfnStartFrame)raven.pfnStartFrame();
-    // Initial inventory is granted directly. Suppress native enemy/player
-    // weapon drops as well, keeping owned inventory entities intact.
-    for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(!valid(e))continue;
-        if(valid(e->v.aiment)&&(e->v.aiment->v.flags&FL_CLIENT))continue;
-        const char* name=text(e->v.classname);if(!std::strncmp(name,"weapon_",7)||!std::strcmp(name,"weaponbox"))engine.pfnRemoveEntity(e);
+    // Drops are blocked at their creation/command paths. Keep a low-frequency
+    // sweep as a fallback for entities created by native death routines.
+    if(globals->time-lastDroppedItemCleanup>=.5f){lastDroppedItemCleanup=globals->time;
+        for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(!valid(e))continue;
+            if(mansionGrenadePickup(e))continue;
+            if(valid(e->v.aiment)&&(e->v.aiment->v.flags&FL_CLIENT))continue;
+            const char* name=text(e->v.classname);if(!std::strncmp(name,"weapon_",7)||!std::strcmp(name,"weaponbox"))engine.pfnRemoveEntity(e);
+        }
     }
+    necroFrame(); // Shared fire zones used by incendiary grenades.
     float dt=std::max(0.f,globals->time-lastFrame);lastFrame=globals->time;
     mansionFrame(dt);
     reactorFrame();
+#ifdef CREMATION_ENABLE_VALIDATION
+    mansionRulesProbeFrame();
+#endif
     if(dt>0) {
         // Process long frames in bounded steps without changing disc travel speed.
         int steps=std::min(32,std::max(1,int(std::ceil(dt/.025f))));
         for(int i=0;i<steps;++i) {
             shockStep(dt/steps);
-            necroStep(dt/steps);
             advanceDiscs(dt/steps);
             advanceNails(dt/steps);
             bounce::frame(dt/steps);
@@ -734,7 +838,7 @@ static void hookStartFrame() {
 static void hookPreThink(edict_t* p) {
     rpgNormalize(p);
     int i=engine.pfnIndexOfEdict(p);if(i>0 && i<33)players[i].buttons=p->v.button;
-    if(shockRifle(p)||winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(shockRifle(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||bounce::isBouncePlayer(p)||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPreThink(p);
 }
 static void playerDefaults(edict_t* p);
@@ -743,16 +847,14 @@ static void hookPostThink(edict_t* p) {
     int i=engine.pfnIndexOfEdict(p);if(i<=0||i>=33) {raven.pfnPlayerPostThink(p);return;}
     auto& state=players[i];
     bool carrier=bounce::isBouncePlayer(p);
-    if(shockRifle(p)||winchester(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
+    if(shockRifle(p)||necromancer(p)||ricochet(p)||nailgun(p)||rpgPlayer(p)||carrier||bounce::isTfcPlayer(p)||bounce::engineerBuilding(p))p->v.button&=~(Attack|Attack2|Reload);
     raven.pfnPlayerPostThink(p);
     mansionDoorRepairPostThink(p,state.buttons);
     dmcPlayerFrame(p);playerDefaults(p);
     rpgNormalize(p);
     rpgPostThink(p,state.buttons);
-    necroPostThink(p,state.buttons);
     shockPostThink(p,state.buttons);
-    if(ShotgunsPlayable)winchesterPostThink(p,state.buttons);
-    if(disabledShotgunActive(p)&&engine.pfnClientCommand)engine.pfnClientCommand(p,const_cast<char*>("weapon_bounce_shotgun\n"));
+    if((disabledShotgunActive(p)||necromancer(p))&&engine.pfnClientCommand)engine.pfnClientCommand(p,const_cast<char*>("weapon_bounce_shotgun\n"));
     bool activeNail=nailgun(p);
     if(activeNail) {
         p->v.viewmodel=engine.pfnAllocString(NailViewModel);
@@ -815,104 +917,55 @@ static void hookPostThink(edict_t* p) {
     // Preserve the engine-visible input after inventory processing is complete.
     p->v.button=state.buttons;
 }
+#include "weapon_registry.inc"
 static int hookRegisterMsg(const char* name,int size) {
     int id=engine.pfnRegUserMsg(name,size);
     if(!std::strcmp(name,"WeaponList"))msgWeaponList=id;
     if(!std::strcmp(name,"CurWeapon"))msgCurWeapon=id;
     if(!std::strcmp(name,"ItemPickup"))msgItemPickup=id;
     if(!std::strcmp(name,"AmmoX"))msgAmmoX=id;
+    if(!std::strcmp(name,"AmmoPickup"))msgAmmoPickup=id;
     if(!std::strcmp(name,"SetFOV"))msgSetFov=id;
     bounce::setMessageIds(msgCurWeapon,msgAmmoX);
     return id;
 }
 static void hookMessageBegin(int dest,int type,const float* origin,edict_t* player) {
-    shotgunList=false;rpgList=false;necroList=false;winchesterList=false;shockList=false;grenadeList=false;currentMsg=type;currentByte=0;customWeaponList=false;customBounceList=false;customNailWeaponList=false;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
+    currentMsg=type;currentByte=0;curWeaponId=0;carrierCurWeapon=false;messagePlayer=player;
+    if(type==msgWeaponList){weaponListPending={};weaponListPending.dest=dest;weaponListPending.target=player;return;}
     engine.pfnMessageBegin(dest,type,origin,player);
 }
 static void hookMessageEnd() {
-    bool bounceList=customBounceList, shellsReady=shotgunList;edict_t* target=messagePlayer;
-    engine.pfnMessageEnd();currentMsg=0;messagePlayer=nullptr;
-    // The magazine counters live in the weapon module; announce them once the
-    // HUD knows the weapon exists.
-    if(bounceList && target)bounce::pickedUp(target);
-    // Crossbow's native WeaponList can precede shotgun's. Correct the HUD as
-    // soon as buckshot is known; waiting until deploy makes the HUD refuse
-    // selection because the provisional ammo index has no ammunition.
-    if(shellsReady && target && msgWeaponList) {
-        int fields[8];bounce::hudListBytes(fields);
-        engine.pfnMessageBegin(MSG_ONE,msgWeaponList,nullptr,target);
-        engine.pfnWriteString(bounce::WeaponName);
-        for(int field:fields)engine.pfnWriteByte(field);
-        engine.pfnMessageEnd();
-        bounce::pickedUp(target);
-        char report[64];std::snprintf(report,sizeof report,"buckshot_index=%d reserve=%d",shotgunAmmoIndex,sharedShells(target,0));
-        startupTrace("FlakHudReady",report);
-    }
+    if(currentMsg==msgWeaponList)weaponRegistryPublish();
+    else engine.pfnMessageEnd();
+    currentMsg=0;messagePlayer=nullptr;
 }
 static void hookWriteString(const char* value) {
-    if(currentMsg==msgWeaponList&&!std::strcmp(value,"weapon_handgrenade"))grenadeList=true;
-    if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_rpg"))rpgList=true;
-    if(currentMsg==msgWeaponList && !std::strcmp(value,"weapon_shotgun"))shotgunList=true;
-    bool shock=!std::strcmp(value,"weapon_gauss")||!std::strcmp(value,"weapon_shockrifle");
-    if(currentMsg==msgWeaponList&&shock){shockList=true;value="weapon_shockrifle";}
-    if(currentMsg==msgItemPickup&&shock)value="weapon_shockrifle";
-    bool win=!std::strcmp(value,"weapon_357")||!std::strcmp(value,"weapon_python")||!std::strcmp(value,"weapon_winchester1887");
-    if(currentMsg==msgWeaponList&&win){winchesterList=true;value="weapon_winchester1887";}
-    if(currentMsg==msgItemPickup&&win)value="weapon_winchester1887";
-    bool necro=!std::strcmp(value,"weapon_hornetgun")||!std::strcmp(value,"weapon_necromancer");
-    if(currentMsg==msgWeaponList&&necro){necroList=true;value="weapon_necromancer";}
-    if(currentMsg==msgItemPickup&&necro)value="weapon_necromancer";
-    bool pistol=!std::strcmp(value,"weapon_ricochet")||!std::strcmp(value,"weapon_9mmhandgun")||!std::strcmp(value,"weapon_glock");
-    bool carrier=bounce::isCarrierClass(value);
-    bool nails=!std::strcmp(value,"weapon_nailgun")||!std::strcmp(value,"weapon_9mmAR")||!std::strcmp(value,"weapon_mp5");
-    bool wrench=!std::strcmp(value,"weapon_pipewrench")||!std::strcmp(value,"weapon_crowbar");
-    if(currentMsg==msgWeaponList && pistol) {customWeaponList=true;value="weapon_ricochet";}
-    else if(currentMsg==msgWeaponList && carrier) {
-        customBounceList=true;
-        if(std::strcmp(value,bounce::WeaponName))value=bounce::WeaponName;
+    if(currentMsg==msgWeaponList){weaponListPending.name=value;return;}
+    if(currentMsg==msgItemPickup){
+        if(!std::strcmp(value,"weapon_gauss"))value="weapon_shockrifle";
+        else if(!std::strcmp(value,"weapon_9mmhandgun")||!std::strcmp(value,"weapon_glock"))value="weapon_ricochet";
+        else if(bounce::isCarrierClass(value))value=bounce::WeaponName;
+        else if(!std::strcmp(value,"weapon_9mmAR")||!std::strcmp(value,"weapon_mp5"))value="weapon_nailgun";
+        else if(!std::strcmp(value,"weapon_crowbar"))value="weapon_pipewrench";
     }
-    else if(currentMsg==msgWeaponList && nails) {customNailWeaponList=true;value="weapon_nailgun";}
-    else if(currentMsg==msgWeaponList && wrench)value="weapon_pipewrench";
-    else if(currentMsg==msgItemPickup && pistol)value="weapon_ricochet";
-    else if(currentMsg==msgItemPickup && carrier)value=bounce::WeaponName;
-    else if(currentMsg==msgItemPickup && nails)value="weapon_nailgun";
-    else if(currentMsg==msgItemPickup && wrench)value="weapon_pipewrench";
     engine.pfnWriteString(value);
 }
 static void hookWriteByte(int value) {
-    if(currentMsg==msgWeaponList&&grenadeList&&currentByte==0)grenadeAmmoIndex=value;
-    if(currentMsg==msgWeaponList&&shockList){const int fields[]={-1,50,255,255,3,1,9,0};if(currentByte==0)shockAmmoIndex=value;else if(currentByte<8)value=fields[currentByte];}
-    if(currentMsg==msgWeaponList&&winchesterList){const int fields[]={shotgunAmmoIndex>=0?shotgunAmmoIndex:1,125,255,255,2,4,3,1};if(currentByte<8)value=fields[currentByte];}
-    if(currentMsg==msgWeaponList&&necroList){const int fields[]={23,1,255,255,0,1,11,1};if(currentByte<8)value=fields[currentByte];}
-    if(currentMsg==msgWeaponList && rpgList) {if(currentByte==0)rpgAmmoIndex=value;else if(currentByte==1)value=30;}
-    if(currentMsg==msgWeaponList && shotgunList && currentByte==0) {shotgunAmmoIndex=value;bounce::setShellAmmoIndex(value); }
-    if(currentMsg==msgSetFov && currentByte==0 && bounce::isBouncePlayer(messagePlayer))value=0;
-    if(currentMsg==msgWeaponList && customWeaponList) {
-        const int fields[]={balance::HudAmmoCharges,balance::MaxCharges,255,255,1,0,GlockId,0};
-        if(currentByte<8)value=fields[currentByte];
-    }
-    if(currentMsg==msgWeaponList && customBounceList) {
-        static int fields[8];
-        if(currentByte==0)bounce::hudListBytes(fields);
-        if(currentByte<8)value=fields[currentByte];
-    }
-    if(currentMsg==msgWeaponList && customNailWeaponList) {
-        static const int fields[]={-1,250,255,255,2,0,Mp5Id,0};
-        if(currentByte==0)nailAmmoIndex=value;
-        if(currentByte==0)value=nailAmmoIndex;
-        else if(currentByte<8)value=fields[currentByte];
+    if(currentMsg==msgAmmoPickup&&singleGrenadePickup&&currentByte==1)value=1;
+    if(currentMsg==msgWeaponList){if(weaponListPending.count<8)weaponListPending.bytes[weaponListPending.count++]=value;return;}
+    if(currentMsg==msgSetFov && currentByte==0){
+        if(bounce::isBouncePlayer(messagePlayer))value=0;
     }
     if(currentMsg==msgCurWeapon) {
         if(currentByte==1) {curWeaponId=value;carrierCurWeapon=(value==bounce::carrierWeaponId());}
         if(currentByte==2 && curWeaponId==GlockId)value=255;
         if(currentByte==2 && curWeaponId==Mp5Id)value=255;
-        if(currentByte==2 && (curWeaponId==8||curWeaponId==11||curWeaponId==3||curWeaponId==9))value=255;
+        if(currentByte==2 && (curWeaponId==8||curWeaponId==11||curWeaponId==9))value=255;
         if(currentByte==2 && curWeaponId==7)value=bounce::tfcClip(messagePlayer);
         if(currentByte==2 && carrierCurWeapon && valid(messagePlayer))value=bounce::status(messagePlayer).clip;
     }
     if(currentMsg==SvcWeaponAnim && !ownAnimation && currentByte==0) {
         if(shockRifle(messagePlayer))value=0;
-        else if(winchester(messagePlayer))value=0;
         else if(necromancer(messagePlayer))value=0;
         else if(ricochet(messagePlayer))value=value==7?4:value==8?3:0;
         else if(pipeWrench(messagePlayer))value=pipeWrenchSequence(value);
@@ -921,6 +974,7 @@ static void hookWriteByte(int value) {
     ++currentByte;engine.pfnWriteByte(value);
 }
 static void hookClientCommand(edict_t* p) {
+    if(engine.pfnCmd_Argv){const char* command=engine.pfnCmd_Argv(0);if(command&&(!std::strcmp(command,"drop")||!std::strcmp(command,"weapon_awp")||!std::strcmp(command,"weapon_deagle")||!std::strcmp(command,"weapon_egon")||!std::strcmp(command,"weapon_necromancer")||!std::strcmp(command,"weapon_hornetgun")))return;}
     if(engine.pfnCmd_Argv&&disabledShotgunClass(engine.pfnCmd_Argv(0)))return;
     if(engine.pfnCmd_Argv && bounce::engineerCommand(p,engine.pfnCmd_Argv(0)))return;
     // Weapon commands travel as the HUD name, which is the item classname, so
@@ -932,6 +986,7 @@ static void hookClientCommand(edict_t* p) {
     }
 }
 static void hookTouch(edict_t* a,edict_t* b) {
+    if(mansionTouchGrenade(a,b)||mansionTouchGrenade(b,a))return;
     auto johnnyAxeTouch=[](edict_t* axe,edict_t* other){
         if(!valid(axe)||!axe->v.classname||std::strcmp(text(axe->v.classname),"cremation_johnny_axe"))return false;
         if(valid(other)&&other==axe->v.owner)return true;
@@ -980,7 +1035,7 @@ static void extensionPrecache(){
             bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
         startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
-        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",5);msgCremationWaveHUD=engine.pfnRegUserMsg("CremationWaveHUD",6);
+        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",8);msgCremationWaveHUD=engine.pfnRegUserMsg("CremationWaveHUD",6);
         czPrecache();
         heartPrecache();
         mansionRadarPrecache();
@@ -1006,8 +1061,9 @@ static void extensionPrecache(){
         qzPrecache();
         engine.pfnPrecacheModel(const_cast<char*>(RandyModel));
         engine.pfnPrecacheModel(const_cast<char*>(RandyCharred));
-        winchesterPrecache();
-        necroPrecache();
+        necroPrecache(); // Fire/charred assets are also used by grenades and old saves.
+        // S&W 629 Opposing Force viewmodel animation-event sounds.
+        for(auto path:{"weapons/629_hammer.wav","weapons/629_revolver_in.wav","weapons/629_revolver_out.wav","weapons/629_shells_land.wav","weapons/629_shell_in.wav","weapons/629_shell_release.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
         cultistPrecache();
         zombieVoicePrecache();
         rpgPrecache();
@@ -1018,6 +1074,10 @@ static void extensionPrecache(){
 static void enemyCombatProbePrecache();
 #endif
 static int hookSpawn(edict_t* e) {
+    if(valid(e)&&(!std::strcmp(text(e->v.classname),"weapon_deagle")||!std::strcmp(text(e->v.classname),"weapon_egon"))){engine.pfnRemoveEntity(e);return 0;}
+    if(valid(e)&&disabledShotgunClass(text(e->v.classname))){engine.pfnRemoveEntity(e);return 0;}
+    if(valid(e)&&(!std::strcmp(text(e->v.classname),"weapon_necromancer")||!std::strcmp(text(e->v.classname),"weapon_hornetgun"))){engine.pfnRemoveEntity(e);return 0;}
+    if(valid(e)&&!std::strcmp(text(e->v.classname),"weaponbox")){engine.pfnRemoveEntity(e);return 0;}
     if(vostokCoverSpawn(e))return 0;
     if(czIs(e)){int result=raven.pfnSpawn(e);czSpawn(e);enemyCombatInstall(e);return result;}
     if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);enemyCombatInstall(e);return result;}
@@ -1031,8 +1091,6 @@ static int hookSpawn(edict_t* e) {
     bool nailItem=classname && (!std::strcmp(classname,"weapon_nailgun")||!std::strcmp(classname,"weapon_9mmAR")||!std::strcmp(classname,"weapon_mp5"));
     bool wrenchItem=classname && (!std::strcmp(classname,"weapon_pipewrench")||!std::strcmp(classname,"weapon_crowbar"));
     bool shockItem=classname&&(!std::strcmp(classname,"weapon_shockrifle")||!std::strcmp(classname,"weapon_gauss"));
-    bool winItem=classname&&(!std::strcmp(classname,"weapon_winchester1887")||!std::strcmp(classname,"weapon_357")||!std::strcmp(classname,"weapon_python"));
-    bool necroItem=classname&&(!std::strcmp(classname,"weapon_necromancer")||!std::strcmp(classname,"weapon_hornetgun"));
     bool minionItem=classname&&!std::strcmp(classname,"monster_minion");
     bool world=classname && !std::strcmp(classname,"worldspawn");
     if(world)extensionPrecache();
@@ -1052,8 +1110,6 @@ static int hookSpawn(edict_t* e) {
     if(world)startupInventoryPrecache();
     if(world)reactorPrecache();
     if(shockItem){e->v.classname=engine.pfnAllocString("weapon_shockrifle");engine.pfnSetModel(e,"models/cremation/w_shockrifle.mdl");}
-    if(winItem){e->v.classname=engine.pfnAllocString("weapon_winchester1887");engine.pfnSetModel(e,"models/cremation/w_winchester1887.mdl");}
-    if(necroItem){e->v.classname=engine.pfnAllocString("weapon_necromancer");engine.pfnSetModel(e,"models/cremation/w_necromancer.mdl");}
     if(minionItem){e->v.classname=engine.pfnAllocString("monster_minion");engine.pfnSetModel(e,"models/cremation/minion.mdl");necroInstall(e);}
     if(classname && !std::strcmp(classname,"monster_human_grunt")) {
         startupTrace("HECUAlliance",cremationAllyHecu(e->pvPrivateData)?"zombie_faction=7":"FAILED");
@@ -1086,6 +1142,8 @@ static int hookSpawn(edict_t* e) {
 #include "judgment_boss.inc"
 static void hookSetAbsBox(edict_t* e){if(judgmentIs(e)){judgmentAbsBox(e);return;}if(raven.pfnSetAbsBox)raven.pfnSetAbsBox(e);}
 #include "mansion_waves.inc"
+#include "mansion_revolver_ammo.inc"
+#include "mansion_cz_respawn.inc"
 #ifdef CREMATION_ENABLE_VALIDATION
 #include "judgment_validation.inc"
 #include "hotd2_death_validation.inc"
@@ -1094,8 +1152,13 @@ static void hookSetAbsBox(edict_t* e){if(judgmentIs(e)){judgmentAbsBox(e);return
 #include "david_validation.inc"
 #endif
 #include "mansion_radar.inc"
-static const char* startupInventory[]={"item_suit","item_longjump","weapon_shockrifle","weapon_bounce_shotgun","weapon_ricochet","weapon_necromancer","weapon_pipewrench","weapon_nailgun","weapon_handgrenade","weapon_rpg","ammo_9mmAR","ammo_buckshot","ammo_buckshot","ammo_buckshot"};
+static const char* startupInventory[]={"item_suit","item_longjump","weapon_357","weapon_ricochet","weapon_pipewrench"};
 static void startupInventoryPrecache(){
+    // Stations and upstairs grenade pickups remain precached even though they
+    // are no longer part of the starting inventory.
+    for(auto name:{"weapon_shockrifle","weapon_bounce_shotgun","weapon_nailgun","weapon_rpg","weapon_handgrenade","ammo_357"}){
+        auto item=engine.pfnCreateNamedEntity(engine.pfnAllocString(name));if(!valid(item))continue;hookSpawn(item);engine.pfnRemoveEntity(item);
+    }
     for(auto name:startupInventory){auto item=engine.pfnCreateNamedEntity(engine.pfnAllocString(name));if(!valid(item))continue;hookSpawn(item);engine.pfnRemoveEntity(item);}
 }
 static void startupInventoryGive(edict_t* player){
@@ -1124,6 +1187,7 @@ static void playerDefaults(edict_t* p){
 #ifdef CREMATION_ENABLE_VALIDATION
 #include "tactical_hud_validation.inc"
 #include "reactor_validation.inc"
+#include "mansion_rules_validation.inc"
 #include "reactor_preview.inc"
 #endif
 #ifdef CREMATION_ENABLE_VALIDATION
@@ -1140,18 +1204,20 @@ static void playerDefaults(edict_t* p){
 #include "dmc_preview.inc"
 #endif
 static void hookActivate(edict_t* list,int count,int maxClients) {
+    weaponRegistryReset();
     tacticalHudNext=0;
     shockStates.fill(ShockState{});shockOrbs.clear();
-    winchesterStates.fill(WinchesterState{});
     anatomicalGibs.clear();humanNativeGibs.clear();humanGibContext=false;
     necroStates.fill(NecroState{});necroFires.clear();incendiaryGrenades.clear();
     rpgCharges.fill(RpgCharge{});rpgMissiles.clear();linkLocks.fill(LinkLock{});linkSkeletons.clear();
-    discs.clear();nails.clear();effects.assign(globals->maxEntities,Effect{});players.fill(PlayerState{});lastFrame=globals->time;
+    discs.clear();nails.clear();effects.assign(globals->maxEntities,Effect{});players.fill(PlayerState{});lastFrame=globals->time;lastDroppedItemCleanup=globals->time;
     bounce::reset();
     raven.pfnServerActivate(list,count,maxClients);
     startupTrace("ServerActivate",text(globals->mapname));
     mansionActivate();
+    mansionCZRespawnActivate();
     reactorActivate();
+    mansionRevolverAmmoActivate();
     firstPlayerPostThinkTime=0;
     int ricochetCount=0,bounceCount=0,nailCount=0,wrenchCount=0;
     hordeProbes.clear();hordeReportAt=globals->time+5.f;hordeReportsRemaining=3;hordeStartedAt=globals->time;
@@ -1226,11 +1292,12 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(restoredClass && !std::strcmp(restoredClass,"monster_human_grunt")) {cremationAllyHecu(e->pvPrivateData);cultistInstall(e);}
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmhandgun")||!std::strcmp(restoredClass,"weapon_glock")))e->v.classname=engine.pfnAllocString("weapon_ricochet");
     if(restoredClass && (!std::strcmp(restoredClass,"weapon_9mmAR")||!std::strcmp(restoredClass,"weapon_mp5")))e->v.classname=engine.pfnAllocString("weapon_nailgun");
+    if(restoredClass&&!std::strcmp(restoredClass,"weapon_awp")){e->v.classname=engine.pfnAllocString("weapon_357");engine.pfnSetModel(e,"models/w_357.mdl");}
     if(restoredClass && !std::strcmp(restoredClass,"weapon_crowbar"))e->v.classname=engine.pfnAllocString("weapon_pipewrench");
     if(restoredClass && !std::strcmp(restoredClass,bounce::CarrierName))e->v.classname=engine.pfnAllocString(bounce::WeaponName);
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_anatomical_gib"))e->v.flags|=FL_KILLME;
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),DavidGibTag))e->v.flags|=FL_KILLME;
-    if(restoredClass&&(!std::strcmp(restoredClass,"weapon_357")||!std::strcmp(restoredClass,"weapon_python")))e->v.classname=engine.pfnAllocString("weapon_winchester1887");
+    if(restoredClass&&(!std::strcmp(restoredClass,"weapon_357")||!std::strcmp(restoredClass,"weapon_python")))e->v.classname=engine.pfnAllocString("weapon_357");
     if(restoredClass&&!std::strcmp(restoredClass,"weapon_gauss"))e->v.classname=engine.pfnAllocString("weapon_shockrifle");
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_shock_core"))e->v.flags|=FL_KILLME;
     humanGibInstall(e);
@@ -1254,12 +1321,14 @@ static void hookCmdStart(const edict_t* player,const struct usercmd_s* cmd,unsig
 static void hookPutInServer(edict_t* player) {
     if(raven.pfnClientPutInServer)raven.pfnClientPutInServer(player);
     startupInventoryGive(player);
-    int i=engine.pfnIndexOfEdict(player);if(i>0&&i<33) {rpgCharges[i]=RpgCharge{};rpgCharges[i].startPending=true;}
+    int i=engine.pfnIndexOfEdict(player);if(i>0&&i<33) {rpgCharges[i]=RpgCharge{};rpgCharges[i].startPending=false;}
     startupTrace("ClientPutInServer","player entered map");
     if(engine.pfnClientCommand)engine.pfnClientCommand(player,const_cast<char*>("cl_lw 0\n"));
 }
 static void hookUpdateClientData(const edict_t* player,int sendWeapons,clientdata_s* data) {
     if(raven.pfnUpdateClientData)raven.pfnUpdateClientData(player,sendWeapons,data);
+    // Only advertise actual inventory bits belonging to the playable registry.
+    if(data)data->weapons&=weaponRegistryMask|(1u<<31);
     // Public network state only: do not access CBasePlayer's private m_iFOV.
     if(bounce::isBouncePlayer(const_cast<edict_t*>(player)))data->fov=0;
 }
@@ -1299,6 +1368,9 @@ extern "C" void __stdcall GiveFnptrsToDll(enginefuncs_t* incoming,globalvars_t* 
     hookedEngine.pfnEmitSound=hookEmitSound;
     hookedEngine.pfnRegUserMsg=hookRegisterMsg;hookedEngine.pfnMessageBegin=hookMessageBegin;hookedEngine.pfnMessageEnd=hookMessageEnd;
     hookedEngine.pfnWriteString=hookWriteString;hookedEngine.pfnWriteByte=hookWriteByte;
+#ifdef CREMATION_ENABLE_VALIDATION
+    hookedEngine.pfnCmd_Argv=weaponProbeArgv;hookedEngine.pfnCmd_Args=weaponProbeArgs;hookedEngine.pfnCmd_Argc=weaponProbeArgc;
+#endif
     hookedEngine.pfnFunctionFromName=hookFunctionFromName;hookedEngine.pfnNameForFunction=hookNameForFunction;
     attachBounce();
     ammoOffset=ravenAmmoOffset(ravenModule);
@@ -1338,10 +1410,12 @@ static void spawnNativeAlias(entvars_t* vars,const char* nativeName,const char* 
     if(!vars||!ravenModule)return;
     auto create=reinterpret_cast<void(*)(entvars_t*)>(GetProcAddress(ravenModule,nativeName));
     if(!create)return;
-    vars->classname=engine.pfnAllocString(const_cast<char*>(nativeName));
+    vars->classname=engine.pfnAllocString(const_cast<char*>(customName));
     create(vars);
     vars->classname=engine.pfnAllocString(const_cast<char*>(customName));
 }
+extern "C" void weapon_awp(entvars_t* vars) {spawnNativeAlias(vars,"weapon_python","weapon_357");}
+extern "C" void weapon_deagle(entvars_t* vars) {spawnNativeAlias(vars,"weapon_egon","weapon_deagle");}
 extern "C" void weapon_nailgun(entvars_t* vars) {
     spawnNativeAlias(vars,"weapon_9mmAR","weapon_nailgun");
 }

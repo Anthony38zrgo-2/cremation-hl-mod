@@ -73,7 +73,7 @@ modelo de la carpeta 0 del RAR. Aparece en un punto CT libre al azar, cuenta
 como enemigo y conserva compatibilidad con los efectos de Cremation.
 
 La primera oleada comienza cinco segundos después de entrar un jugador vivo.
-Se intenta generar un enemigo cada 0,375 segundos, alternando norte, este,
+Se intenta generar un enemigo cada 0,75 segundos, alternando norte, este,
 sur y oeste y rotando los diez puntos de cada frente. Cada frente recibe
 10 enemigos en las dos primeras oleadas y 20 en las dos últimas. En la cuarta
 oleada, los 40 cultistas salen desde puntos CT normales elegidos al azar; 20
@@ -87,17 +87,47 @@ puntos. La siguiente oleada empieza ocho segundos después de eliminar todos
 los enemigos y agotar las apariciones pendientes de la anterior. La cuarta
 termina con un mensaje de finalización; no se repite indefinidamente.
 
-El HUD usa `TE_TEXTMESSAGE`, canal 4, centrado horizontalmente en y=0,86,
-con actualización cada 0,5 segundos. Muestra oleada, enemigos realmente vivos
-y aviso de refuerzos mientras quedan apariciones pendientes. Los aliados del
+### Límite de concurrencia y reemplazo de bajas
+El mapa mantiene un límite estricto de **16 monstruos simultáneos** (mansionHordeAlive() <= 16),
+sin incluir al zombi táctico de CS Zero (monster_czero_zombie), el cual tiene asignado su propio rol
+independiente de infiltración y colocación de la bomba C4.
+Cuando el número de monstruos regulares vivos alcanza 16, la emisión de nuevos enemigos se pausa.
+En cuanto el jugador elimina a uno o varios enemigos y se desocupan plazas, el generador reanuda la
+emisión inmediatamente (comprobando cada 0,25 s) para reemplazar al caído, manteniendo la tensión y
+el ritmo constante sin saturar los accesos ni provocar atascos de colisión en las puertas.
+
+### Apagado progresivo de luces de la mansión
+Cada **1 minuto (60 segundos)** de partida, una de las 11 lámparas interiores de la mansión
+(lampa1–lampa11, estilos de luz 32 a 42) se apaga progresivamente.
+1,5 segundos antes de apagarse, la bombilla parpadea con una oscilación eléctrica (mamamamamaa)
+y reproduce un zumbido con chispas (`buttons/spark6.wav`). Al cumplirse el minuto, la luz pasa a
+negro absoluto (`"a"`), produce una detonación de chispas visibles (TE_SPARKS) y el sonido de
+rotura (`buttons/spark5.wav`). El orden de apagado comienza en las habitaciones exteriores y
+garaje de la planta baja, avanza por las salas del piso superior y culmina en la lámpara central
+del vestíbulo y escalera principal (lampa5), sumergiendo gradualmente la mansión en una
+oscuridad opresiva mientras arrecia la niebla roja y la lluvia en el exterior.
+
+El contador del HUD muestra `Zombies: N` y `Wave: N` apilados en el centro inferior de
+la pantalla, en rojo sólido y con Nosifer de menor tamaño. Usa el
+mismo mensaje de red que actualiza las barras y se renueva cada 0,5 segundos con
+el número de enemigos realmente vivos. El aviso
+de oleada y refuerzos se mantiene centrado en la parte inferior. Los aliados del
 jugador y los cadáveres no cuentan como enemigos vivos.
 
 Las rutas CT–puerta principal se calculan sobre el BSP, con casco humano,
 comprobación de suelo, escalones, altura adicional del zombi Quake y margen
-lateral. El movimiento utiliza `WalkMove` con colisiones, sin teletransportes
-ni secuencias cinematográficas. La detección de objetivos visibles cede el
-combate a la IA de cada enemigo; al perder el contacto puede continuar la ruta.
-Los enemigos mantienen la alianza de facción zombi/cultista.
+lateral. El movimiento normal utiliza `WalkMove` con colisiones, sin secuencias
+cinematográficas. Si un zombi permanece atascado sin avanzar durante 1,25 s y
+el jugador está a más de 640 unidades, puede dar un paso de recuperación de
+hasta 96 unidades por celdas ya presentes en su ruta. Solo salta a una celda
+libre con suelo y vuelve a comprobar cada tramo; no atraviesa puertas cerradas
+ni paredes. La ruta incluye las escaleras, así que el paso puede subir algunos
+peldaños cuando el jugador está lejos. La detección de objetivos visibles cede
+el combate a la IA de cada enemigo; al perder el contacto puede continuar la
+ruta. Si un zombi común ve al jugador a menos de 1024 unidades, corre hacia él
+por la ruta compartida y deja de esperar su turno de asedio, aunque haya otros
+zombis alrededor. El Quake y el táctico de CS Zero conservan sus sistemas de
+combate propios. Los enemigos mantienen la alianza de facción zombi/cultista.
 
 El controlador `mansion_wave_state` conserva oleada, contador de apariciones,
 cursor CT, temporizadores y finalización en campos nativos serializables.
@@ -117,3 +147,11 @@ variable `CREMATION_MANSION_VALIDATE`; el juego normal no activa ese modo.
 Evidencia en `diagnostics/mansion-*.json` y `diagnostics/mansion-*-server.log`.
 La revisión visual del cielo, HUD y combate requiere una sesión interactiva.
 Reiniciar completamente Half-Life e iniciar una partida nueva para usar el mapa.
+
+## Reaparición del zombi táctico
+
+Solo el NPC de CS Zero reaparece tres segundos después de morir mientras
+queden más de cinco enemigos de la oleada, contando las apariciones pendientes.
+Con cinco o menos deja de reaparecer; el resto de la horda no revive.
+La reaparición conserva el contador de la oleada y escoge un punto libre lejos
+del jugador. La cola de reaparición se conserva al guardar y cargar.

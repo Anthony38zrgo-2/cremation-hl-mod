@@ -1,6 +1,6 @@
 // Uses original sprite atlases. No changes to Ravenholm's client exports,
 // status messages or HUD atlas: this overlay has its own versioned message.
-struct TacticalHudState{int bomb=0,flags=0,doorHp[2]{1000,1000};bool kit=false,alive=false;float received=-100,doorsReceived=-100,bombEnd=0,progress=0,powerEnds[4]{},toastEnd=0,doorToastEnd=0;};
+struct TacticalHudState{int bomb=0,flags=0,doorHp[2]{1000,1000},zombies=0,wave=0;bool kit=false,alive=false;float received=-100,doorsReceived=-100,bombEnd=0,progress=0,powerEnds[4]{},toastEnd=0,plantToastEnd=0,doorToastEnd=0;};
 static TacticalHudState tacticalHud;
 static HSPRITE tacticalCs=0,tacticalDmcNumbers=0,tacticalPowerIcons[3]{};
 static void tacticalHudTrace(const char* line){static int enabled=-1;if(enabled<0){char env[8]{};GetEnvironmentVariableA("CREMATION_HUD_VALIDATE",env,sizeof env);enabled=env[0]=='1';if(!enabled){GetEnvironmentVariableA("CREMATION_HUD_TRACE",env,sizeof env);enabled=env[0]=='1';}}if(enabled){if(FILE* f=std::fopen("Cremation/diagnostics/hud-client-trace.log","a")){std::fprintf(f,"%s\n",line);std::fclose(f);}}}
@@ -11,12 +11,15 @@ static int tacticalHudMessage(const char*,int size,void* ptr){
     tacticalHud.received=now;tacticalHud.bomb=b[1];tacticalHud.bombEnd=now+word(2)*.1f;tacticalHud.progress=std::min(1000.f,float(word(4)));
     tacticalHud.flags=b[6];tacticalHud.kit=b[7]!=0;tacticalHud.alive=b[16]!=0;
     for(int i=0;i<4;++i)tacticalHud.powerEnds[i]=now+word(8+i*2)*.1f;
-    if((before==0&&b[1]>0)||(b[1]>=4&&before!=b[1]))tacticalHud.toastEnd=now+(b[1]>=4?6.f:3.f);
+    if(before==0&&b[1]>0)tacticalHud.plantToastEnd=now+3.f;
+    if(b[1]>=4&&before!=b[1])tacticalHud.toastEnd=now+6.f;
     return 1;
 }
 static int mansionDoorsMessage(const char*,int size,void* ptr){
-    if(size!=5||!ptr)return 1;auto b=static_cast<unsigned char*>(ptr);if(b[0]!=1)return 1;
-    int hp[2]={std::min(1000,int(unsigned(b[1])|(unsigned(b[2])<<8))),std::min(1000,int(unsigned(b[3])|(unsigned(b[4])<<8)))};
+    if(size!=8||!ptr)return 1;auto b=static_cast<unsigned char*>(ptr);if(b[0]!=2)return 1;
+    auto word=[&](int n){return unsigned(b[n])|(unsigned(b[n+1])<<8);};
+    int hp[2]={std::min(1000,int(word(1))),std::min(1000,int(word(3)))};
+    tacticalHud.zombies=int(word(5));tacticalHud.wave=b[7];
     float now=eng.GetClientTime();for(int i=0;i<2;++i){if(tacticalHud.doorHp[i]>0&&hp[i]==0)tacticalHud.doorToastEnd=now+3.5f;tacticalHud.doorHp[i]=hp[i];}
     tacticalHud.doorsReceived=now;return 1;
 }
@@ -43,11 +46,11 @@ static void drawTacticalHud(){
             tacticalSprite(tacticalCs,x,y,144,72,24,24,r,g,b);int seconds=int(std::ceil(left));seconds=std::min(5999,seconds);
             tacticalDigits(seconds/60,x+30,y,true,r,g,b);eng.pfnDrawCharacter(x+76,y+3,':',r,g,b);tacticalDigits(seconds%60,x+88,y,true,r,g,b);
         }
-        if(now<tacticalHud.toastEnd){int size=std::max(24,std::min(52,h*34/1080));
-            if(status==1)drawCremationFontText("BOMBA ACTIVADA","Nosifer",size,w/2,int(h*.24f),r,g,b);
-            else if(status==5)drawCremationFontText("BOMBA EXPLOTADA","Nosifer",size,w/2,int(h*.24f),r,g,b);
-            else if(status==4)drawCremationFontText("BOMBA DESACTIVADA","Butcherman",size,w/2,int(h*.24f),r,g,b);
+        if(now<tacticalHud.toastEnd){int size=std::max(24,std::min(48,h*32/1080));
+            if(status==5)drawCremationFontText("BOMBA EXPLOTADA","Nosifer",size,w/2,int(h*.24f),255,55,40);
+            else if(status==4)drawCremationFontText("BOMBA DESACTIVADA","Butcherman",size,w/2,int(h*.24f),255,55,40);
         }
+        if(now<tacticalHud.plantToastEnd)drawCremationFontText("BOMBA PLANTADA","Nosifer",std::max(24,std::min(48,h*32/1080)),w/2,int(h*.56f),255,55,40);
         if(status>=4&&now<tacticalHud.toastEnd)tacticalSprite(tacticalCs,w/2-16,int(h*.24f)+25,status==4?32:0,148,32,32,r,g,b);
         if(status==3&&(tacticalHud.flags&1)&&tacticalHud.alive){int width=std::min(600,std::max(200,w/2)),x0=(w-width)/2,y0=int(h*.64f),height=12;
             float progress=std::min(1000.f,tacticalHud.progress+(now-tacticalHud.received)*200);
@@ -83,6 +86,14 @@ static void drawTacticalHud(){
             if(hp)eng.pfnFillRGBA(x0+2,y+2,(width-4)*hp/1000,height-4,225,35,24,240);
         }
     }
+    if(now-tacticalHud.doorsReceived<=1.2f&&tacticalHud.doorsReceived<=now&&tacticalHud.wave>0){char zombies[48],wave[32];
+            std::snprintf(zombies,sizeof zombies,"Zombies: %d",tacticalHud.zombies);
+            std::snprintf(wave,sizeof wave,"Wave: %d",tacticalHud.wave);
+            const int pixels=std::max(14,std::min(18,h*18/1080));
+            const int y=int(h*.80f),cx=w/2;
+            drawCremationFontText(zombies,"Nosifer",pixels,cx,y,255,45,45);
+            drawCremationFontText(wave,"Nosifer",pixels,cx,y+pixels+5,255,45,45);
+        }
     if(now<tacticalHud.doorToastEnd)drawCremationFontText("PUERTA DESTRUIDA","Nosifer",std::max(24,std::min(48,h*32/1080)),w/2,int(h*.32f),255,55,40);
     int mask=0;for(int i=0;i<4;++i)if(tacticalHud.alive&&tacticalHud.powerEnds[i]>now)mask|=1<<i;
     bool bar=status==3&&(tacticalHud.flags&1)&&tacticalHud.alive;int signature=status|(mask<<3)|(bar?128:0)|(tacticalHud.kit?256:0)|(tacticalHud.alive?512:0);

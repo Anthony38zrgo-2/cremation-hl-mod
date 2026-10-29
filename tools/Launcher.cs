@@ -51,6 +51,31 @@ internal static class CremationLauncher
         return source.Substring(0, valueStart + 1) + family + source.Substring(valueEnd);
     }
 
+    private static string SetSchemeValue(string source, string sectionName, string keyName, string value)
+    {
+        int sectionStart = source.IndexOf(sectionName, StringComparison.Ordinal);
+        if (sectionStart < 0 || source.IndexOf(sectionName, sectionStart + sectionName.Length, StringComparison.Ordinal) >= 0)
+            throw new InvalidDataException("No se encontro una seccion unica para " + sectionName);
+        int blockOpen = source.IndexOf('{', sectionStart + sectionName.Length);
+        if (blockOpen < 0) throw new InvalidDataException("Seccion invalida: " + sectionName);
+        int depth = 0, blockEnd = -1;
+        for (int i = blockOpen; i < source.Length; ++i)
+        {
+            if (source[i] == '{') ++depth;
+            else if (source[i] == '}' && --depth == 0) { blockEnd = i + 1; break; }
+        }
+        if (blockEnd < 0) throw new InvalidDataException("Seccion incompleta: " + sectionName);
+        string key = "\"" + keyName + "\"";
+        int keyStart = source.IndexOf(key, blockOpen, blockEnd - blockOpen, StringComparison.Ordinal);
+        if (keyStart < 0 || source.IndexOf(key, keyStart + key.Length, blockEnd - keyStart - key.Length, StringComparison.Ordinal) >= 0)
+            throw new InvalidDataException("No se encontro una clave unica para " + keyName);
+        int valueStart = source.IndexOf('"', keyStart + key.Length);
+        int valueEnd = valueStart < 0 ? -1 : source.IndexOf('"', valueStart + 1);
+        if (valueStart < 0 || valueEnd < 0)
+            throw new InvalidDataException("Valor de esquema invalido: " + keyName);
+        return source.Substring(0, valueStart + 1) + value + source.Substring(valueEnd);
+    }
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -100,8 +125,18 @@ internal static class CremationLauncher
             // contain only font entries, which makes VGUI build broken white panels.
             string baseSchemePath = Path.Combine(root, "valve", "resource", "TrackerScheme.res");
             string scheme = File.ReadAllText(baseSchemePath, Encoding.UTF8).TrimStart('\uFEFF');
-            scheme = SetSchemeFont(scheme, "MenuLarge", "Butcherman");
-            scheme = SetSchemeFont(scheme, "MenuBlurLarge", "Butcherman");
+            scheme = SetSchemeFont(scheme, "MenuLarge", "Nosifer");
+            scheme = SetSchemeFont(scheme, "MenuBlurLarge", "Nosifer");
+            scheme = SetSchemeValue(scheme, "Colors", "ControlText", "220 22 38 255");
+            scheme = SetSchemeValue(scheme, "Colors", "BrightControlText", "255 68 76 255");
+            scheme = SetSchemeValue(scheme, "Colors", "DimBaseText", "165 20 30 255");
+            scheme = SetSchemeValue(scheme, "Colors", "BrightBaseText", "255 68 76 255");
+            scheme = SetSchemeValue(scheme, "Colors", "SelectedText", "255 68 76 255");
+            scheme = SetSchemeValue(scheme, "InGameDesktop", "MenuColor", "220 22 38 255");
+            scheme = SetSchemeValue(scheme, "InGameDesktop", "ArmedMenuColor", "255 68 76 255");
+            scheme = SetSchemeValue(scheme, "InGameDesktop", "BlurMenuColor", "220 22 38 255");
+            scheme = SetSchemeValue(scheme, "InGameDesktop", "DepressedMenuColor", "120 8 18 255");
+            scheme = SetSchemeValue(scheme, "InGameDesktop", "MenuHintColor", "165 20 30 255");
             wroteTrackerScheme = true;
             File.WriteAllText(trackerScheme, scheme, new UTF8Encoding(false));
 

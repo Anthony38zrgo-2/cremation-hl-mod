@@ -47,14 +47,14 @@ No se teletransporta al jugador durante el salto.
 
 ## Recompensas
 
-Una estación junto a la puerta de la casa NE, en (1136,1184,65). Selección
-aleatoria entre Flak Cannon, Plasma Rifle/Link Gun, Shock Rifle, RPG y granadas.
-Se excluyen Ricochet, Necromancer, motosierra y armas base sin habilitar.
+Las estaciones de las casas NE y SO entregan exclusivamente Flak Cannon,
+Link Gun, Shock Rifle o Rocket Launcher. La antigua estación de powerups
+usa ahora la misma selección de armas. No entrega granadas ni powerups.
 
 Las representaciones flotan, giran y tienen contorno y partículas cuadradas
 doradas. Recogida por proximidad: concede el arma si falta y munición del
 tipo correcto. Una reserva llena no consume la recompensa. Reaparece con una
-nueva selección a los 15 segundos. Las estaciones y temporizadores usan campos
+nueva selección a los 10 segundos. Las estaciones y temporizadores usan campos
 serializables del motor; hace falta aceptación interactiva de guardar/cargar.
 La retirada general de armas tiradas continúa activa: estas estaciones usan
 representaciones propias y entregan el arma al inventario.
@@ -66,12 +66,14 @@ si la salida está ocupada busca un punto cercano del mismo patio. Detiene el
 impulso de entrada y aplica dos segundos de cooldown. Es un regreso de un solo
 sentido, sin telefrag.
 
-La casa suroeste tiene una estación aleatoria en (-1840,-1696,65), junto a su
-puerta: botiquín (`item_healthkit`), batería (`item_battery`) o módulo de salto
-largo (`item_longjump`), mediante las entidades nativas de Half-Life. Flotan
-con partículas cuadradas cian, reaparecen a los 15 segundos y no se consumen
-si ya se tiene salud/armadura completa o el módulo. Su portal reflejado en
-(-1744,-1696,72) devuelve al mismo patio trasero seguro.
+La casa suroeste conserva su salto y portal de regreso, pero su estación usa
+la misma selección de cuatro armas y espera diez segundos tras la recogida.
+Su portal reflejado en (-1744,-1696,72) devuelve al mismo patio trasero seguro.
+
+El jugador empieza con revólver, Ricochet y motosierra, además del traje y su
+equipo de movimiento. Hay ocho cajas .357 (cuatro por planta) y cuatro granadas
+en la planta superior. Cada granada concede una unidad. Los suministros no se
+duplican al activar el mapa y lo recogido no se repone al cargar una partida.
 
 ## Fuentes y compilación
 

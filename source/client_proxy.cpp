@@ -22,8 +22,10 @@ static Vector renderedMuzzle(0,0,0);static float renderedMuzzleAt=-100;static do
 static HMODULE donor;static cl_enginefunc_t eng;
 #include "client_font.inc"
 #include "client_judgment_hud.inc"
+#include "client_weather.inc"
 #include "client_music.inc"
 #include "client_tactical_hud.inc"
+#include "client_revolver.inc"
 #include "client_radar.inc"
 static Vector visibleMuzzle(cl_entity_t* entity){if(entity==eng.GetViewModel()&&eng.GetClientTime()-renderedMuzzleAt<.1f)return renderedMuzzle;return Vector(entity->attachment[0]);}
 static void loadDonor(){if(donor)return;char p[MAX_PATH];GetModuleFileNameA(GetModuleHandleA("client.dll"),p,MAX_PATH);char* end=strrchr(p,'\\');if(end)strcpy(end+1,"client_ravenholm.dll");donor=LoadLibraryA(p);if(donor)for(int i=0;i<sizeof(clientTargets)/sizeof(clientTargets[0]);++i)clientTargets[i]=GetProcAddress(donor,clientNames[i]);}
@@ -56,7 +58,7 @@ static void drawShock(){auto local=eng.GetLocalPlayer();for(int i=1;i<33;++i){au
 struct LinkFx{float until=0;Vector end{0,0,0};BEAM* beams[64]{};};static LinkFx links[33];
 static int message(const char*,int size,void* ptr){if(size!=8)return 1;auto b=static_cast<unsigned char*>(ptr);int i=b[0];if(i<1||i>32)return 1;links[i].end=Vector(short(b[2]|b[3]<<8)/8.f,short(b[4]|b[5]<<8)/8.f,short(b[6]|b[7]<<8)/8.f);links[i].until=eng.GetClientTime()+.18f;return 1;}
 extern "C" int Initialize(cl_enginefunc_t* e,int v){loadDonor();if(!donor)return 0;eng=*e;return reinterpret_cast<int(*)(cl_enginefunc_t*,int)>(GetProcAddress(donor,"Initialize"))(e,v);}
-extern "C" void HUD_Init(){loadDonor();reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_Init"))();eng.pfnHookUserMsg("HordeRadar",radarMessage);eng.pfnHookUserMsg("TacticalHUD",tacticalHudMessage);eng.pfnHookUserMsg("JudgmentHUD",judgmentHudMessage);eng.pfnHookUserMsg("MnDoors",mansionDoorsMessage);eng.pfnHookUserMsg("CremationWaveHUD",waveHudMessage);eng.pfnHookUserMsg("LinkMuzzle",message);eng.pfnHookUserMsg("LinkShot",shotMessage);eng.pfnHookUserMsg("FlakMuz",flakMessage);eng.pfnHookUserMsg("ShockFx",shockMessage);eng.pfnHookUserMsg("GibBlood",gibBloodMessage);}
+extern "C" void HUD_Init(){loadDonor();reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_Init"))();weatherInit();eng.pfnHookUserMsg("HordeRadar",radarMessage);eng.pfnHookUserMsg("TacticalHUD",tacticalHudMessage);eng.pfnHookUserMsg("JudgmentHUD",judgmentHudMessage);eng.pfnHookUserMsg("MnDoors",mansionDoorsMessage);eng.pfnHookUserMsg("CremationWaveHUD",waveHudMessage);eng.pfnHookUserMsg("LinkMuzzle",message);eng.pfnHookUserMsg("LinkShot",shotMessage);eng.pfnHookUserMsg("FlakMuz",flakMessage);eng.pfnHookUserMsg("ShockFx",shockMessage);eng.pfnHookUserMsg("GibBlood",gibBloodMessage);}
 static void drawLinks(){float now=eng.GetClientTime();int sprite=0;eng.CL_LoadModel("sprites/xbeam1.spr",&sprite);if(!sprite)return;auto local=eng.GetLocalPlayer();
 for(int i=1;i<33;++i){auto& s=links[i];auto entity=(local&&local->index==i)?eng.GetViewModel():eng.GetEntityByIndex(i);bool active=s.until>now&&entity&&entity->model;
 if(active&&local&&local->index==i&&!strstr(entity->model->name,"v_nailgun.mdl"))active=false;
@@ -65,12 +67,14 @@ Vector from=visibleMuzzle(entity),span=s.end-from;float length=span.Length();if(
 for(int layer=0;layer<4;++layer){Vector previous=from;for(int n=1;n<=16;++n){float t=n/16.f,env=std::sin(t*3.14159265f),phase=now*18-t*18.85f+layer*3.14159265f;Vector point=from+span*t+up*(env*6);if(layer>=2)point=point+(side*std::sin(phase)+up*std::cos(phase))*(env*5);auto& beam=s.beams[layer*16+n-1];
 if(!beam||beam->die<=now)beam=eng.pEfxAPI->R_BeamPoints(previous,point,sprite,.3f,layer==0?3.6f:layer==1?.9f:.5f,0,layer==0?.3f:1.f,1,0,20,layer==1?.88f:.1f,1,layer==1?.88f:.2f);
 if(beam){for(int a=0;a<3;++a){beam->source[a]=previous[a];beam->target[a]=point[a];beam->delta[a]=point[a]-previous[a];}beam->die=now+.3f;}previous=point;}}}}
-extern "C" void HUD_DrawTransparentTriangles(){reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_DrawTransparentTriangles"))();if(!studioHooked){drawLinks();drawShot();drawFlak();drawShock();}}
+extern "C" void HUD_DrawTransparentTriangles(){reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_DrawTransparentTriangles"))();if(!studioHooked){drawLinks();drawShot();drawFlak();drawShock();}drawWeatherRain();}
 extern "C" int HUD_GetStudioModelInterface(int,r_studio_interface_t**,engine_studio_api_t*);
 extern "C" int HUD_VidInit();
 extern "C" void HUD_Reset();
 extern "C" void HUD_DrawNormalTriangles();
-extern "C" void F(void* p){loadDonor();reinterpret_cast<void(*)(void*)>(GetProcAddress(donor,"F"))(p);auto t=static_cast<cldll_func_t*>(p);t->pShutdown=HUD_Shutdown;t->pHudFrame=HUD_Frame;t->pHudRedrawFunc=HUD_Redraw;t->pDrawNormalTriangles=HUD_DrawNormalTriangles;t->pAddEntity=HUD_AddEntity;t->pHudVidInitFunc=HUD_VidInit;t->pHudResetFunc=HUD_Reset;t->pInitFunc=Initialize;t->pHudInitFunc=HUD_Init;t->pDrawTransparentTriangles=HUD_DrawTransparentTriangles;t->pStudioInterface=HUD_GetStudioModelInterface;}
+static HUD_CALCREF_FUNC donorCalcRefdef=nullptr;
+static void hookCalcRefdef(struct ref_params_s* pparams){if(donorCalcRefdef)donorCalcRefdef(pparams);weatherOnRefdef(pparams);}
+extern "C" void F(void* p){loadDonor();reinterpret_cast<void(*)(void*)>(GetProcAddress(donor,"F"))(p);auto t=static_cast<cldll_func_t*>(p);donorCalcRefdef=t->pCalcRefdef;t->pCalcRefdef=hookCalcRefdef;t->pShutdown=HUD_Shutdown;t->pHudFrame=HUD_Frame;t->pHudRedrawFunc=HUD_Redraw;t->pDrawNormalTriangles=HUD_DrawNormalTriangles;t->pAddEntity=HUD_AddEntity;t->pHudVidInitFunc=HUD_VidInit;t->pHudResetFunc=HUD_Reset;t->pInitFunc=Initialize;t->pHudInitFunc=HUD_Init;t->pDrawTransparentTriangles=HUD_DrawTransparentTriangles;t->pStudioInterface=HUD_GetStudioModelInterface;}
 
 static engine_studio_api_t studioApi;static r_studio_interface_t studioProxy;static int (*nativeDrawModel)(int);
 static int drawStudio(int flags){int result=nativeDrawModel(flags);if(studioApi.GetCurrentEntity()==eng.GetViewModel()){drawLinks();drawShot();drawFlak();drawShock();}return result;}
@@ -90,8 +94,8 @@ static void captureMuzzle(){
 
 }
 static void drawPoints(){captureMuzzle();studioApi.StudioDrawPoints();}
-extern "C" void HUD_DrawNormalTriangles(){if(wglGetCurrentContext()){glGetDoublev(GL_PROJECTION_MATRIX,worldProjection);haveWorldProjection=true;}reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_DrawNormalTriangles"))();}
+extern "C" void HUD_DrawNormalTriangles(){if(wglGetCurrentContext()){glGetDoublev(GL_PROJECTION_MATRIX,worldProjection);haveWorldProjection=true;}weatherApplyFogOpenGL();reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_DrawNormalTriangles"))();}
 extern "C" int HUD_GetStudioModelInterface(int version,r_studio_interface_t** iface,engine_studio_api_t* api){loadDonor();studioApi=*api;hookedStudioApi=*api;hookedStudioApi.StudioDrawPoints=drawPoints;int result=reinterpret_cast<int(*)(int,r_studio_interface_t**,engine_studio_api_t*)>(GetProcAddress(donor,"HUD_GetStudioModelInterface"))(version,iface,&hookedStudioApi);if(result&&iface&&*iface){studioProxy=**iface;nativeDrawModel=studioProxy.StudioDrawModel;studioProxy.StudioDrawModel=drawStudio;*iface=&studioProxy;studioHooked=true;}return result;}
 
-extern "C" int HUD_VidInit(){clearCremationFontCache();judgmentHudClear();tacticalHudClear();radarClear();waveHudClear();memset(links,0,sizeof links);bloodDrops.clear();memset(shockEffects,0,sizeof shockEffects);renderedMuzzleAt=-100;haveWorldProjection=false;shotAt=-100;shotPending=false;flakPending=false;return reinterpret_cast<int(*)()>(GetProcAddress(donor,"HUD_VidInit"))();}
-extern "C" void HUD_Reset(){clearCremationFontCache();tacticalHudClear();radarClear();waveHudClear();memset(links,0,sizeof links);bloodDrops.clear();memset(shockEffects,0,sizeof shockEffects);renderedMuzzleAt=-100;haveWorldProjection=false;shotAt=-100;shotPending=false;flakPending=false;reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_Reset"))();}
+extern "C" int HUD_VidInit(){revolverCrosshairSprite=0;clearCremationFontCache();judgmentHudClear();tacticalHudClear();radarClear();waveHudClear();weatherClear();memset(links,0,sizeof links);bloodDrops.clear();memset(shockEffects,0,sizeof shockEffects);renderedMuzzleAt=-100;haveWorldProjection=false;shotAt=-100;shotPending=false;flakPending=false;return reinterpret_cast<int(*)()>(GetProcAddress(donor,"HUD_VidInit"))();}
+extern "C" void HUD_Reset(){revolverCrosshairSprite=0;clearCremationFontCache();tacticalHudClear();radarClear();waveHudClear();weatherClear();memset(links,0,sizeof links);bloodDrops.clear();memset(shockEffects,0,sizeof shockEffects);renderedMuzzleAt=-100;haveWorldProjection=false;shotAt=-100;shotPending=false;flakPending=false;reinterpret_cast<void(*)()>(GetProcAddress(donor,"HUD_Reset"))();}

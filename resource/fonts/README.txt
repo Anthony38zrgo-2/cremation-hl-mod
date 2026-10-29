@@ -1,7 +1,8 @@
 Fuentes incluidas en Cremation
 
-Butcherman-Regular.ttf se usa en los textos grandes del menu, oleadas y Judgment.
-Nosifer-Regular.ttf se usa en avisos puntuales de bomba y puertas destruidas.
+Nosifer-Regular.ttf se usa en el titulo y las opciones grandes del menu, ademas de
+avisos puntuales de bomba y puertas destruidas.
+Butcherman-Regular.ttf se usa en los textos de oleadas, Judgment y algunos avisos.
 Las etiquetas pequenas, cifras y temporizadores conservan la fuente HUD legible.
 
 Las dos fuentes provienen de Google Fonts y se incluyen con sus archivos OFL-1.1.
