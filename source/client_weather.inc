@@ -228,7 +228,7 @@ static void weatherFrame(double time) {
     float targetStart = indoors ? 80.0f : 15.0f;
     float targetEnd = indoors ? 800.0f : 550.0f;
     float targetDensity = indoors ? 0.0018f : 0.0045f;
-    if(mansionInvasionFog){targetStart=0;targetEnd=indoors?240.f:300.f;targetDensity=.012f;}
+    if(mansionInvasionFog&&!indoors){targetStart=15.f;targetEnd=460.f;targetDensity=.0055f;}
     float targetColor[3] = {
         indoors ? 120.0f : 165.0f,
         indoors ? 20.0f : 25.0f,

@@ -557,7 +557,7 @@ static bool mansionScientistSpawn(int wave){
     static const int skins[]={2,2,3,3};
     int choice=engine.pfnRandomLong(0,3);auto scientist=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_scientist"));
     if(!valid(scientist)){startupTrace("MansionScientistSpawnFailed","monster_scientist allocation failed");return false;}
-    scientist->v.origin=Vector(1280,-288,24.1f);scientist->v.targetname=engine.pfnAllocString("mansion_rescue_scientist");
+    scientist->v.origin=Vector(64,-256,56.1f);scientist->v.targetname=engine.pfnAllocString("mansion_rescue_scientist");
     hookSpawn(scientist);
     if(!aliveEnemy(scientist)||!scientist->pvPrivateData){if(valid(scientist))engine.pfnRemoveEntity(scientist);startupTrace("MansionScientistSpawnFailed","native scientist Spawn failed");return false;}
     if(raven.pfnThink)raven.pfnThink(scientist);
@@ -565,10 +565,10 @@ static bool mansionScientistSpawn(int wave){
     scientist->v.health*=10.f;scientist->v.max_health=scientist->v.health;
     engine.pfnEmitSound(scientist,CHAN_BODY,"debris/wood1.wav",1.f,ATTN_NONE,0,100);
     engine.pfnSetModel(scientist,const_cast<char*>(models[choice]));scientist->v.skin=engine.pfnRandomLong(0,skins[choice]-1);
-    scientist->v.origin=Vector(1280,-288,24.1f);scientist->v.angles.y=180.f;scientist->v.nextthink=globals->time+.2f;
+    scientist->v.origin=Vector(64,-256,56.1f);scientist->v.angles.y=180.f;scientist->v.movetype=MOVETYPE_NONE;scientist->v.velocity=Vector(0,0,0);scientist->v.sequence=13;scientist->v.frame=0;scientist->v.animtime=globals->time;scientist->v.nextthink=globals->time+.2f;
     engine.pfnSetOrigin(scientist,&scientist->v.origin.x);
     mansionScientist={scientist,scientist->serialnumber,wave,false};
-    char detail[128];std::snprintf(detail,sizeof detail,"wave=%d variant=%d skin=%d bridge=1280,-288,24",wave,choice,int(scientist->v.skin));startupTrace("MansionScientistSpawn",detail);
+    char detail[128];std::snprintf(detail,sizeof detail,"wave=%d variant=%d skin=%d front_door=64,-256,56",wave,choice,int(scientist->v.skin));startupTrace("MansionScientistSpawn",detail);
     return true;
 }
 static void mansionScientistEnsure(int wave){
@@ -580,7 +580,7 @@ static void mansionScientistRescue(MansionScientistRef& ref){
     static const char* weapons[]={"weapon_357","weapon_ricochet","weapon_pipewrench","weapon_nailgun","weapon_shockrifle","weapon_rpg"};
     auto scientist=ref.entity;if(!valid(scientist)||ref.rescued)return;
     ref.rescued=true;
-    Vector upstairs(-624,-176,192.1f);engine.pfnSetOrigin(scientist,&upstairs.x);scientist->v.velocity=Vector(0,0,0);scientist->v.sequence=0;scientist->v.frame=0;scientist->v.animtime=globals->time;
+    Vector upstairs(-624,-176,192.1f);engine.pfnSetOrigin(scientist,&upstairs.x);scientist->v.velocity=Vector(0,0,0);scientist->v.movetype=MOVETYPE_NONE;scientist->v.sequence=13;scientist->v.frame=0;scientist->v.animtime=globals->time;
     int pick=engine.pfnRandomLong(0,int(sizeof(weapons)/sizeof(weapons[0]))-1);auto item=engine.pfnCreateNamedEntity(engine.pfnAllocString(weapons[pick]));
     if(valid(item)){item->v.origin=Vector(-128,-256,56.1f);hookSpawn(item);if(valid(item)){item->v.origin=Vector(-128,-256,56.1f);engine.pfnSetOrigin(item,&item->v.origin.x);engine.pfnDropToFloor(item);}}
     mansionScientistMessage("Cientifico rescatado");startupTrace("MansionScientistRescued",weapons[pick]);
@@ -600,10 +600,9 @@ static void mansionEventAnimate(edict_t* e,float dt){
 static void mansionScientistFrame(float dt){
     auto& ref=mansionScientist;auto e=ref.entity;
     if(!valid(e)||e->serialnumber!=ref.serial||!aliveEnemy(e))return;
-    mansionEventAnimate(e,dt);if(ref.rescued)return;
-    mansionNavWalk(e,Vector(-96,-256,56.1f),dt,115.f,true);
-    const Vector at=e->v.origin;
-    if(at.x<-22.f&&at.x>-720.f&&at.y>-736.f&&at.y<224.f&&at.z>48.f&&at.z<136.f)mansionScientistRescue(ref);
+    e->v.velocity=Vector(0,0,0);mansionEventAnimate(e,dt);if(ref.rescued)return;
+    auto door=mansionDoor(1);
+    if(valid(door)&&(std::fabs(door->v.angles.x)>30.f||std::fabs(door->v.angles.y)>30.f||std::fabs(door->v.angles.z)>30.f||door->v.solid==SOLID_NOT))mansionScientistRescue(ref);
 }
 static void mansionEventFrame(){
     auto state=mansionState();if(!valid(state))return;
@@ -828,8 +827,11 @@ static void mansionRescueProbe(float dt){
     if(stage==0){stage=1;state->v.frags=1;
         if(!mansionScientistSpawn(1)){startupTrace("MansionRescueProbe","FAIL spawn");stage=2;return;}
         auto sc=mansionScientist.entity;int serial=sc->serialnumber;hp=sc->v.health;sc->v.health-=7.f;
-        Vector inside(-64,-256,56.1f);engine.pfnSetOrigin(sc,&inside.x);mansionScientistFrame(.05f);
-        same=mansionScientist.entity==sc&&sc->serialnumber==serial&&sc->v.health==hp-7.f&&sc->v.origin.z>180;
+        auto door=mansionDoor(1);Vector initial=sc->v.origin;mansionScientistFrame(.05f);
+        bool waits=length(sc->v.origin-initial)<.1f&&!mansionScientist.rescued&&sc->v.sequence==13;
+        Vector oldAngles=door->v.angles;door->v.angles.y=45.f;mansionScientistFrame(.05f);door->v.angles=oldAngles;
+        Vector upstairs=sc->v.origin;mansionScientistFrame(.05f);
+        same=waits&&mansionScientist.entity==sc&&sc->serialnumber==serial&&sc->v.health==hp-7.f&&sc->v.origin.z>180&&length(sc->v.origin-upstairs)<.1f&&sc->v.sequence==13&&sc->v.movetype==MOVETYPE_NONE;
         for(int i=0;i<7;++i)mansionEmit(state);
         mansionDoorHealth(1);state->v.vuser1.x=0;mansionEventFrame();mansionEventFrame();
         sc->v.takedamage=DAMAGE_NO;started=globals->time;
