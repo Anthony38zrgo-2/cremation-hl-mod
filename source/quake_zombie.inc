@@ -3,6 +3,8 @@
 // never control this entity. Per-class cloned tables leave every native NPC alone.
 // State uses saved entvars: impulse, button, dmgtime, pain_finished, teleport_time,
 // radsuit_finished, dmg_take, dmg_save and enemy. No unsaved gameplay side tables.
+static bool mansionMap();
+static bool mansionActor(edict_t* e);
 static constexpr const char* QZClass="monster_quake_zombie";
 static constexpr const char* QZGibClass="quake_zombie_gib";
 static constexpr const char* QZModel="models/cremation/quake/zombie.mdl";
@@ -201,6 +203,26 @@ static bool qzThink(edict_t* e){
             }
         }
     }else if(mode==QZAttack&&enemy)qzFace(e,enemy->v.origin);
+    // Fix 5: congelar el reloj Quake sin desplazamiento real. En la mansion el
+    // movimiento lo pone mansionNavWalk/routeStep en StartFrame; si el Think
+    // avanza button/frame sin moverse, el ciclo se corta en el puente.
+    static std::vector<Vector> qzMansionPrev;
+    static std::vector<int> qzMansionPrevSerial;
+    {
+        int qzIdx=engine.pfnIndexOfEdict(e);
+        if(qzIdx>0&&mansionMap()&&mansionActor(e)){
+            if(size_t(qzIdx)>=qzMansionPrev.size()){qzMansionPrev.resize(qzIdx+1,Vector(0,0,0));qzMansionPrevSerial.resize(qzIdx+1,0);}
+            if(qzMansionPrevSerial[qzIdx]==e->serialnumber){
+                Vector d=e->v.origin-qzMansionPrev[qzIdx];
+                if(length2d(d)<0.5f&&std::fabs(d.z)<1.f&&(e->v.impulse==QZIdle||e->v.impulse==QZChase)){
+                    e->v.animtime=globals->time;
+                    e->v.framerate=(e->v.impulse==QZDown&&e->v.button==10)?0.f:1.f;
+                    return true;
+                }
+            }
+            qzMansionPrev[qzIdx]=e->v.origin;qzMansionPrevSerial[qzIdx]=e->serialnumber;
+        }
+    }
     int frames=qzFrames[std::max(0,std::min(12,e->v.sequence))];
     ++e->v.button;
     if(e->v.impulse==QZDown&&e->v.button==9){e->v.solid=SOLID_NOT;qzSound(e,6);}

@@ -22,6 +22,8 @@ with using_validation_dll(MOD):
             assert 'MansionVisionRange PASS' in text, 'Player beyond 120 units was detected'
             assert 'MansionCZRoomPolicy PASS' in text, 'CZ scientist and room-defense policy failed'
             assert 'MansionRunRange PASS' in text, 'Zombie run threshold failed'
+            assert 'MansionInvasionSpawnRoute PASS' in text, 'Invasion redirected a zombie before it left the spawn hub'
+            assert 'MansionCZInvasionSpawn PASS' in text, 'Invasion redirected the CZ NPC before it left the spawn hub'
         finally:
             if process.poll() is None:process.terminate()
             process.wait(timeout=5)

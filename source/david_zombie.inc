@@ -30,6 +30,7 @@ static_assert(maxLayoutCompatible(),"Max must retain the shared David 16-bone hi
 static constexpr bool kenLayoutCompatible(){for(int n=0;n<16;++n)if(ken_assets::bone[n]!=david_assets::bone[n]||ken_assets::parent[n]!=david_assets::parent[n]||ken_assets::bodyBase[n]!=david_assets::bodyBase[n]||ken_assets::bodyCount[n]!=david_assets::bodyCount[n])return false;return true;}
 static_assert(kenLayoutCompatible(),"Ken must retain David's rig and bodygroup layout");
 static constexpr const char* DavidGibTag="cremation_david_gib";
+static bool mansionOnBridgeRoute(edict_t* e);
 static cvar_t davidEnable={const_cast<char*>("cremation_david"),const_cast<char*>("1"),FCVAR_SERVER,1,nullptr};
 static cvar_t davidRadius={const_cast<char*>("david_crowd_radius"),const_cast<char*>("256"),FCVAR_SERVER,256,nullptr};
 static cvar_t davidClearRadius={const_cast<char*>("david_clear_radius"),const_cast<char*>("320"),FCVAR_SERVER,320,nullptr};
@@ -226,6 +227,9 @@ static edict_t* johnnyTarget(DavidState& s){
 }
 static void johnnyStartThrow(DavidState& s,edict_t* target){
  if(!johnnyModel(s.entity)||s.saved.johnnyAxes==0||s.johnnyGuarding||s.johnnyThrowing||globals->time<s.johnnyNextThrow||!johnnyPlayerAlive(target))return;
+ // Fix 5: en el puente el throw de 1s con velocity=0 tapona a toda la fila.
+ // Se inhibe el inicio sobre la ruta del puente; fuera del puente sigue igual.
+ if(mansionMap()&&mansionActor(s.entity)&&mansionOnBridgeRoute(s.entity))return;
  auto e=s.entity;float d=length(target->v.origin-e->v.origin);if(d<112.f||d>320.f||!johnnyCanSee(e,target))return;
  int side=(s.saved.johnnyAxes&1)?1:2;if((side==1&&(s.saved.severMask&((1<<3)|(1<<4)|(1<<5))))||(side==2&&(s.saved.severMask&((1<<6)|(1<<7)|(1<<8)))))side=(side==1?2:1);
  if(!(s.saved.johnnyAxes&side))return;
@@ -255,6 +259,9 @@ static void johnnyFinishThrow(DavidState& s){
 }
 static bool johnnyBeginGuard(DavidState& s){
  if(s.dying||!aliveEnemy(s.entity)||!johnnyModel(s.entity)||!s.saved.johnnyAxes||s.saved.johnnyDefended)return false;
+ // Fix 5: el guard de 1s con velocity=0 tambien tapona el puente. Fuera del
+ // puente mantiene su funcion defensiva intacta.
+ if(mansionMap()&&mansionActor(s.entity)&&mansionOnBridgeRoute(s.entity))return false;
  auto e=s.entity;s.saved.johnnyDefended=1;s.saved.johnnyGuardRemaining=1.f;s.johnnyGuarding=true;s.johnnyGuardUntil=globals->time+1.f;s.johnnyThrowing=false;s.johnnyThrowTarget=nullptr;s.johnnyThrowTargetSerial=0;s.johnnyThrowSide=0;s.johnnyThrowReleased=false;s.johnnyNextThrow=s.johnnyGuardUntil;
  e->v.velocity.x=0;e->v.velocity.y=0;e->v.sequence=johnny_assets::seqGuard;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=slowed(e)?balance::SlowFactor:1.f;
  if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);
@@ -325,7 +332,7 @@ static void __fastcall davidActivity(void* object,void*,int requested){
 
   }
  }
- bool wasLoco=valid(e)&&(maxModel(e)?(e->v.sequence==max_assets::seqWalk||e->v.sequence==max_assets::seqRun):(johnnyModel(e)?(e->v.sequence==johnny_assets::seqWalk||e->v.sequence==johnny_assets::seqRun):(e->v.sequence==1||e->v.sequence==2)));
+ bool wasLoco=valid(e)&&(maxModel(e)?(e->v.sequence==max_assets::seqWalk||e->v.sequence==max_assets::seqRun):(johnnyModel(e)?(e->v.sequence==johnny_assets::seqWalk||e->v.sequence==johnny_assets::seqRun):(e->v.sequence==1||e->v.sequence==2||e->v.sequence==david_assets::seqCrawl)));
  float oldFrame=valid(e)?e->v.frame:0.f;
  bool slow=!death&&valid(e)&&slowed(e);float rate=slow?e->v.framerate:0;
  reinterpret_cast<void(__thiscall*)(void*,int)>(t->activity)(object,requested);
@@ -348,7 +355,7 @@ static void __fastcall davidActivity(void* object,void*,int requested){
   s->attackEventConsumed=false;
   if(johnnyModel(e)||maxModel(e))++s->attackSelections[0];else ++s->attackSelections[attackSequence-david_assets::seqAttackRight];
  }else if(valid(e)&&!death&&s&&aliveEnemy(e)){
-  bool isLoco=maxModel(e)?(e->v.sequence==max_assets::seqWalk||e->v.sequence==max_assets::seqRun):(johnnyModel(e)?(e->v.sequence==johnny_assets::seqWalk||e->v.sequence==johnny_assets::seqRun):(e->v.sequence==1||e->v.sequence==2));
+  bool isLoco=maxModel(e)?(e->v.sequence==max_assets::seqWalk||e->v.sequence==max_assets::seqRun):(johnnyModel(e)?(e->v.sequence==johnny_assets::seqWalk||e->v.sequence==johnny_assets::seqRun):(e->v.sequence==1||e->v.sequence==2||e->v.sequence==david_assets::seqCrawl));
   if(wasLoco&&isLoco){e->v.frame=oldFrame;e->v.animtime=globals->time;}
  }
  if(slow&&valid(e))e->v.framerate=rate;

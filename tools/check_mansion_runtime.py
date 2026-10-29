@@ -125,29 +125,65 @@ with (MOD/('diagnostics/mansion-routes-server.log' if args.routes else 'diagnost
             print('PASS: fake GoldSrc player touch opened both original rotating doors with targetname unset.')
             raise SystemExit(0)
         spawns = re.findall(r'MansionSpawn wave=(\d+) index=(\d+) ct=(\d+) type=(\S+)', phases)
-        assert len(spawns) == 244, len(spawns)
+        # El CZ tactico puede morir y reaparecer (revive); la composicion se
+        # valida sobre el primer spawn de cada (wave,index). Tpose sustituye
+        # a los poison (todo base kind 3) mas 3 fijos de wave2 (kind 6).
+        def base_kind(w, i):
+            s, r = i % 4, i // 4
+            if w == 1:
+                return 0
+            if w == 2:
+                return (r + s) % 2
+            if w == 3:
+                return (r + s) % 4
+            return 4 if r % 2 else (r // 2 + s) % 4
+        def is_tpose(w, i):
+            if w == 2:
+                return i in (18, 23, 29)
+            return w in (3, 4) and base_kind(w, i) == 3
+        tpose = {(w, i) for w in (2, 3, 4) for i in range(40 if w == 2 else 80) if is_tpose(w, i)}
+        seen = {}
+        for w,index,ct,kind in spawns:
+            seen.setdefault((int(w),int(index)), (int(ct),kind))
+        assert len(seen) == 241, (len(seen), len(spawns))
         randy_models=re.findall(r'MansionSpawn wave=\d+ index=\d+ ct=\d+ type=monster_randy .*?model=(\S+)', phases)
         assert len(randy_models)==30 and all(model=='models/cremation/hotd2/randy/randy.mdl' for model in randy_models),randy_models
         kinds = ['monster_zombie','monster_max','monster_randy','monster_poisionzombie','monster_human_grunt']
         compositions = []
         for wave in range(1,5):
-            rows = [(int(index),int(ct),kind) for w,index,ct,kind in spawns if int(w)==wave]
+            rows = [(index,ct,kind) for (w,index),(ct,kind) in seen.items() if w==wave]
+            rows.sort()
             special_kind='judgment' if wave==4 else 'monster_czero_zombie'
             special=[row for row in rows if row[2]==special_kind]
-            assert len(special)==1 and 0<=special[0][1]<40 and special[0][0] in (40,80),special
+            assert len(special)==1 and 0<=special[0][1]<40 and special[0][0] in (0,80),special
             rows=[row for row in rows if row[2]!=special_kind]
+            if wave==1:
+                assert sum(1 for index,ct,kind in rows if kind=='monster_tpose')==0,rows
+            elif wave==2:
+                assert sum(1 for index,ct,kind in rows if kind=='monster_tpose')==3,rows
+            elif wave==3:
+                assert sum(1 for index,ct,kind in rows if kind=='monster_tpose')==20,rows
+            else:
+                assert sum(1 for index,ct,kind in rows if kind=='monster_tpose')==10,rows
+                assert not any(kind=='monster_poisionzombie' for index,ct,kind in rows),rows
             counts = collections.Counter(kind for index,ct,kind in rows)
+            johnny_n = 10 if wave==1 else 15 if wave==2 else 0
             expected = []
             for index in range(40 if wave<=2 else 80):
-                sector,round_number=index%4,index//4
-                kind = (0 if wave==1 else (round_number+sector)%2 if wave==2 else
-                        (round_number+sector)%4 if wave==3 else
-                        4 if round_number%2 else (round_number//2+sector)%4)
-                expected.append('monster_johnny' if index<(10 if wave==1 else 15 if wave==2 else 0) else kinds[kind])
+                if wave<=3 and index==0:
+                    continue  # CZ tactico (special) filtrado de rows
+                if (wave,index) in tpose:
+                    expected.append('monster_tpose');continue
+                if 1 <= index <= johnny_n:
+                    expected.append('monster_johnny');continue
+                expected.append(kinds[base_kind(wave,index)])
             assert [kind for index,ct,kind in rows]==expected, (wave,counts,collections.Counter(expected))
             compositions.append(dict(counts))
             if wave < 4:
-                assert [ct for index,ct,kind in rows] == [i%40 for i in range(len(rows))]
+                # Round-robin de CT: el cursor no se reinicia por oleada (el CZ
+                # no lo avanza), asi que se verifica avance +1 mod 40.
+                cts = [ct for index,ct,kind in rows]
+                assert all((b-a)%40==1 for a,b in zip(cts,cts[1:])), (wave,cts[:12])
             else:
                 assert all(0 <= ct < 40 for index,ct,kind in rows), rows
                 role_counts=re.search(r'MansionCultistRoles perimeter=(\d+) door=(\d+) backdoor=(\d+)',phases)

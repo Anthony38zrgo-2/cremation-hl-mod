@@ -6,6 +6,21 @@ inline int total(int wave) {return hordeTotal(wave)+(wave==4?1:0);}
 inline int johnnyTotal(int wave) {return wave==1?10:(wave==2?15:0);}
 inline bool isJohnny(int wave,int index) {return index>=0&&index<johnnyTotal(wave)&&index<hordeTotal(wave);}
 inline int kind(int wave,int index);
+// Los Tpose ocupan el lugar de los poison: todo base kind 3 vuela como Tpose.
+// Wave2 no tiene poison, asi que conserva 3 puestos fijos de normales.
+inline int baseKind(int wave,int index){
+    int sector=index%4,round=index/4;
+    if(wave==1)return 0;
+    if(wave==2)return (round+sector)%2;
+    if(wave==3)return (round+sector)%4;
+    return round%2?4:(round/2+sector)%4;
+}
+inline bool isTpose(int wave,int index){
+    if(index<0||index>=hordeTotal(wave))return false;
+    if(wave==2)return index==18||index==23||index==29;
+    if(wave==3||wave==4)return baseKind(wave,index)==3;
+    return false;
+}
 inline int cultistSlot(int wave,int index) {
     if(wave!=4||index<0||index>=hordeTotal(wave)||kind(wave,index)!=4)return -1;
     return (index/8)*4+(index%8)-4;
@@ -28,14 +43,12 @@ static constexpr float cultistPerimeter[40][3]={
 inline int kind(int wave,int index) {
     if(index==hordeTotal(wave))return 5;
     if(wave>=1&&wave<=3&&index==0)return 5;
-    if(wave==1)return 0;
-    int sector=index%4,round=index/4;
-    if(wave==2)return (round+sector)%2;
-    if(wave==3)return (round+sector)%4;
-    return round%2?4:(round/2+sector)%4;
+    if(isTpose(wave,index))return 6;
+    return baseKind(wave,index);
 }
 inline const char* classname(int type) {
-    static const char* names[]={"monster_zombie","monster_max","monster_randy","monster_poisionzombie","monster_human_grunt","monster_czero_zombie"};
+    // El indice 3 era poison: ahora vuela como Tpose (kind 3 ya no se emite).
+    static const char* names[]={"monster_zombie","monster_max","monster_randy","monster_tpose","monster_human_grunt","monster_czero_zombie","monster_tpose"};
     return names[type];
 }
 }

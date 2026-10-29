@@ -9,6 +9,7 @@ EXPORTS
     monster_randy
     monster_johnny
     monster_czero_zombie
+    monster_tpose
     quake_zombie_gib
     weapon_shockrifle
     ammo_shockcore

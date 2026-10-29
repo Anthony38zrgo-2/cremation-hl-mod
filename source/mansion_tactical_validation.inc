@@ -11,6 +11,14 @@ static void mansionTacticalProbe(float dt){
   state->v.frags=1;state->v.armorvalue=1;state->v.health=0;
   if(!mansionEmit(state)){fail("spawn zombie");return;}
   actor=mansionFind("mansion_enemy_johnny_1_01");if(!aliveEnemy(actor)){fail("zombie invalid");return;}
+  mansionDoorHealth(1);mansionDoorHealth(2);Vector savedDoorHp=state->v.vuser1;bool oldInvasion=mansionInvaded;mansionInvaded=true;state->v.vuser1.x=state->v.vuser1.y=0;
+  auto checkSpawnRoute=[&](const char* route){Vector spawnAt(-1152,1664,24.1f);engine.pfnSetOrigin(actor,&spawnAt.x);actor->v.flags|=FL_ONGROUND;actor->v.target=engine.pfnAllocString(route);
+   int idx=engine.pfnIndexOfEdict(actor);if(idx>0&&size_t(idx)<mansionRouteIntents.size())mansionRouteIntents[idx].ready=false;
+   bool overridden=mansionEventMove(actor,.05f);inMansionMove=true;mansionRouteMarkerMove(actor,.1f);inMansionMove=false;
+   return !overridden&&mansionTargetStarts(actor,route)&&length2d(actor->v.origin-spawnAt)>.1f;};
+  bool spawnExit=checkSpawnRoute("mansion_route_00_01")&&checkSpawnRoute("mansion_side_route_00_01");
+  startupTrace(spawnExit?"MansionInvasionSpawnRoute PASS":"MansionInvasionSpawnRoute FAIL","broken doors preserve both exterior routes");
+  state->v.vuser1=savedDoorHp;mansionInvaded=oldInvasion;Vector resetSpawn(-1152,1664,24.1f);engine.pfnSetOrigin(actor,&resetSpawn.x);actor->v.target=engine.pfnAllocString("mansion_route_00_01");
   actor->v.flags|=FL_ONGROUND;bool startsForward=mansionTargetStarts(actor,"mansion_route_00_01");actor->v.target=engine.pfnAllocString("mansion_route_00_00");inMansionMove=true;mansionRouteMarkerMove(actor,.05f);inMansionMove=false;
   bool skipsSpawn=mansionTargetStarts(actor,"mansion_route_00_01");Vector bridgePlayer=actor->v.origin+Vector(100,-16,36);engine.pfnSetOrigin(player,&bridgePlayer.x);
   float before=length2d(player->v.origin-actor->v.origin);inMansionMove=true;mansionPursuePlayer(actor,player,.1f);inMansionMove=false;
@@ -26,6 +34,10 @@ static void mansionTacticalProbe(float dt){
   auto npc=engine.pfnCreateNamedEntity(engine.pfnAllocString(CZClass));auto scientist=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_scientist"));bool npcPolicy=false;
   if(valid(npc)&&valid(scientist)){npc->v.origin=Vector(-550,-300,192.1f);hookSpawn(npc);npc->v.targetname=engine.pfnAllocString("mansion_enemy_cz_room_probe");scientist->v.origin=Vector(-624,-176,192.1f);hookSpawn(scientist);
    auto oldScientist=mansionScientist;bool oldInvaded=mansionInvaded;mansionScientist={scientist,scientist->serialnumber,1,true};mansionInvaded=true;
+   Vector oldHp=state->v.vuser1;state->v.vuser1.y=0;Vector moveOther(224,-256,24.1f),czSpawn(-752,1920,24.1f);engine.pfnSetOrigin(actor,&moveOther.x);engine.pfnSetOrigin(npc,&czSpawn.x);npc->v.flags|=FL_ONGROUND;npc->v.target=engine.pfnAllocString("mansion_side_route_24_01");
+   bool czOverridden=mansionEventMove(npc,.05f);inMansionMove=true;mansionRouteMarkerMove(npc,.1f);inMansionMove=false;
+   bool czExit=!czOverridden&&mansionTargetStarts(npc,"mansion_side_route_24_01")&&length2d(npc->v.origin-czSpawn)>.1f;
+   startupTrace(czExit?"MansionCZInvasionSpawn PASS":"MansionCZInvasionSpawn FAIL","CZ keeps spawn route when a door breaks");state->v.vuser1=oldHp;
    Vector npcAt(-550,-300,192.1f),playerAt(-600,-250,228.1f);engine.pfnSetOrigin(npc,&npcAt.x);engine.pfnSetOrigin(player,&playerAt.x);
    bool detected=mansionCZRoomPlayer(npc)==player&&mansionPriorityPlayer(npc)==nullptr;mansionEventMove(npc,.05f);bool pistol=npc->v.iuser1==5&&npc->v.button<20;
    Vector outside(-300,-250,228.1f);engine.pfnSetOrigin(player,&outside.x);bool cleared=mansionCZRoomPlayer(npc)==nullptr;mansionEventMove(npc,.05f);npcPolicy=detected&&pistol&&cleared&&npc->v.iuser1==0;

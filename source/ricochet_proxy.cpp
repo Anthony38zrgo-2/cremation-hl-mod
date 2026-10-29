@@ -504,6 +504,7 @@ static bool mansionActor(edict_t* e){return valid(e)&&e->v.targetname&&!std::str
 #include "czero_smoke.inc"
 #include "czero_zombie.inc"
 #include "david_zombie.inc"
+#include "tpose_zombie.inc"
 #include "heart_pickups.inc"
 static bool disabledShotgunActive(edict_t* p){return !ShotgunsPlayable&&bounce::isTfcPlayer(p);}
 static void attachBounce() {
@@ -611,6 +612,7 @@ static bool hordeAlert(HordeProbe& probe) {
 }
 static bool zombieBusy(edict_t* e){
     if(!valid(e)||!aliveEnemy(e))return false;
+    if(tposeIs(e))return false;
     if(auto s=davidState(e)){
         if(s->dying||s->johnnyGuarding||s->johnnyThrowing)return true;
         return davidBusy(e)&&e->v.frame<250.f;
@@ -646,7 +648,11 @@ static void safeSetLocomotionSequence(edict_t* e, int sequence, float preservedF
 static void safeSetSequence(edict_t* e, int sequence, float baseFramerate = 1.0f) {
     safeSetLocomotionSequence(e, sequence, 0.0f, baseFramerate);
 }
+static void hordeRunAnimation(edict_t* e);
 static void hordeWalkAnimation(edict_t* e) {
+    if(tposeIs(e))return;
+    // Randy siempre corre: cualquier peticion de walk se resuelve en run.
+    if(randyClass(e)){hordeRunAnimation(e);return;}
     if(zombieBusy(e))return;
     if(auto state=davidState(e)){if(aliveEnemy(e))davidActivity(e->pvPrivateData,nullptr,state->running?4:3);return;}
     if(!engine.pfnGetModelPtr)return;
@@ -660,14 +666,15 @@ static void hordeWalkAnimation(edict_t* e) {
     }
 }
 static void hordeRunAnimation(edict_t* e) {
+    if(tposeIs(e))return;
     if(zombieBusy(e))return;
     if(auto state=davidState(e)){if(aliveEnemy(e))davidActivity(e->pvPrivateData,nullptr,state->running?4:3);return;}
     if(!engine.pfnGetModelPtr)return;
     auto data=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!data)return;
     int count=*reinterpret_cast<int*>(data+164),offset=*reinterpret_cast<int*>(data+168);
-    int run=-1,authoredRun=-1,locomotion=-1;
+    int run=-1,trueRun=-1,authoredRun=-1,locomotion=-1;
     for(int i=0;i<count;++i){int activity=*reinterpret_cast<int*>(data+offset+i*176+40);
-        if(activity==4){run=i;break;}
+        if(activity==4&&trueRun<0){trueRun=i;run=i;break;}
         const char* label=reinterpret_cast<const char*>(data+offset+i*176);
         if(activity==3&&authoredRun<0&&!std::strncmp(label,"run",3))authoredRun=i;
         if(activity==3&&locomotion<0)locomotion=i;
@@ -675,11 +682,21 @@ static void hordeRunAnimation(edict_t* e) {
     // Several original GoldSrc zombie models mark their authored run cycle as
     // ACT_WALK (3), and some have no ACT_RUN entry at all. Keep those models'
     // original locomotion cycle instead of leaving a stale sequence selected.
-    if(run<0)run=authoredRun>=0?authoredRun:locomotion;
+    if(trueRun<0)run=authoredRun>=0?authoredRun:locomotion;
     if(run>=0){
         int oldAct=(e->v.sequence>=0&&e->v.sequence<count)?*reinterpret_cast<int*>(data+offset+e->v.sequence*176+40):-1;
         float preserved=(oldAct==3||oldAct==4)?e->v.frame:0.f;
-        safeSetLocomotionSequence(e,run,preserved,1.0f);
+        float base=1.0f;
+        if(trueRun<0){
+            // Fix 4: sin ACT_RUN no alternar ciclos por velocidad. Mantiene el
+            // walk y compensa con framerate para no deslizar ni cortar.
+            const char* cn=text(e->v.classname);
+            if(!std::strcmp(cn,"monster_randy")||!std::strcmp(cn,"monster_fastzombie"))base=2.2f;
+            else if(!std::strcmp(cn,"monster_poisionzombie"))base=1.2f;
+            else if(!std::strcmp(cn,"monster_max"))base=1.4f;
+            if(e->v.sequence==run){e->v.framerate=slowed(e)?base*balance::SlowFactor:base;e->v.animtime=globals->time;return;}
+        }
+        safeSetLocomotionSequence(e,run,preserved,base);
     }
 }
 static void mansionFrame(float dt);
@@ -718,6 +735,7 @@ static void hookThink(edict_t* e) {
     enemyCombatClearTargets(e);
     if(mansionScientistThink(e)||mansionEventThink(e))return;
     if(judgmentIs(e)){judgmentThink(e,.05f);e->v.nextthink=0;return;}
+    if(tposeThink(e))return;
     if(vostokCoverThink(e))return;
     if(czThink(e))return;
     if(qzThink(e))return;
@@ -731,7 +749,9 @@ static void hookThink(edict_t* e) {
     if(active)e->v.framerate=expected;
     raven.pfnThink(e);
     incendiaryAfterThink(e,incendiary,grenadeOwner,grenadeOwnerSerial);
-    for(const auto& probe:hordeProbes)if(probe.entity==e && probe.fallback && !probe.combat && aliveEnemy(e))hordeWalkAnimation(e);
+    // Fix 4: la mansion posee su animacion (mansionRouteAnimate/NavWalk). El
+    // fallback de hordeProbes no debe pisar walk/run cada Think en el puente.
+    for(const auto& probe:hordeProbes)if(probe.entity==e && probe.fallback && !probe.combat && aliveEnemy(e) && !(mansionMap()&&mansionActor(e)))hordeWalkAnimation(e);
     if(active && aliveEnemy(e)) {
         if(std::fabs(e->v.framerate-expected)>.0001f)s->baseFrame=e->v.framerate;
         e->v.framerate=s->baseFrame*balance::SlowFactor;blue(e);
@@ -1073,6 +1093,7 @@ static void extensionPrecache(){
         engine.pfnPrecacheModel(const_cast<char*>(RandyModel));
         engine.pfnPrecacheModel(const_cast<char*>(RandyCharred));
         necroPrecache(); // Fire/charred assets are also used by grenades and old saves.
+        tposePrecache();
         // S&W 629 Opposing Force viewmodel animation-event sounds.
         for(auto path:{"weapons/629_hammer.wav","weapons/629_revolver_in.wav","weapons/629_revolver_out.wav","weapons/629_shells_land.wav","weapons/629_shell_in.wav","weapons/629_shell_release.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
         cultistPrecache();
@@ -1092,6 +1113,7 @@ static int hookSpawn(edict_t* e) {
     if(vostokCoverSpawn(e))return 0;
     if(czIs(e)){int result=raven.pfnSpawn(e);czSpawn(e);enemyCombatInstall(e);return result;}
     if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);enemyCombatInstall(e);return result;}
+    if(tposeIs(e)){int result=raven.pfnSpawn(e);tposeSpawn(e);humanGibInstall(e);weaponBloodInstall(e);enemyCombatInstall(e);return result;}
     const char* classname=text(e->v.classname);
     bool johnnyNpc=classname&&!std::strcmp(classname,"monster_johnny");
     bool maxNpc=classname&&!std::strcmp(classname,"monster_max");
@@ -1298,6 +1320,7 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(qzIs(e)){qzInstall(e);weaponBloodInstall(e);enemyCombatInstall(e);Vector mins(-16,-16,0),maxs(16,16,QZHeight);engine.pfnSetSize(e,&mins.x,&maxs.x);e->v.view_ofs=Vector(0,0,QZEye);e->v.nextthink=globals->time+.1f;return result;}
     if(qzGib(e)){e->v.nextthink=std::max(globals->time+.1f,e->v.dmgtime);return result;}
     if(restoredClass&&!std::strcmp(restoredClass,"monster_minion"))necroInstall(e);
+    if(tposeIs(e)){engine.pfnSetModel(e,TposeModel);Vector lo(-32,-32,-80),hi(32,32,8);engine.pfnSetSize(e,&lo.x,&hi.x);e->v.view_ofs=Vector(0,0,-36);e->v.movetype=MOVETYPE_FLY;e->v.flags|=FL_FLY;e->v.renderfx=kRenderFxGlowShell;e->v.rendercolor=Vector(255,0,255);e->v.renderamt=25;e->v.nextthink=globals->time+.1f;}
     if(restoredClass&&!std::strcmp(restoredClass,"weapon_hornetgun"))e->v.classname=engine.pfnAllocString("weapon_necromancer");
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_necro_fx"))e->v.flags|=FL_KILLME;
     if(restoredClass && !std::strcmp(restoredClass,"monster_human_grunt")) {cremationAllyHecu(e->pvPrivateData);cultistInstall(e);}
@@ -1456,6 +1479,7 @@ extern "C" void cremation_sentry_base(entvars_t* vars) {
 
 extern "C" void weapon_necromancer(entvars_t* vars){spawnNativeAlias(vars,"weapon_hornetgun","weapon_necromancer");}
 extern "C" void monster_minion(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_minion");}
+extern "C" void monster_tpose(entvars_t* vars){spawnNativeAlias(vars,"monster_alien_controller","monster_tpose");}
 extern "C" void monster_johnny(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_johnny");}
 extern "C" void monster_ken(entvars_t* vars){spawnNativeAlias(vars,"monster_zombie","monster_ken");}
 extern "C" void monster_randy(entvars_t* vars){spawnNativeAlias(vars,"monster_fastzombie","monster_randy");}

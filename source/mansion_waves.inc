@@ -33,7 +33,7 @@ static MansionRaidAttack mansionRaidAttacks[2];
 static bool mansionEventMove(edict_t* e,float dt);
 struct MansionSense{edict_t* actor=nullptr;edict_t* visiblePlayer=nullptr;int serial=0,visiblePlayerSerial=0;bool contact=false;float next=0,decisionInterval=.35f,visiblePlayerDistance=1e30f;};
 static std::vector<MansionSense> mansionSense;
-struct MansionRouteIntent{edict_t* actor=nullptr;int serial=0;Vector destination{0,0,0};float nextDecision=0,speed=55.f;bool ready=false;string_t target=0;};
+struct MansionRouteIntent{edict_t* actor=nullptr;int serial=0;Vector destination{0,0,0};float nextDecision=0,speed=55.f;bool ready=false;string_t target=0;float blocked=0,recoveryAt=0;int sideBias=0;bool lastRunning=false;};
 static std::vector<MansionRouteIntent> mansionRouteIntents;
 struct MansionTacticalSense{edict_t* actor=nullptr;edict_t* target=nullptr;int serial=0,targetSerial=0;Vector lastSeen{0,0,0};float reactAt=0,rememberUntil=0,nextSense=0;};
 static std::vector<MansionTacticalSense> mansionTacticalSenses;
@@ -59,6 +59,13 @@ static float mansionRouteReport=0;
 static float mansionMoveElapsed=0;
 static float mansionDoorHudAt=0;
 static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed,bool running=false);
+static MansionRouteIntent& mansionRouteIntentFor(edict_t* e);
+static bool mansionBridgeEdgeClear(edict_t* e,const Vector& a,const Vector& b);
+static bool mansionBridgeSpotFree(edict_t* e,const Vector& at);
+static bool mansionBridgeNudge(edict_t* e,const Vector& goal);
+static void mansionRouteAnimate(edict_t* e,bool running);
+static bool mansionInsideFloor(const Vector& at);
+static bool mansionPlaceInside(edict_t* e,const Vector& desired);
 static void czPistol(edict_t* e,edict_t* target);
 static int mansionNearestNav(const Vector& p);
 static Vector czNavPoint(int n);
@@ -288,7 +295,16 @@ static bool mansionSiegeMove(edict_t* actor,int door,const Vector& entry,float d
     Vector goal=reserved;
     if(role<3){if(role==1)goal=goal+tangent*34.f;else if(role==2)goal=goal-tangent*34.f;
         mansionStrikeDoor(actor,door,65.f);
-    }else{goal=panel->v.origin+outward*(100.f+float(role-3)*44.f);goal.z=entry.z;}
+    }else{
+        // Fix 2: la cola no es fila india sobre el eje del puente. Escalon
+        // lateral + 68u entre puestos para hulls de 32u sin solaparse.
+        goal=panel->v.origin+outward*(100.f+float(role-3)*68.f);goal.z=entry.z;
+        goal=goal+tangent*((role%2)?36.f:-36.f);
+        // Si otro en cola ya reservo muy cerca, abre aun mas el abanico.
+        for(const auto& s:mansionDoorStrikes)if(s.actor!=actor&&s.slot>=3&&s.door==door){
+            if(length2d(s.position-goal)<56.f){goal=goal+tangent*((role%2)?-36.f:36.f);break;}
+        }
+    }
     if(length2d(goal-actor->v.origin)>18.f||std::fabs(goal.z-actor->v.origin.z)>20.f)mansionNavWalk(actor,goal,dt,speed);
     return true;
 }
@@ -369,21 +385,36 @@ static float mansionLocomotionSpeed(edict_t* e,bool& running){
         running=state->running;
         return running?mansionChaseSpeed(e):55.f;
     }
+    // Fix 4: histeresis run/walk para genericos. Sin memoria el flag parpadea
+    // cada tick en el umbral y la secuencia se reinicia a frame 0.
+    auto& intent=mansionRouteIntentFor(e);
+    bool hasRun=false;
     auto model=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));running=false;
     if(model){int count=*reinterpret_cast<int*>(model+164),offset=*reinterpret_cast<int*>(model+168);
         for(int i=0;i<count;++i){auto seq=model+offset+i*176;int activity=*reinterpret_cast<int*>(seq+40);
-            if(activity==4||(activity==3&&!std::strncmp(reinterpret_cast<const char*>(seq),"run",3))){running=true;break;}}}
-    for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO&&length2d(p->v.origin-e->v.origin)<70.f){running=false;break;}}
+            if(activity==4||(activity==3&&!std::strncmp(reinterpret_cast<const char*>(seq),"run",3))){hasRun=true;break;}}}
+    // Randy siempre corre: sin histeresis ni chequeo de modelo.
+    if(randyClass(e)){running=true;intent.lastRunning=true;return mansionChaseSpeed(e);}
+    if(!hasRun){intent.lastRunning=false;running=false;}
+    else{
+        float nearest=1e30f;
+        for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO)nearest=std::min(nearest,length2d(p->v.origin-e->v.origin));}
+        // Corre hasta 60 para parar, anda hasta 90 para arrancar.
+        bool want=intent.lastRunning?(nearest>=60.f):(nearest>=90.f);
+        // Sin jugador cercano, conserva el ultimo estado en vez de forzar run.
+        if(nearest>900.f)want=intent.lastRunning;
+        running=want;intent.lastRunning=want;
+    }
     return running?mansionChaseSpeed(e):(!std::strcmp(text(e->v.classname),"monster_poisionzombie")?52.f:55.f);
 }
 static bool mansionChaseVisiblePlayer(edict_t* e,edict_t* player,float dt){
-    if(!valid(e)||!valid(player)||zombieBusy(e))return false;Vector delta=player->v.origin-e->v.origin;float distance=length2d(delta);
+    if(!valid(e)||!valid(player)||tposeIs(e)||zombieBusy(e))return false;Vector delta=player->v.origin-e->v.origin;float distance=length2d(delta);
     if(distance<=80.f)return true;
     auto state=davidState(e);
+    // Fix 5: no adelantar movedAt. Solo marca progreso si el WalkMove movio.
     if(state){
         state->target=player;
         state->targetSerial=player->serialnumber;
-        state->movedAt=globals->time;
     }
     bool shouldRun=true;
     if(state)shouldRun=state->running;
@@ -396,23 +427,24 @@ static bool mansionChaseVisiblePlayer(edict_t* e,edict_t* player,float dt){
     if(distance>192.f&&length2d(navGoal-e->v.origin)>64.f){
         mansionNavWalk(e,navGoal,dt,speed,shouldRun);
         bool moved=length2d(e->v.origin-before)>.1f;
-        if(moved){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;mansionReleaseDoorRole(e);}
+        if(moved){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;mansionReleaseDoorRole(e);if(state)state->movedAt=globals->time;}
         return moved;
     }
     Vector direction=normal(Vector(delta.x,delta.y,0));Vector goal=player->v.origin-direction*64.f;delta=goal-e->v.origin;
     float yaw=std::atan2(delta.y,delta.x)*180.f/3.14159265f;
     float step=std::min(length2d(delta),speed*std::min(dt,.1f));bool moved=hookWalkMove(e,yaw,step,0)!=0;
-    if(!moved)for(float turn:{20.f,-20.f,40.f,-40.f,70.f,-70.f,100.f,-100.f})if(hookWalkMove(e,yaw+turn,step,0)){yaw+=turn;moved=true;break;}
+    if(!moved)for(float turn:{20.f,-20.f,40.f,-40.f,70.f,-70.f,100.f,-100.f,135.f,-135.f})if(hookWalkMove(e,yaw+turn,step,0)){yaw+=turn;moved=true;break;}
     if(moved){
         e->v.angles.y=yaw;
         if(shouldRun)hordeRunAnimation(e);else hordeWalkAnimation(e);
         mansionReleaseDoorRole(e);
+        if(state)state->movedAt=globals->time;
         return true;
     }
     if(playerNode>=0&&length2d(navGoal-e->v.origin)>18.f){
         mansionNavWalk(e,navGoal,dt,speed,shouldRun);
         moved=length2d(e->v.origin-before)>.1f;
-        if(moved){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;mansionReleaseDoorRole(e);}
+        if(moved){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;mansionReleaseDoorRole(e);if(state)state->movedAt=globals->time;}
         return moved;
     }
     return false;
@@ -433,22 +465,131 @@ static bool mansionBridgePursuitClear(edict_t* e,edict_t* player){
     Vector goal=player->v.origin+Vector(0,0,player->v.mins.z),delta=goal-e->v.origin;
     if(std::fabs(delta.z)>18.f)return false;
     Vector from=e->v.origin+Vector(0,0,36.1f),to=goal+Vector(0,0,36.1f);TraceResult tr{};
-    engine.pfnTraceHull(&from.x,&to.x,1,1,e,&tr);if(tr.fStartSolid||tr.fAllSolid||tr.flFraction<.995f)return false;
+    engine.pfnTraceHull(&from.x,&to.x,1,1,e,&tr);
+    if(tr.fStartSolid||tr.fAllSolid)return false;
+    // Fix 3: un monstruo vivo en medio no es pared. La separacion lateral de
+    // mansionRouteStep lo rodea; solo el mundo bloquea la persecucion directa.
+    if(tr.flFraction<.995f&&!(valid(tr.pHit)&&tr.pHit!=e&&aliveEnemy(tr.pHit)))return false;
     int steps=std::max(1,int(std::ceil(length2d(delta)/32.f)));
     for(int i=1;i<=steps;++i){Vector at=e->v.origin+delta*(float(i)/steps),top=at+Vector(0,0,18),bottom=at-Vector(0,0,24);
-        engine.pfnTraceLine(&top.x,&bottom.x,1,e,&tr);if(tr.fStartSolid||tr.flFraction>=1.f||tr.vecPlaneNormal.z<.65f)return false;}
+        engine.pfnTraceLine(&top.x,&bottom.x,1,e,&tr);
+        if(tr.fStartSolid)return false;
+        // Si la linea pega primero en un vivo, no significa falta de suelo.
+        if(valid(tr.pHit)&&tr.pHit!=e&&aliveEnemy(tr.pHit))continue;
+        if(tr.flFraction>=1.f||tr.vecPlaneNormal.z<.65f)return false;}
     return true;
 }
 static bool mansionTargetStarts(edict_t* e,const char* prefix){const char* name=text(e->v.target);return name&&std::strncmp(name,prefix,std::strlen(prefix))==0;}
-static float mansionRouteSpeed(edict_t* e){const char* name=text(e->v.classname);return qzIs(e)?35.f:((czIs(e)||!std::strcmp(name,"monster_human_grunt"))?85.f:55.f);}
+static float mansionRouteSpeed(edict_t* e){const char* name=text(e->v.classname);return qzIs(e)?35.f:((czIs(e)||!std::strcmp(name,"monster_human_grunt"))?85.f:(randyClass(e)?mansionChaseSpeed(e):55.f));}
+static MansionRouteIntent& mansionRouteIntentFor(edict_t* e){
+    static MansionRouteIntent dummy{};
+    int idx=engine.pfnIndexOfEdict(e);
+    if(idx<=0)return dummy;
+    if(size_t(idx)>=mansionRouteIntents.size())mansionRouteIntents.resize(idx+1);
+    auto& it=mansionRouteIntents[idx];
+    if(it.actor!=e||it.serial!=e->serialnumber)it=MansionRouteIntent{e,e->serialnumber};
+    return it;
+}
+static bool mansionBridgeEdgeClear(edict_t* e,const Vector& a,const Vector& b){
+    float sweep=std::max(a.z,b.z)+36.2f;Vector from(a.x,a.y,sweep),to(b.x,b.y,sweep);TraceResult tr{};
+    engine.pfnTraceHull(&from.x,&to.x,1,1,e,&tr);
+    if(tr.fStartSolid||tr.fAllSolid)return false;
+    if(tr.flFraction>=.995f)return true;
+    if(valid(tr.pHit)&&tr.pHit!=e&&aliveEnemy(tr.pHit))return true;
+    return false;
+}
+static bool mansionBridgeSpotFree(edict_t* e,const Vector& at){
+    Vector probe=at+Vector(0,0,36.2f);TraceResult tr{};
+    engine.pfnTraceHull(&probe.x,&probe.x,1,1,e,&tr);
+    if(tr.fStartSolid||tr.fAllSolid)return false;
+    Vector lo=at+e->v.mins,hi=at+e->v.maxs;
+    for(int i=1;i<=globals->maxClients;++i){auto o=engine.pfnPEntityOfEntIndex(i);
+        if(!valid(o)||o==e||o->v.solid==SOLID_NOT||o->v.health<=0||o->v.deadflag!=DEAD_NO)continue;
+        Vector oLo=o->v.origin+o->v.mins,oHi=o->v.origin+o->v.maxs;
+        if(lo.x<oHi.x-2&&hi.x>oLo.x+2&&lo.y<oHi.y-2&&hi.y>oLo.y+2&&lo.z<oHi.z-2&&hi.z>oLo.z+2)return false;}
+    for(auto o:getActiveEnemies()){
+        if(o==e||o->v.solid==SOLID_NOT||!aliveEnemy(o))continue;
+        Vector oLo=o->v.origin+o->v.mins,oHi=o->v.origin+o->v.maxs;
+        if(lo.x<oHi.x-2&&hi.x>oLo.x+2&&lo.y<oHi.y-2&&hi.y>oLo.y+2&&lo.z<oHi.z-2&&hi.z>oLo.z+2)return false;}
+    return true;
+}
+static bool mansionBridgeNudge(edict_t* e,const Vector& goal){
+    Vector delta=goal-e->v.origin;float yaw=std::atan2(delta.y,delta.x)*180.f/3.14159265f;
+    float rad=yaw*3.14159265f/180.f;Vector fwd(std::cos(rad),std::sin(rad),0),side(-fwd.y,fwd.x,0);
+    Vector cands[]={e->v.origin+fwd*32.f,e->v.origin+side*28.f,e->v.origin-side*28.f,e->v.origin+fwd*20.f+side*28.f,e->v.origin+fwd*20.f-side*28.f,e->v.origin+side*48.f,e->v.origin-side*48.f};
+    for(auto& at:cands){
+        if(length2d(at-e->v.origin)<10.f)continue;
+        if(!mansionBridgeEdgeClear(e,e->v.origin,at))continue;
+        if(!mansionBridgeSpotFree(e,at))continue;
+        Vector old=e->v.origin;
+        engine.pfnSetOrigin(e,&at.x);engine.pfnDropToFloor(e);e->v.velocity=Vector(0,0,0);
+        char rep[160];std::snprintf(rep,sizeof rep,"class=%s from=%.0f,%.0f,%.0f to=%.0f,%.0f,%.0f",text(e->v.classname),old.x,old.y,old.z,e->v.origin.x,e->v.origin.y,e->v.origin.z);
+        startupTrace("MansionBridgeNudge",rep);
+        return true;
+    }
+    return false;
+}
+static void mansionRouteAnimate(edict_t* e,bool running){
+    if(judgmentKuarl(e)){judgmentAnimate(e,16,153,5.1f,true);return;}
+    if(czIs(e)){
+        // Fix 4: histeresis CZ. No alternar walk/run/idle cada tick; walk<->run
+        // preserva frame en czSequence y el idle espera .6s via fuser1.
+        int want=running?4:3;
+        if(e->v.sequence!=want)czSequence(e,want);
+        e->v.fuser1=globals->time+.6f;
+        return;
+    }
+    if(qzIs(e))return;
+    if(running)hordeRunAnimation(e);else hordeWalkAnimation(e);
+}
 static void mansionRouteStep(edict_t* e,const Vector& goal,float dt,float speed,bool running=false){
+    if(!valid(e)||!aliveEnemy(e))return;
+    auto& intent=mansionRouteIntentFor(e);
     Vector delta=goal-e->v.origin;float yaw=std::atan2(delta.y,delta.x)*180.f/3.14159265f;
     float distance=std::min(length2d(delta),speed*dt)*(qzIs(e)&&slowed(e)?balance::SlowFactor:1.f);
-    bool moved=hookWalkMove(e,yaw,distance,0)!=0;
-    if(!moved)for(float turn:{30.f,-30.f,60.f,-60.f,90.f,-90.f}){
-        if(hookWalkMove(e,yaw+turn,distance,0)!=0){yaw+=turn;moved=true;break;}
+    if(distance<=0.f){intent.blocked=0;return;}
+    // Fix 2: separacion. Si hay un vivo justo delante, sesga al lado libre.
+    float bias=intent.sideBias>=0?1.f:-1.f;
+    {
+        float best=1e30f;int side=0;
+        for(auto o:getActiveEnemies()){
+            if(o==e||!aliveEnemy(o)||o->v.solid==SOLID_NOT)continue;
+            Vector d=o->v.origin-e->v.origin;float dist2d=length2d(d);
+            if(dist2d>72.f||std::fabs(d.z)>56.f)continue;
+            float ang=std::atan2(d.y,d.x)*180.f/3.14159265f;float rel=ang-yaw;
+            while(rel>180)rel-=360;while(rel<-180)rel+=360;
+            if(std::fabs(rel)<50.f&&dist2d<best){best=dist2d;side=(rel>=0?-1:1);}
+        }
+        if(side!=0)bias=float(side);
     }
-    if(moved){e->v.angles.y=yaw;if(judgmentKuarl(e))judgmentAnimate(e,16,153,5.1f,true);else if(czIs(e)){czSequence(e,3);e->v.fuser1=globals->time+.15f;}else if(!qzIs(e)){if(running)hordeRunAnimation(e);else hordeWalkAnimation(e);}}
+    bool moved=hookWalkMove(e,yaw,distance,0)!=0;
+    float firstYaw=yaw;
+    if(!moved){
+        // Fix 1: abanico completo con sesgo inicial, no solo +-30/60/90.
+        float turns[]={30.f*bias,-30.f*bias,60.f*bias,-60.f*bias,90.f*bias,-90.f*bias,135.f,-135.f,180.f};
+        for(float t:turns){if(hookWalkMove(e,yaw+t,distance,0)){yaw+=t;moved=true;break;}}
+    }
+    if(moved){
+        // Fix 5: movedAt solo con progreso real, no antes del WalkMove.
+        intent.blocked=0;intent.sideBias=(yaw!=firstYaw)?(yaw>firstYaw?1:-1):intent.sideBias;
+        if(auto st=davidState(e))st->movedAt=globals->time;
+        e->v.angles.y=yaw;mansionRouteAnimate(e,running);
+        return;
+    }
+    // Fix 1: sin progreso no vibrar: acumula, prueba nudge validado y redecide.
+    intent.blocked+=dt;
+    intent.sideBias=int(-bias);
+    if(intent.blocked>=1.25f&&globals->time>=intent.recoveryAt){
+        if(mansionBridgeNudge(e,goal)){intent.blocked=0;intent.recoveryAt=globals->time+2.f;
+            if(auto st=davidState(e))st->movedAt=globals->time;
+            e->v.angles.y=yaw;mansionRouteAnimate(e,running);return;}
+        intent.recoveryAt=globals->time+.5f;
+    }
+    if(intent.blocked>=2.5f){
+        intent.ready=false;intent.nextDecision=0;intent.blocked=0;intent.recoveryAt=globals->time+1.f;
+        char rep[128];std::snprintf(rep,sizeof rep,"class=%s target=%s blocked=2.5s nudge_failed",text(e->v.classname),text(e->v.target)?text(e->v.target):"none");
+        startupTrace("MansionBridgeStall",rep);
+    }
 }
 static void mansionSetUpperPatrol(edict_t* e,int point){
     point%=4;if(!mansionUpperTargets[point]){char target[48];std::snprintf(target,sizeof target,"mansion_upper_patrol_%d",point);mansionUpperTargets[point]=engine.pfnAllocString(target);}
@@ -526,7 +667,9 @@ static bool mansionRouteMarkerMove(edict_t* e,float dt){
     if(size_t(entityIndex)>=mansionRouteIntents.size())mansionRouteIntents.resize(entityIndex+1);
     auto& intent=mansionRouteIntents[entityIndex];if(intent.actor!=e||intent.serial!=e->serialnumber)intent=MansionRouteIntent{e,e->serialnumber};
     if(intent.ready&&intent.target==e->v.target&&globals->time<intent.nextDecision){mansionRouteStep(e,intent.destination,dt,intent.speed);return true;}
-    if(mansionDoorHealth(side?2:1)<=0){mansionSetUpperPatrol(e,0);return true;}
+    // Complete the spawn-hub funnel and bridge before switching to the
+    // interior graph after a door is destroyed.
+    if(mansionDoorHealth(side?2:1)<=0&&!(mansionOutsideCentral(e->v.origin)&&mansionOnBridgeRoute(e))){mansionSetUpperPatrol(e,0);return true;}
     auto goal=mansionFind(target);if(!valid(goal))return true;
     if(goal->v.target){auto next=mansionFind(text(goal->v.target));
         if(valid(next)&&length2d(next->v.origin-e->v.origin)<length2d(goal->v.origin-e->v.origin)&&mansionShortcut(e,next->v.origin)){
@@ -568,19 +711,41 @@ static bool mansionPursuePlayer(edict_t* e,edict_t* player,float dt){
     mansionReleaseDoorRole(e);
     if(auto state=davidState(e)){state->target=player;state->targetSerial=player->serialnumber;}
     Vector delta=player->v.origin-e->v.origin;float distance=length2d(delta);
-    bool running=distance>=70.f;if(auto state=davidState(e)){running=running&&!davidCrawling(*state);state->running=running;}
+    // Fix 4: histeresis 60/90 en vez de umbral unico 70. Sin esto run/walk
+    // parpadea y cada cambio reinicia la secuencia a frame 0.
+    bool running;
+    if(auto state=davidState(e)){
+        bool was=state->running;
+        running=was?(distance>=60.f):(distance>=90.f);
+        running=running&&!davidCrawling(*state);
+        state->running=running;
+    }else{
+        auto& intent=mansionRouteIntentFor(e);
+        // Randy siempre corre, sin histeresis.
+        if(randyClass(e)){running=true;intent.lastRunning=true;}
+        else{
+            bool want=intent.lastRunning?(distance>=60.f):(distance>=90.f);
+            running=want;intent.lastRunning=want;
+        }
+    }
     // The CSZ graph ends at the mansion perimeter. On exterior bridges follow
     // the player directly when visible, or the authored bridge waypoints.
     if(mansionOutsideCentral(e->v.origin)&&mansionOnBridgeRoute(e)&&distance>64.f){
         if(!zombieBusy(e)&&johnnyCanSee(e,player)&&mansionBridgePursuitClear(e,player)){
-            if(auto state=davidState(e))state->movedAt=globals->time;
+            Vector before=e->v.origin;
             mansionRouteStep(e,player->v.origin,dt,running?mansionChaseSpeed(e):55.f,running);
+            // movedAt ya se actualiza dentro de mansionRouteStep solo si hubo progreso.
+            (void)before;
         }else if(!zombieBusy(e))mansionRouteMarkerMove(e,dt);
         return true;
     }
     if(czIs(e)){
         if(distance<=64.f&&std::fabs(delta.z)<80.f){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;if(!czMeleeBusy(e))czFire(e,player);}
-        else if(!czMeleeBusy(e)){czSequence(e,4);mansionNavWalk(e,player->v.origin,dt,140.f,true);}return true;
+        else if(!czMeleeBusy(e)){
+            // Fix 4: CZ tambien con histeresis (no forzar run 4 siempre).
+            mansionRouteAnimate(e,running);
+            mansionNavWalk(e,player->v.origin,dt,running?140.f:85.f,running);
+        }return true;
     }
     for(int i=0;i<2;++i)if(mansionRaiders[i].entity==e&&mansionRaiders[i].serial==e->serialnumber){
         if(distance<=64.f&&std::fabs(delta.z)<80.f){mansionRaidMelee(e,player,i,dt);return true;}
@@ -588,11 +753,14 @@ static bool mansionPursuePlayer(edict_t* e,edict_t* player,float dt){
     }
     if(zombieBusy(e))return true;
     if(distance<=60.f&&std::fabs(delta.z)<80.f){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;return true;}
-    if(auto state=davidState(e))state->movedAt=globals->time;
+    Vector before=e->v.origin;
     float speed=running?mansionChaseSpeed(e):55.f;if(auto state=davidState(e))if(davidCrawling(*state))speed=16.f;
-    mansionNavWalk(e,player->v.origin,dt,speed,running);return true;
+    mansionNavWalk(e,player->v.origin,dt,speed,running);
+    if(length2d(e->v.origin-before)>.1f){if(auto state=davidState(e))state->movedAt=globals->time;}
+    return true;
 }
 static bool mansionTacticalMove(edict_t* e,float dt){
+    if(tposeIs(e))return false;
     if(!aliveEnemy(e)||pushed(e)||czIs(e)||judgmentIs(e)||mansionCultist(e))return false;
     if(!mansionTacticalZombie(e))return false;
     int index=engine.pfnIndexOfEdict(e);if(index<=0)return false;
@@ -611,11 +779,14 @@ static bool mansionTacticalMove(edict_t* e,float dt){
     Vector delta=s.lastSeen-e->v.origin;float distance=length2d(delta);
     if(auto state=davidState(e)){state->target=s.target;state->targetSerial=s.targetSerial;}
     if(distance<=72.f){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;return true;}
-    if(auto state=davidState(e))state->movedAt=globals->time;
+    Vector tacBefore=e->v.origin;
     bool running=false;float speed=mansionLocomotionSpeed(e,running);
-    mansionReleaseDoorRole(e);mansionNavWalk(e,s.lastSeen,dt,speed,running);return true;
+    mansionReleaseDoorRole(e);mansionNavWalk(e,s.lastSeen,dt,speed,running);
+    if(length2d(e->v.origin-tacBefore)>.1f){if(auto state=davidState(e))state->movedAt=globals->time;}
+    return true;
 }
 static void mansionMove(edict_t* e,float dt){
+    if(tposeIs(e))return;
     if(auto state=davidState(e))if(state->dying)return;
     if(mansionMap()&&mansionActor(e)&&aliveEnemy(e)&&!pushed(e))if(auto player=mansionPriorityPlayer(e)){mansionPursuePlayer(e,player,dt);return;}
     if(mansionEventMove(e,dt))return;
@@ -628,7 +799,7 @@ static void mansionMove(edict_t* e,float dt){
     bool onBridge=mansionOnBridgeRoute(e)||mansionOutsideCentral(e->v.origin);
     bool contact=!mansionTacticalZombie(e)&&!onBridge&&!perimeterCultist&&mansionContact(e);
     if(zombieBusy(e))return;
-    if(!mansionTacticalZombie(e)&&!onBridge&&!cultist&&!perimeterCultist&&!czIs(e)&&!qzIs(e)&&!judgmentIs(e)){
+    if(!mansionTacticalZombie(e)&&!onBridge&&!cultist&&!perimeterCultist&&!czIs(e)&&!qzIs(e)&&!judgmentIs(e)&&!tposeIs(e)){
         if(auto player=mansionVisiblePlayer(e,MansionZombieNoticeRange)){
             if(mansionChaseVisiblePlayer(e,player,dt))return;
         }
@@ -664,7 +835,7 @@ static void mansionPrecache(){
     for(int i=1;i<=11;++i){auto& path=bshiftSequences[i-1];std::snprintf(path,sizeof path,"models/cremation/scientists/bshift_hd/models/scientist%02d.mdl",i);engine.pfnPrecacheGeneric(path);}
     // Native Spawn performs each monster's full sound/model precache now,
     // before GoldSrc closes its resource list. No prototypes enter the wave.
-    for(int type=0;type<6;++type){auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString(mansion::classname(type)));if(!valid(e)){startupTrace("MansionPrecacheCreateFailed",mansion::classname(type));continue;}
+    for(int type=0;type<7;++type){auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString(mansion::classname(type)));if(!valid(e)){startupTrace("MansionPrecacheCreateFailed",mansion::classname(type));continue;}
         e->v.origin=Vector(1336,392,24);hookSpawn(e);engine.pfnRemoveEntity(e);}
     auto scientist=engine.pfnCreateNamedEntity(engine.pfnAllocString("monster_scientist"));if(valid(scientist)){hookSpawn(scientist);engine.pfnRemoveEntity(scientist);}
     for(auto path:{"debris/wood1.wav","cremation/scientist_rescue/male_help.wav","cremation/scientist_rescue/male_fear.wav","cremation/scientist_rescue/male_thanks.wav","cremation/scientist_rescue/male_pain.wav","cremation/scientist_rescue/female_help.wav","cremation/scientist_rescue/female_fear.wav","cremation/scientist_rescue/female_thanks.wav","cremation/scientist_rescue/female_pain.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
@@ -786,6 +957,54 @@ static void mansionScientistFrame(float dt){
         engine.pfnEmitSound(e,CHAN_VOICE,line,1.f,ATTN_NORM,0,100);mansionScientistVoiceAt=globals->time+engine.pfnRandomFloat(3.5f,5.f);}
 
 }
+static bool mansionInsideFloor(const Vector& at){
+    Vector top=at+Vector(0,0,18),bottom=at-Vector(0,0,24);TraceResult tr{};
+    engine.pfnTraceLine(&top.x,&bottom.x,1,nullptr,&tr);
+    if(tr.fStartSolid||tr.flFraction>=1.f||tr.vecPlaneNormal.z<.65f)return false;
+    return true;
+}
+static bool mansionPlaceInside(edict_t* e,const Vector& desired){
+    // Todo punto interior debe pertenecer al grafo de rutas y estar libre.
+    // Prueba el punto pedido, anillo 32/64 y el nodo nav mas cercano.
+    Vector cands[10];
+    cands[0]=desired;
+    cands[1]=desired+Vector(32,0,0);cands[2]=desired+Vector(-32,0,0);
+    cands[3]=desired+Vector(0,32,0);cands[4]=desired+Vector(0,-32,0);
+    cands[5]=desired+Vector(64,0,0);cands[6]=desired+Vector(-64,0,0);
+    cands[7]=desired+Vector(0,64,0);cands[8]=desired+Vector(0,-64,0);
+    int nearNode=mansionNearestNav(desired);
+    cands[9]=(nearNode>=0)?czNavPoint(nearNode):desired;
+    for(auto& at:cands){
+        int node=mansionNearestNav(at);
+        if(node<0)continue;
+        Vector np=czNavPoint(node);
+        if(length2d(np-at)>96.f||std::fabs(np.z-at.z)>20.f)continue;
+        {
+            Vector probe=at+Vector(0,0,36.2f);TraceResult tr{};
+            engine.pfnTraceHull(&probe.x,&probe.x,1,1,e,&tr);
+            if(tr.fStartSolid||tr.fAllSolid)continue;
+        }
+        if(!mansionBridgeSpotFree(e,at))continue;
+        if(!mansionInsideFloor(at))continue;
+        Vector old=e->v.origin;
+        engine.pfnSetOrigin(e,&at.x);engine.pfnDropToFloor(e);
+        e->v.velocity=Vector(0,0,0);
+        {
+            Vector probe=e->v.origin+Vector(0,0,36.2f);TraceResult tr{};
+            engine.pfnTraceHull(&probe.x,&probe.x,1,1,e,&tr);
+            if(tr.fStartSolid||tr.fAllSolid){engine.pfnSetOrigin(e,&old.x);continue;}
+        }
+        if(!mansionInsideFloor(e->v.origin)){engine.pfnSetOrigin(e,&old.x);continue;}
+        char rep[192];std::snprintf(rep,sizeof rep,"class=%s from=%.0f,%.0f,%.0f to=%.0f,%.0f,%.0f",
+            text(e->v.classname),old.x,old.y,old.z,e->v.origin.x,e->v.origin.y,e->v.origin.z);
+        startupTrace("MansionInsidePlace",rep);
+        return true;
+    }
+    char rep[160];std::snprintf(rep,sizeof rep,"class=%s desired=%.0f,%.0f,%.0f no_free_spot",
+        text(e->v.classname),desired.x,desired.y,desired.z);
+    startupTrace("MansionInsideBlocked",rep);
+    return false;
+}
 static void mansionEventFrame(){
     auto state=mansionState();if(!valid(state))return;
     auto sc=mansionScientist.entity;
@@ -807,15 +1026,21 @@ static void mansionEventFrame(){
     if(!mansionInvaded)return;
     int count=0;for(auto& r:mansionRaiders)if(r.entity)++count;
     for(auto e:getActiveEnemies()){
-        if(count>=2&&mansionGroundAssigned>=3)break;if(!mansionActor(e)||!aliveEnemy(e)||czIs(e)||judgmentIs(e)||mansionCultist(e))continue;
+        if(count>=2&&mansionGroundAssigned>=3)break;if(!mansionActor(e)||!aliveEnemy(e)||czIs(e)||judgmentIs(e)||tposeIs(e)||mansionCultist(e))continue;
         if(auto dying=davidState(e))if(dying->dying)continue;
         bool assigned=mansionTargetStarts(e,"mansion_invasion_idle");for(auto& r:mansionRaiders)if(r.entity==e)assigned=true;if(assigned)continue;
-        if(count>=2){Vector at(-128.f-float(mansionGroundAssigned)*128.f,-512,56.1f);engine.pfnSetOrigin(e,&at.x);e->v.target=engine.pfnAllocString("mansion_invasion_idle");++mansionGroundAssigned;continue;}
+        if(count>=2){Vector at(-128.f-float(mansionGroundAssigned)*128.f,-512,56.1f);
+            // Planta baja: el punto fijo debe estar en el grafo y libre.
+            // Sin esto el zombie nace dentro de la geometria y se queda quieto.
+            if(mansionPlaceInside(e,at)){e->v.target=engine.pfnAllocString("mansion_invasion_idle");++mansionGroundAssigned;}
+            continue;}
         // Choose models whose native melee animation events can be driven for
         // the scientist objective. Other zombie types keep their own attacks.
         if(!davidState(e)&&!randyClass(e))continue;
         Vector at=count==0?Vector(-352,-640,192.1f):Vector(-352,128,192.1f);
-        engine.pfnSetOrigin(e,&at.x);e->v.velocity=Vector(0,0,0);e->v.target=0;
+        // Raiders de planta alta: mismo requisito de grafo + punto libre.
+        if(!mansionPlaceInside(e,at))continue;
+        e->v.target=0;
         mansionRaiders[count]={e,e->serialnumber};++count;
     }
 }
@@ -875,10 +1100,14 @@ static void mansionCZEquipPistol(edict_t* e,bool pistol){
     startupTrace("MansionCZWeapon",pistol?"pistol: player in scientist room":"knife: resume scientist objective");
 }
 static bool mansionEventMove(edict_t* e,float dt){
+    if(tposeIs(e))return false;
     if(!mansionActor(e)||!aliveEnemy(e))return false;
     bool czInside=czIs(e)&&e->v.origin.x<0&&e->v.origin.x>-768&&e->v.origin.y>-768&&e->v.origin.y<224;
     if(!mansionInvaded&&!czInside)return false;
     if(auto state=davidState(e))if(state->dying)return false;
+    // Keep every exterior actor, including the CS Zero NPC, on its funnel
+    // and bridge until it reaches the interior navigation area.
+    if(mansionInvaded&&mansionOutsideCentral(e->v.origin)&&mansionOnBridgeRoute(e))return false;
     auto sc=mansionScientist.entity;
     if(czIs(e)){
         if(!aliveEnemy(sc))return true;
@@ -886,7 +1115,7 @@ static bool mansionEventMove(edict_t* e,float dt){
         mansionCZEquipPistol(e,false);
         Vector delta=sc->v.origin-e->v.origin;float distance=length2d(delta);
         if(distance<=64.f&&std::fabs(delta.z)<80.f){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;if(!czMeleeBusy(e))czFire(e,sc);}
-        else if(!czMeleeBusy(e)){czSequence(e,4);mansionNavWalk(e,sc->v.origin,dt,140.f,true);}
+        else if(!czMeleeBusy(e)){bool czRun=distance>90.f;mansionRouteAnimate(e,czRun);mansionNavWalk(e,sc->v.origin,dt,czRun?140.f:85.f,czRun);}
         return true;
     }
     for(int i=0;i<2;++i)if(mansionRaiders[i].entity==e&&mansionRaiders[i].serial==e->serialnumber){
@@ -895,8 +1124,9 @@ static bool mansionEventMove(edict_t* e,float dt){
         mansionEventAnimate(e,dt);
         Vector goal=(mansionScientist.rescued?sc->v.origin:Vector(-624,-176,192.1f))+Vector(0,i?48.f:-48.f,0);
         if(!mansionScientist.rescued||length(sc->v.origin-e->v.origin)>60.f){
-            if(auto state=davidState(e))state->movedAt=globals->time;
+            Vector evBefore=e->v.origin;
             bool running=false;float speed=mansionLocomotionSpeed(e,running);mansionNavWalk(e,goal,dt,speed,running);
+            if(length2d(e->v.origin-evBefore)>.1f){if(auto state=davidState(e))state->movedAt=globals->time;}
         }
         return true;
     }
@@ -910,6 +1140,7 @@ static bool mansionEventMove(edict_t* e,float dt){
     return false;
 }
 static bool mansionEventThink(edict_t* e){
+    if(tposeIs(e))return false;
     if(!mansionMap()||!mansionActor(e)||!aliveEnemy(e))return false;
     if(auto state=davidState(e))if(state->dying)return false;
     auto state=mansionState();if(valid(state)&&state->v.impulse==2){e->v.nextthink=globals->time+.2f;return true;}
@@ -933,11 +1164,11 @@ static bool mansionEmit(edict_t* state){
     if(type!=5&&!(wave==4&&index==mansion::hordeTotal(wave))&&mansionHordeAlive()>=10)return false;
 #endif
 #ifdef CREMATION_ENABLE_VALIDATION
-    bool johnny=type!=5&&mansion::isJohnny(wave,index-(wave<=3?1:0))&&!mansionCZRouteTest;
+    bool johnny=type!=5&&type!=6&&mansion::isJohnny(wave,index-(wave<=3?1:0))&&!mansionCZRouteTest;
     const char* actorMarkerFormat=johnny?"mansion_enemy_johnny_%d_%02d":(wave<=2?"mansion_enemy_fixed_%d_%02d":"mansion_enemy_%d_%02d");
     if(mansionCZRouteTest)type=5;else if(johnny)type=0;
 #else
-    bool johnny=type!=5&&mansion::isJohnny(wave,index-(wave<=3?1:0));
+    bool johnny=type!=5&&type!=6&&mansion::isJohnny(wave,index-(wave<=3?1:0));
     const char* actorMarkerFormat=johnny?"mansion_enemy_johnny_%d_%02d":(wave<=2?"mansion_enemy_fixed_%d_%02d":"mansion_enemy_%d_%02d");
     if(johnny)type=0;
 #endif

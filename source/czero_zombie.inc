@@ -108,17 +108,21 @@ static bool czThink(edict_t* e){
         e->v.frame=std::min(255.f,e->v.frame+dt*210);if(e->v.frame>=255){e->v.deadflag=DEAD_DEAD;e->v.framerate=0;e->v.animtime=globals->time;e->v.nextthink=0;}
         else e->v.nextthink=globals->time+.1f;return true;
     }
-    float rate=slowed(e)?balance::SlowFactor:1.f;e->v.framerate=rate;
+    float rate=slowed(e)?balance::SlowFactor:1.f;
+    // Fix 5: no avanzar el frame si esta empujado/congelado/en el aire.
+    // Antes avanzaba y luego retornaba, cortando walk/idle al desbloquearse.
+    if(pushed(e)||(e->v.flags&FL_FROZEN)||(!(e->v.flags&FL_ONGROUND)&&e->v.iuser1!=7&&e->v.iuser1!=8)){
+        if(e->v.iuser1==4)e->v.teleport_time+=dt;
+        if(e->v.flags&FL_FROZEN)e->v.velocity=Vector(0,0,0);
+        e->v.framerate=rate;e->v.animtime=globals->time;
+        e->v.nextthink=globals->time+.05f;return true;
+    }
     auto h=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));int so=*reinterpret_cast<int*>(h+168)+e->v.sequence*176;
     float fps=*reinterpret_cast<float*>(h+so+32);int frames=*reinterpret_cast<int*>(h+so+56);
     float nextFrame=e->v.frame+dt*rate*fps*256/std::max(1,frames-1);
     int sequenceFlags=*reinterpret_cast<int*>(h+so+36);
     e->v.frame=(sequenceFlags&1)?std::fmod(nextFrame,256.f):std::min(255.f,nextFrame);e->v.animtime=globals->time;
-    if(pushed(e)||(e->v.flags&FL_FROZEN)||(!(e->v.flags&FL_ONGROUND)&&e->v.iuser1!=7&&e->v.iuser1!=8)){
-        if(e->v.iuser1==4)e->v.teleport_time+=dt;
-        if(e->v.flags&FL_FROZEN)e->v.velocity=Vector(0,0,0);
-        e->v.nextthink=globals->time+.05f;return true;
-    }
+    e->v.framerate=rate;
     // Mansion owns this NPC's movement and scientist objective; do not enter
     // the bomb-planter state machine or replace its target with the player.
     if(mansionMap()&&mansionActor(e)){e->v.nextthink=globals->time+.05f;return true;}
@@ -134,10 +138,10 @@ static bool czThink(edict_t* e){
         else if((!e->v.target||distance<160)&&distance>48){
             float yaw=e->v.angles.y;Vector direction=normal(Vector(delta.x,delta.y,0));Vector next=e->v.origin+direction*(140*dt);
             Vector top=next+Vector(0,0,16),bottom=next-Vector(0,0,22);TraceResult ground{};engine.pfnTraceLine(&top.x,&bottom.x,1,e,&ground);
-            if(ground.flFraction<1&&ground.vecPlaneNormal.z>.65f&&engine.pfnWalkMove(e,yaw,140*dt*rate,0)){czSequence(e,4);e->v.fuser1=globals->time+.15f;}
+            if(ground.flFraction<1&&ground.vecPlaneNormal.z>.65f&&engine.pfnWalkMove(e,yaw,140*dt*rate,0)){czSequence(e,4);e->v.fuser1=globals->time+.6f;}
         }
         if(!czMeleeBusy(e)&&globals->time>e->v.fuser1&&globals->time>e->v.dmgtime)czSequence(e,75);
-    }else if(!czMeleeBusy(e)&&globals->time>e->v.fuser1&&globals->time>e->v.dmgtime+.3f)czSequence(e,75);
+    }else if(!czMeleeBusy(e)&&globals->time>e->v.fuser1&&globals->time>e->v.dmgtime+.6f)czSequence(e,75);
     e->v.nextthink=globals->time+.05f;return true;
 }
 static void czVisualCleanup(){
