@@ -154,6 +154,7 @@ static bool qzClearTall(edict_t* e,const Vector& at){
     }return true;
 }
 static bool qzWalk(edict_t* e,float yaw,float distance){
+    if(distance>0&&e->v.targetname&&!std::strncmp(text(e->v.targetname),"mansion_enemy_",14))return false;
     float a=yaw*3.14159265f/180;Vector to=e->v.origin+Vector(std::cos(a)*distance,std::sin(a)*distance,0);
     if(!qzClearTall(e,to))return false;
     return engine.pfnWalkMove(e,yaw,distance,0)!=0;

@@ -20,7 +20,7 @@ with using_validation_dll(MOD):
             assert 'Message name too long' not in server_log
             assert "couldn't exec maps/cs_mansion_wave1_load.cfg" not in server_log
             assert 'MansionRescueProbe PASS native_private=1' in text, 'Native rescue fixture failed; inspect diagnostics/scientist-event-server.log'
-            assert 'same_entity=1 raiders=2 ground=3 defeat=1 paths=2' in text
+            assert 'same_entity=1 raiders=2 ground=3 defeat=1 paths=2 native_hit=1' in text
             variant=os.environ.get('CREMATION_SCIENTIST_VARIANT')
             if variant in ('0','2'):
                 assert f'variant={variant}' in text

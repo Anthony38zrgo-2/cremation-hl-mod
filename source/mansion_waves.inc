@@ -20,6 +20,8 @@ static float mansionScientistLastHealth=0,mansionScientistPainAt=0;
 static int mansionGroundAssigned=0;
 static MansionScientistRef mansionRaiders[2];
 static float mansionRaidHitAt[2]{};
+struct MansionRaidAttack{bool active=false;int sequence=-1;float frame=0;};
+static MansionRaidAttack mansionRaidAttacks[2];
 static bool mansionEventMove(edict_t* e,float dt);
 struct MansionSense{edict_t* actor=nullptr;edict_t* visiblePlayer=nullptr;int serial=0,visiblePlayerSerial=0;bool contact=false;float next=0,decisionInterval=.35f,visiblePlayerDistance=1e30f;};
 static std::vector<MansionSense> mansionSense;
@@ -537,8 +539,9 @@ static bool mansionTacticalMove(edict_t* e,float dt){
     if(globals->time<s.reactAt)return true;
     if(zombieBusy(e))return true;
     Vector delta=s.lastSeen-e->v.origin;float distance=length2d(delta);
+    if(auto state=davidState(e)){state->target=s.target;state->targetSerial=s.targetSerial;}
     if(distance<=72.f){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;return true;}
-    if(auto state=davidState(e)){state->target=s.target;state->targetSerial=s.targetSerial;state->movedAt=globals->time;}
+    if(auto state=davidState(e))state->movedAt=globals->time;
     bool running=false;float speed=mansionLocomotionSpeed(e,running);
     mansionReleaseDoorRole(e);mansionNavWalk(e,s.lastSeen,dt,speed,running);return true;
 }
@@ -617,6 +620,7 @@ static bool mansionScientistSpawn(int wave){
     scientist->v.health*=10.f;scientist->v.max_health=scientist->v.health;
     engine.pfnEmitSound(scientist,CHAN_BODY,"debris/wood1.wav",1.f,ATTN_NONE,0,100);
     engine.pfnSetModel(scientist,const_cast<char*>(models[choice]));scientist->v.skin=engine.pfnRandomLong(0,skins[choice]-1);
+    Vector scientistMins(-16,-16,0),scientistMaxs(16,16,72);engine.pfnSetSize(scientist,&scientistMins.x,&scientistMaxs.x);
     scientist->v.origin=Vector(64,-256,56.1f);scientist->v.angles.y=180.f;scientist->v.movetype=MOVETYPE_NONE;scientist->v.velocity=Vector(0,0,0);scientist->v.sequence=13;scientist->v.frame=0;scientist->v.animtime=globals->time;scientist->v.nextthink=globals->time+.2f;
     engine.pfnSetOrigin(scientist,&scientist->v.origin.x);
     mansionScientist={scientist,scientist->serialnumber,wave,false};
@@ -695,36 +699,77 @@ static void mansionEventFrame(){
         if(count>=2&&mansionGroundAssigned>=3)break;if(!mansionActor(e)||!aliveEnemy(e)||czIs(e)||judgmentIs(e)||mansionCultist(e))continue;
         bool assigned=mansionTargetStarts(e,"mansion_invasion_idle");for(auto& r:mansionRaiders)if(r.entity==e)assigned=true;if(assigned)continue;
         if(count>=2){Vector at(-128.f-float(mansionGroundAssigned)*128.f,-512,56.1f);engine.pfnSetOrigin(e,&at.x);e->v.target=engine.pfnAllocString("mansion_invasion_idle");++mansionGroundAssigned;continue;}
+        // Choose models whose native melee animation events can be driven for
+        // the scientist objective. Other zombie types keep their own attacks.
+        if(!davidState(e)&&!randyClass(e))continue;
         Vector at=count==0?Vector(-352,-640,192.1f):Vector(-352,128,192.1f);
         engine.pfnSetOrigin(e,&at.x);e->v.velocity=Vector(0,0,0);e->v.target=0;
         mansionRaiders[count]={e,e->serialnumber};++count;
     }
+}
+static bool mansionRaidMelee(edict_t* e,edict_t* target,int index,float dt){
+    auto& attack=mansionRaidAttacks[index];
+    if(!aliveEnemy(e)||!aliveEnemy(target)||!e->pvPrivateData){attack.active=false;return false;}
+    auto model=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!model)return false;
+    int count=*reinterpret_cast<int*>(model+164),offset=*reinterpret_cast<int*>(model+168);
+    if(!attack.active){
+        if(length(target->v.origin-e->v.origin)>64.f||globals->time<mansionRaidHitAt[index]||zombieBusy(e))return false;
+        e->v.angles.y=std::atan2(target->v.origin.y-e->v.origin.y,target->v.origin.x-e->v.origin.x)*180.f/3.14159265f;
+        auto table=*reinterpret_cast<void***>(e->pvPrivateData);
+        reinterpret_cast<void(__thiscall*)(void*,int)>(table[ravenholm_abi::slot::SetActivity])(e->pvPrivateData,30);
+        int seq=e->v.sequence;if(seq<0||seq>=count)return false;
+        auto desc=model+offset+seq*176;int activity=*reinterpret_cast<int*>(desc+40),events=*reinterpret_cast<int*>(desc+48);
+#ifdef CREMATION_ENABLE_VALIDATION
+        {char detail[100];std::snprintf(detail,sizeof detail,"start=%d seq=%d act=%d events=%d",index,seq,activity,events);startupTrace("MansionRaidMelee",detail);}
+#endif
+        if((activity!=30&&activity!=31)||events<=0)return false;
+        attack.active=true;attack.sequence=seq;attack.frame=0;e->v.frame=0;e->v.animtime=globals->time;
+    }
+    if(e->v.sequence!=attack.sequence){attack.active=false;return false;}
+    auto desc=model+offset+attack.sequence*176;float fps=*reinterpret_cast<float*>(desc+32);
+    int frames=*reinterpret_cast<int*>(desc+56),events=*reinterpret_cast<int*>(desc+48),eventOffset=*reinterpret_cast<int*>(desc+52);
+    if(frames<=1||events<0||events>32){attack.active=false;return false;}
+    float before=attack.frame;attack.frame=std::min(float(frames-1),before+dt*fps*(slowed(e)?balance::SlowFactor:1.f));
+    e->v.frame=attack.frame*255.f/float(frames-1);e->v.animtime=globals->time;
+    for(int i=0;i<events;++i){auto item=model+eventOffset+i*76;int frame=*reinterpret_cast<int*>(item),id=*reinterpret_cast<int*>(item+4);
+        if(id<1||id>3||float(frame)<=before||float(frame)>attack.frame)continue;
+        MonsterEvent_t event{};event.event=id;event.options=reinterpret_cast<char*>(item+12);
+        auto table=*reinterpret_cast<void***>(e->pvPrivateData);
+#ifdef CREMATION_ENABLE_VALIDATION
+        engine.pfnMakeVectors(&e->v.angles.x);Vector start=e->v.origin+Vector(0,0,e->v.size.z*.5f),end=start+globals->v_forward*70.f;TraceResult probe{};
+        engine.pfnTraceHull(&start.x,&end.x,0,3,e,&probe);
+        {char row[160];std::snprintf(row,sizeof row,"hit=%s solid=%d targetbounds=%.0f,%.0f attackerheight=%.0f",valid(probe.pHit)?text(probe.pHit->v.classname):"world",target->v.solid,target->v.mins.z,target->v.maxs.z,e->v.size.z);startupTrace("MansionRaidTrace",row);}
+#endif
+        reinterpret_cast<void(__thiscall*)(void*,MonsterEvent_t*)>(table[ravenholm_abi::slot::HandleAnimEvent])(e->pvPrivateData,&event);
+#ifdef CREMATION_ENABLE_VALIDATION
+        {char detail[100];std::snprintf(detail,sizeof detail,"event=%d target_hp=%.1f distance=%.1f",id,target->v.health,length(target->v.origin-e->v.origin));startupTrace("MansionRaidMelee",detail);}
+#endif
+    }
+    if(attack.frame>=frames-1){attack.active=false;mansionRaidHitAt[index]=globals->time+.25f;}
+    return true;
 }
 static bool mansionEventMove(edict_t* e,float dt){
     if(!mansionInvaded||!mansionActor(e)||!aliveEnemy(e))return false;
     auto sc=mansionScientist.entity;
     for(int i=0;i<2;++i)if(mansionRaiders[i].entity==e&&mansionRaiders[i].serial==e->serialnumber){
         if(!aliveEnemy(sc))return true;
+        if(mansionRaidMelee(e,sc,i,dt))return true;
         mansionEventAnimate(e,dt);
         Vector goal=(mansionScientist.rescued?sc->v.origin:Vector(-624,-176,192.1f))+Vector(0,i?48.f:-48.f,0);
-        if(!mansionScientist.rescued||length(sc->v.origin-e->v.origin)>72.f){
+        if(!mansionScientist.rescued||length(sc->v.origin-e->v.origin)>60.f){
             if(auto state=davidState(e))state->movedAt=globals->time;
             bool running=false;float speed=mansionLocomotionSpeed(e,running);mansionNavWalk(e,goal,dt,speed,running);
         }
-        else if(mansionScientist.rescued&&globals->time>=mansionRaidHitAt[i]){
-            Vector from=e->v.origin+Vector(0,0,36),to=sc->v.origin+Vector(0,0,36);TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,0,e,&tr);
-            if(tr.flFraction==1||tr.pHit==sc){mansionRaidHitAt[i]=globals->time+1.f;
-                e->v.angles.y=std::atan2(sc->v.origin.y-e->v.origin.y,sc->v.origin.x-e->v.origin.x)*180.f/3.14159265f;
-                auto model=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(model){int count=*reinterpret_cast<int*>(model+164),offset=*reinterpret_cast<int*>(model+168);for(int n=0;n<count;++n)if(*reinterpret_cast<int*>(model+offset+n*176+40)==28){e->v.sequence=n;e->v.frame=0;e->v.animtime=globals->time;break;}}
-
-                auto table=*reinterpret_cast<void***>(sc->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(sc->pvPrivateData,&e->v,&e->v,std::max(20.f,e->v.dmg),1<<2);}
-        }return true;
+        return true;
     }
     if(mansionTacticalMove(e,dt))return true;
     if(e->v.origin.x<0&&e->v.origin.x>-768&&e->v.origin.y>-768&&e->v.origin.y<256){return true;}
-    // Exterior actors retain their native player combat, without climbing indoors.
-    if(mansionTargetStarts(e,"mansion_upper_patrol_"))e->v.target=0;
-    return true;
+    // Exterior horde continues its siege against a remaining intact door.
+    int door=mansionDoorHealth(1)>0?1:(mansionDoorHealth(2)>0?2:0);
+    if(!door)return true;
+    const char* destination=door==1?"mansion_wait_door_1":"mansion_wait_door_2";
+    if(!mansionTargetStarts(e,destination))e->v.target=engine.pfnAllocString(destination);
+    return false;
 }
 static bool mansionEventThink(edict_t* e){
     if(!mansionMap()||!mansionActor(e)||!aliveEnemy(e))return false;
@@ -850,7 +895,7 @@ static void mansionActivate(){
     mansionAliveAt=-1;mansionAliveCached=0;mansionHordeAliveAt=-1;mansionHordeAliveCached=0;
     mansionCultists.clear();mansionDoorStrikes.clear();mansionSense.assign(globals->maxEntities,MansionSense{});mansionRouteIntents.assign(globals->maxEntities,MansionRouteIntent{});
     mansionController={};for(auto& door:mansionDoors)door={};for(auto& target:mansionUpperTargets)target=0;
-    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistEntryAt=0;mansionScientistVoiceLine=0;mansionScientistFemale=false;mansionScientistLastHealth=0;mansionScientistPainAt=0;mansionGroundAssigned=0;mansionTacticalSenses.clear();for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;
+    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistEntryAt=0;mansionScientistVoiceLine=0;mansionScientistFemale=false;mansionScientistLastHealth=0;mansionScientistPainAt=0;mansionGroundAssigned=0;mansionTacticalSenses.clear();for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;for(auto& a:mansionRaidAttacks)a={};
     mansionNavReset();mansionAssignCultistRoles();
     mansionLightsReset();
 #ifdef CREMATION_ENABLE_VALIDATION
@@ -900,10 +945,10 @@ static void mansionDoorTouchProbe(){
 #endif
 #ifdef CREMATION_ENABLE_VALIDATION
 static void mansionRescueProbe(float dt){
-    static int stage=0;static bool same=false;static float hp=0,started=0;auto state=mansionState();
-    if(stage==2)return;
+    static int stage=0;static bool same=false,paths=false;static float hp=0,started=0,beforeAttack=0;auto state=mansionState();
+    if(stage==3)return;
     if(stage==0){stage=1;state->v.frags=1;
-        if(!mansionScientistSpawn(1)){startupTrace("MansionRescueProbe","FAIL spawn");stage=2;return;}
+        if(!mansionScientistSpawn(1)){startupTrace("MansionRescueProbe","FAIL spawn");stage=3;return;}
         auto sc=mansionScientist.entity;int serial=sc->serialnumber;hp=sc->v.health;sc->v.health-=7.f;
         auto door=mansionDoor(1);Vector initial=sc->v.origin;mansionScientistFrame(.05f);
         bool waits=length(sc->v.origin-initial)<.1f&&!mansionScientist.rescued&&sc->v.sequence==13;
@@ -921,18 +966,25 @@ static void mansionRescueProbe(float dt){
     auto sc=mansionScientist.entity;inMansionMove=true;mansionNavBeginTick();
     int arrived=0;for(auto& r:mansionRaiders)if(valid(r.entity)){mansionEventMove(r.entity,std::min(.1f,dt));if(length(r.entity->v.origin-sc->v.origin)<80.f)++arrived;}
     mansionNavFinishTick();inMansionMove=false;
-    if(arrived<2&&globals->time-started<35.f)return;
+    if(stage==1){
+        if(arrived<2&&globals->time-started<35.f)return;
+        paths=arrived==2;stage=2;started=globals->time;beforeAttack=sc->v.health;sc->v.takedamage=DAMAGE_AIM;
+    }
+    bool nativeHit=sc->v.health<beforeAttack;
+    if(!nativeHit&&globals->time-started<10.f)return;
     for(auto& r:mansionRaiders){char at[120];std::snprintf(at,sizeof at,"raider at %.0f,%.0f,%.0f",r.entity->v.origin.x,r.entity->v.origin.y,r.entity->v.origin.z);startupTrace("MansionRescueRoute",at);}
-    stage=2;sc->v.takedamage=DAMAGE_AIM;
+    stage=3;sc->v.takedamage=DAMAGE_AIM;
     auto table=*reinterpret_cast<void***>(sc->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(sc->pvPrivateData,&mansionRaiders[0].entity->v,&mansionRaiders[0].entity->v,10000.f,1<<2);
     mansionEventFrame();int raiders=0;for(auto& r:mansionRaiders)if(valid(r.entity))++raiders;
-    char detail[220];std::snprintf(detail,sizeof detail,"%s native_private=%d health10x=%.0f same_entity=%d raiders=%d ground=%d defeat=%d paths=%d",same&&raiders==2&&arrived==2&&state->v.impulse==2?"PASS":"FAIL",sc->pvPrivateData?1:0,hp,int(same),raiders,mansionGroundAssigned,int(state->v.impulse==2),arrived);startupTrace("MansionRescueProbe",detail);
+    char detail[220];std::snprintf(detail,sizeof detail,"%s native_private=%d health10x=%.0f same_entity=%d raiders=%d ground=%d defeat=%d paths=%d native_hit=%d",same&&raiders==2&&paths&&nativeHit&&state->v.impulse==2?"PASS":"FAIL",sc->pvPrivateData?1:0,hp,int(same),raiders,mansionGroundAssigned,int(state->v.impulse==2),paths?2:arrived,int(nativeHit));startupTrace("MansionRescueProbe",detail);
 }
 
+#include "mansion_tactical_validation.inc"
 #endif
 static void mansionFrame(float dt){
     if(!mansionMap())return;auto state=mansionState();if(!valid(state))return;mansionEventFrame();mansionDoorFrame();if(!mansionInvaded&&state->v.impulse!=2)mansionLightsFrame(dt);
 #ifdef CREMATION_ENABLE_VALIDATION
+    char tacticsProbe[8]{};GetEnvironmentVariableA("CREMATION_MANSION_TACTICS",tacticsProbe,sizeof tacticsProbe);if(tacticsProbe[0]=='1'){mansionTacticalProbe(std::min(.1f,dt));return;}
     char rescueProbe[8]{};GetEnvironmentVariableA("CREMATION_RESCUE_VALIDATE",rescueProbe,sizeof rescueProbe);if(rescueProbe[0]=='1'){mansionRescueProbe(dt);return;}
     if(mansionDoorTouchTest){mansionDoorTouchProbe();return;}
     if(mansionJudgmentTest){judgmentProbeFrame(dt);return;}

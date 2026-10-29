@@ -566,7 +566,9 @@ static int hookWalkMove(edict_t* e,float yaw,float distance,int mode) {
     if(mansionMap()&&mansionActor(e)&&!inMansionMove)return 1;
     return engine.pfnWalkMove(e,yaw,distance,mode);
 }
+static bool mansionTacticalZombie(edict_t* e);
 static void hookMoveToOrigin(edict_t* e,const float* goal,float distance,int mode) {
+    if(mansionMap()&&mansionActor(e)&&mansionTacticalZombie(e)&&!inMansionMove)return;
     if(pushed(e))distance=0;
     else if(slowed(e))distance*=balance::SlowFactor;
     engine.pfnMoveToOrigin(e,goal,distance,mode);

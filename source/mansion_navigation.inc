@@ -16,6 +16,12 @@ struct MansionNavPath{
 
     int node=-1,edge=0;
 
+    int blockedFrom=-1,blockedTo=-1;float blockedUntil=0;
+
+    int stairDirection=0;Vector stairMins{0,0,0},stairMaxs{0,0,0};
+
+    Vector directGoal{0,0,0};float directUntil=0;bool directClear=false;
+
     std::vector<float> costs;std::vector<int> previous;
 
     std::priority_queue<MansionNavItem,std::vector<MansionNavItem>,std::greater<MansionNavItem>> pending;
@@ -170,7 +176,7 @@ static void mansionNavEndPlan(MansionNavPath& path,bool found){
 
         std::reverse(path.nodes.begin(),path.nodes.end());++mansionNavCompleted;if(path.goal.z>140.f)++mansionNavUpperCompleted;
 
-        if(path.start>=0&&path.finish>=0){auto cached=std::find_if(mansionSharedRoutes.begin(),mansionSharedRoutes.end(),[&](const MansionSharedRoute& r){return r.start==path.start&&r.finish==path.finish;});
+        if(path.start>=0&&path.finish>=0&&path.blockedUntil<=globals->time){auto cached=std::find_if(mansionSharedRoutes.begin(),mansionSharedRoutes.end(),[&](const MansionSharedRoute& r){return r.start==path.start&&r.finish==path.finish;});
 
             if(cached==mansionSharedRoutes.end())mansionSharedRoutes.push_back({path.start,path.finish,path.nodes,globals->time+5.f});
 
@@ -233,6 +239,8 @@ static void mansionPlanNav(edict_t* e,MansionNavPath& path,const Vector& goal){
         if(path.edge>=czNav[n].count){path.node=-1;continue;}
 
         int index=czNav[n].first+path.edge,next=czNavEdges[index];
+
+        if(path.blockedUntil>globals->time&&n==path.blockedFrom&&next==path.blockedTo){++path.edge;++work;--mansionNavEdgesLeft;continue;}
 
         Vector a=czNavPoint(n),b=czNavPoint(next);
 
@@ -332,6 +340,16 @@ static bool mansionNavSpotFree(edict_t* e,const Vector& at){
 
 }
 
+static bool mansionNavDirectClear(edict_t* e,const Vector& goal){
+    Vector delta=goal-e->v.origin;float distance=length2d(delta);
+    if(distance>512.f||std::fabs(delta.z)>18.f||!mansionNavEdgeClear(e,e->v.origin,goal))return false;
+    int steps=std::max(1,int(std::ceil(distance/48.f)));
+    for(int i=1;i<=steps;++i){Vector at=e->v.origin+delta*(float(i)/steps),top=at+Vector(0,0,18),bottom=at-Vector(0,0,24);TraceResult tr{};
+        engine.pfnTraceLine(&top.x,&bottom.x,1,e,&tr);
+        if(tr.fStartSolid||tr.flFraction>=1.f||tr.vecPlaneNormal.z<.65f)return false;
+    }return true;
+}
+
 static bool mansionTryStuckStep(edict_t* e,MansionNavPath& path){
 
     // A rare recovery for the zombie horde only. Never skip a sealed door or
@@ -350,7 +368,7 @@ static bool mansionTryStuckStep(edict_t* e,MansionNavPath& path){
 
         if(length(at-e->v.origin)<18.f)continue;
 
-        bool clear=true;for(size_t edge=path.cursor;edge<i;++edge){
+        bool clear=mansionNavEdgeClear(e,e->v.origin,czNavPoint(path.nodes[path.cursor]));for(size_t edge=path.cursor;clear&&edge<i;++edge){
 
             if(!mansionNavEdgeClear(e,czNavPoint(path.nodes[edge]),czNavPoint(path.nodes[edge+1]))){clear=false;break;}}
 
@@ -382,6 +400,46 @@ static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed,bo
 
     auto& path=mansionNavPath(e);
 
+    // The Mansion stair flight is narrower than a normal human hull. Follow
+    // its centreline, restoring the actor's exact hull at the landing.
+    bool inHouse=e->v.origin.x<0&&e->v.origin.x>-760&&e->v.origin.y>-720&&e->v.origin.y<224;
+    int wanted=path.stairDirection;
+    if(!wanted&&inHouse&&goal.z>160.f&&e->v.origin.z<170.f)wanted=1;
+    else if(!wanted&&inHouse&&goal.z<110.f&&e->v.origin.z>180.f)wanted=-1;
+    if(wanted){
+        Vector landing=wanted>0?Vector(-224,-224,64.1f):Vector(-224,8,192.1f);
+        if(!path.stairDirection){
+            if(length2d(e->v.origin-landing)>25.f||std::fabs(e->v.origin.z-landing.z)>20.f)return mansionNavWalk(e,landing,dt,speed,running);
+            path.stairMins=e->v.mins;path.stairMaxs=e->v.maxs;path.stairDirection=wanted;
+            Vector lo(-8,-8,e->v.mins.z),hi(8,8,e->v.maxs.z);engine.pfnSetSize(e,&lo.x,&hi.x);
+        }
+        float endY=wanted>0?8.f:-224.f;
+        bool arrived=wanted>0?(e->v.origin.y>=endY-2.f&&e->v.origin.z>180.f):(e->v.origin.y<=endY+2.f&&e->v.origin.z<82.f);
+        if(arrived){engine.pfnSetSize(e,&path.stairMins.x,&path.stairMaxs.x);path.stairDirection=0;path.requested=false;path.nodes.clear();return false;}
+        float dx=-224.f-e->v.origin.x;float remaining=std::fabs(dx)>1.f?std::fabs(dx):std::fabs(endY-e->v.origin.y);
+        float yaw=std::fabs(dx)>1.f?(dx>0?0.f:180.f):(wanted>0?90.f:270.f);
+        if(hookWalkMove(e,yaw,std::min(remaining,speed*dt),0)){e->v.angles.y=yaw;if(!qzIs(e)){if(running)hordeRunAnimation(e);else hordeWalkAnimation(e);}}
+        return false;
+    }
+
+    if(length2d(goal-e->v.origin)<=512.f&&std::fabs(goal.z-e->v.origin.z)<=18.f){
+        if(globals->time>=path.directUntil||length(path.directGoal-goal)>16.f){
+            path.directGoal=goal;path.directClear=mansionNavDirectClear(e,goal);path.directUntil=globals->time+.35f;
+        }
+        if(path.directClear){
+            Vector delta=goal-e->v.origin;float distance=length2d(delta);
+            if(distance<18.f)return true;
+            float yaw=std::atan2(delta.y,delta.x)*180.f/3.14159265f,step=std::min(distance,speed*dt);
+            bool moved=hookWalkMove(e,yaw,step,0)!=0;float side=engine.pfnIndexOfEdict(e)%2?1.f:-1.f;
+            if(!moved)for(float turn:{25.f,50.f,90.f,135.f}){
+                if(hookWalkMove(e,yaw+turn*side,step,0)){yaw+=turn*side;moved=true;break;}
+                if(hookWalkMove(e,yaw-turn*side,step,0)){yaw-=turn*side;moved=true;break;}
+            }
+            if(moved){path.blocked=0;path.requested=false;path.planning=false;path.nodes.clear();e->v.angles.y=yaw;if(!czIs(e)&&!qzIs(e)){if(running)hordeRunAnimation(e);else hordeWalkAnimation(e);}return false;}
+            path.directClear=false;path.directUntil=globals->time+.35f;
+        }
+    }
+
     if(!path.requested||length(path.goal-goal)>8.f){
 
         path.nodes.clear();path.cursor=0;path.goal=goal;path.retryAt=0;path.blocked=0;path.recoveryAt=0;
@@ -392,9 +450,9 @@ static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed,bo
 
         auto cached=std::find_if(mansionSharedRoutes.begin(),mansionSharedRoutes.end(),[&](const MansionSharedRoute& r){return r.start==path.start&&r.finish==path.finish&&r.expires>globals->time;});
 
-        if(cached!=mansionSharedRoutes.end())path.nodes=cached->nodes;
+        if(path.blockedUntil<=globals->time&&cached!=mansionSharedRoutes.end())path.nodes=cached->nodes;
 
-        else for(const auto& route:mansionSharedRoutes)if(route.finish==path.finish&&route.expires>globals->time){
+        else if(path.blockedUntil<=globals->time)for(const auto& route:mansionSharedRoutes)if(route.finish==path.finish&&route.expires>globals->time){
 
             auto merge=std::find(route.nodes.begin(),route.nodes.end(),path.start);
 
@@ -444,7 +502,12 @@ static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed,bo
 
         if(globals->time>=path.recoveryAt&&mansionTryStuckStep(e,path)){path.blocked=0;path.recoveryAt=globals->time+2.f;}
 
-        else if(path.blocked>=2.5f){path.nodes.clear();path.retryAt=globals->time+.75f;path.blocked=0;}
+        else if(path.blocked>=2.5f){
+            int from=path.cursor>0?path.nodes[path.cursor-1]:path.start;
+            int to=path.cursor<path.nodes.size()?path.nodes[path.cursor]:-1;
+            if(from>=0&&to>=0&&from!=to){path.blockedFrom=from;path.blockedTo=to;path.blockedUntil=globals->time+4.f;}
+            path.nodes.clear();path.planning=false;path.pending={};path.retryAt=globals->time+.25f;path.blocked=0;
+        }
 
     }
 
