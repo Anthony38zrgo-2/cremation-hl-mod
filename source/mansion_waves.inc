@@ -371,6 +371,35 @@ static bool mansionChaseVisiblePlayer(edict_t* e,edict_t* player,float dt){
     }
     return false;
 }
+static bool mansionJohnnyReposition(edict_t* e,float dt){
+    auto state=davidState(e);
+    if(!state||!johnnyModel(e)||!state->saved.johnnyAxes||!state->hasLastSeen||
+       globals->time-state->lastSeenAt>8.f||mansionVisiblePlayer(e,MansionZombieNoticeRange))return false;
+    if(state->mansionRepositionReady&&length2d(state->mansionRepositionGoal-e->v.origin)<28.f){
+        state->mansionRepositionReady=false;++state->mansionRepositionCount;
+    }
+    if(!state->mansionRepositionReady){
+        if(state->mansionRepositionCount>=4)return false;
+        float best=1e30f;Vector chosen{};bool found=false;
+        constexpr float pi=3.14159265f;
+        for(float radius:{112.f,160.f,208.f})for(int k=0;k<16;++k){
+            float angle=(float(k)+float(state->serial%16)/16.f)*2.f*pi/16.f;
+            Vector candidate(state->lastSeen.x+std::cos(angle)*radius,state->lastSeen.y+std::sin(angle)*radius,e->v.origin.z);
+            if(std::fabs(candidate.z-e->v.origin.z)>96.f||mansionNearestNav(candidate)<0||length2d(candidate-e->v.origin)<40.f)continue;
+            Vector from=candidate+Vector(0,0,e->v.view_ofs.z),to=state->lastSeen+Vector(0,0,36);TraceResult tr{};
+            engine.pfnTraceLine(&from.x,&to.x,1,e,&tr);if(tr.fStartSolid||tr.flFraction<.99f)continue;
+            float score=length2d(candidate-e->v.origin);
+            if(state->mansionRepositionCount&&length2d(candidate-state->mansionRepositionGoal)<64.f)score+=240.f;
+            for(auto other:getActiveEnemies())if(other!=e&&zombieSpreadActor(other)&&length2d(other->v.origin-candidate)<112.f)score+=90.f;
+            if(score<best){best=score;chosen=candidate;found=true;}
+        }
+        if(!found)return false;
+        state->mansionRepositionGoal=chosen;state->mansionRepositionReady=true;
+    }
+    state->movedAt=globals->time;
+    mansionNavWalk(e,state->mansionRepositionGoal,dt,mansionChaseSpeed(e),true);
+    return true;
+}
 static bool mansionRouteActive(edict_t* e){return mansionMap()&&mansionActor(e)&&aliveEnemy(e)&&!mansionContact(e);}
 static bool mansionShortcut(edict_t* e,const Vector& destination){
     Vector delta=destination-e->v.origin;float distance=length2d(delta);
@@ -500,6 +529,7 @@ static void mansionMove(edict_t* e,float dt){
             if(mansionChaseVisiblePlayer(e,player,dt))return;
         }
     }
+    if(!onBridge&&mansionJohnnyReposition(e,dt))return;
     if(contact&&!mansionTargetStarts(e,"mansion_wait_door_")&&!mansionTargetStarts(e,"mansion_route_")&&!mansionTargetStarts(e,"mansion_side_route_"))return;
     if(czIs(e)&&!czSmokeCanLeave(e))return;if(czIs(e)&&czMeleeBusy(e))return;
     if(qzIs(e)&&(e->v.impulse!=QZIdle&&e->v.impulse!=QZChase))return;
