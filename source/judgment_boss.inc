@@ -99,7 +99,7 @@ static void judgmentSendHud(edict_t* player){
 }
 static void judgmentPrecache(){
     for(auto path:{KuarlModel,ZealModel})engine.pfnPrecacheModel(const_cast<char*>(path));
-    for(auto path:{"zombie/claw_strike1.wav","zombie/claw_strike2.wav","zombie/claw_hit1.wav","zombie/claw_hit2.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
+    for(auto path:{"zombie/claw_strike1.wav","zombie/claw_strike2.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
     // Native base classes perform their own model and sound registration here.
     for(auto cls:{"monster_gargantua","monster_alien_controller"}){auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString(cls));if(!valid(e))continue;e->v.origin=Vector(1336,392,24);hookSpawn(e);engine.pfnRemoveEntity(e);}
 }
@@ -165,7 +165,7 @@ static void judgmentPlayerHit(edict_t* attacker,edict_t* player,float damageAmou
     if(!valid(attacker)||!valid(player)||!player->pvPrivateData)return;Vector from=attacker->v.origin+attacker->v.view_ofs,to=player->v.origin+player->v.view_ofs;TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,0,attacker,&tr);
     if(tr.flFraction<1.f&&tr.pHit!=player)return;auto table=*reinterpret_cast<void***>(player->pvPrivateData);
     reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(player->pvPrivateData,&attacker->v,&attacker->v,damageAmount,1<<2);
-    sound(attacker,"zombie/claw_hit1.wav");
+    sound(attacker,"zombie/claw_strike1.wav");
 }
 static void judgmentSoloThink(edict_t* zeal,float dt){
     if(!judgmentZeal(zeal))return;

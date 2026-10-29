@@ -541,8 +541,10 @@ static void mansionPrecache(){
     if(!mansionMap())return;
     for(auto path:{"debris/flesh1.wav","debris/flesh2.wav","debris/flesh3.wav","buttons/spark5.wav","buttons/spark6.wav"})engine.pfnPrecacheSound(const_cast<char*>(path));
     for(auto path:{"models/cremation/scientists/valve_hd/models/scientist.mdl","models/cremation/scientists/bshift_hd/models/scientist.mdl","models/cremation/scientists/female_valve/scientist.mdl","models/cremation/scientists/female_gearbox/scientist.mdl"})engine.pfnPrecacheModel(const_cast<char*>(path));
-    for(int i=1;i<=10;++i){char path[128];std::snprintf(path,sizeof path,"models/cremation/scientists/valve_hd/models/scientist%02d.mdl",i);engine.pfnPrecacheGeneric(path);}
-    for(int i=1;i<=11;++i){char path[128];std::snprintf(path,sizeof path,"models/cremation/scientists/bshift_hd/models/scientist%02d.mdl",i);engine.pfnPrecacheGeneric(path);}
+    // GoldSrc retains these pointers for client resource transfers.
+    static char valveSequences[10][96]{},bshiftSequences[11][96]{};
+    for(int i=1;i<=10;++i){auto& path=valveSequences[i-1];std::snprintf(path,sizeof path,"models/cremation/scientists/valve_hd/models/scientist%02d.mdl",i);engine.pfnPrecacheGeneric(path);}
+    for(int i=1;i<=11;++i){auto& path=bshiftSequences[i-1];std::snprintf(path,sizeof path,"models/cremation/scientists/bshift_hd/models/scientist%02d.mdl",i);engine.pfnPrecacheGeneric(path);}
     // Native Spawn performs each monster's full sound/model precache now,
     // before GoldSrc closes its resource list. No prototypes enter the wave.
     for(int type=0;type<6;++type){auto e=engine.pfnCreateNamedEntity(engine.pfnAllocString(mansion::classname(type)));if(!valid(e)){startupTrace("MansionPrecacheCreateFailed",mansion::classname(type));continue;}

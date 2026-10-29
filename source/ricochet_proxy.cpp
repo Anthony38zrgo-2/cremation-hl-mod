@@ -1042,7 +1042,7 @@ static void extensionPrecache(){
             bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
         startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
-        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionEvent=engine.pfnRegUserMsg("MnEvent",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",8);msgCremationWaveHUD=engine.pfnRegUserMsg("CremationWaveHUD",6);
+        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionEvent=engine.pfnRegUserMsg("MnEvent",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",8);msgCremationWaveHUD=engine.pfnRegUserMsg("CrWaveHUD",6);
         czPrecache();
         heartPrecache();
         mansionRadarPrecache();
