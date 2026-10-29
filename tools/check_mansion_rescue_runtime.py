@@ -10,7 +10,7 @@ with using_validation_dll(MOD):
     with (MOD/'diagnostics/scientist-event-server.log').open('wb') as output:
         process=subprocess.Popen([str(MOD.parent/'hlds.exe'),'-console','-game','Cremation','-insecure','-nomaster','-port','27039','+sv_lan','1','+maxplayers','1','+map','cs_mansion_wave1'],cwd=MOD.parent,env=dict(os.environ,CREMATION_RESCUE_VALIDATE='1'),stdout=output,stderr=subprocess.STDOUT,stdin=subprocess.PIPE,creationflags=subprocess.CREATE_NO_WINDOW)
         try:
-            deadline=time.monotonic()+30
+            deadline=time.monotonic()+50
             while time.monotonic()<deadline:
                 text=diagnostics.read_bytes()[offset:].decode(errors='replace') if diagnostics.exists() else ''
                 if 'MansionRescueProbe' in text:break

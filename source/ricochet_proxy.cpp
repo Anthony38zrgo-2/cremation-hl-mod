@@ -663,15 +663,17 @@ static void hordeRunAnimation(edict_t* e) {
     if(!engine.pfnGetModelPtr)return;
     auto data=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));if(!data)return;
     int count=*reinterpret_cast<int*>(data+164),offset=*reinterpret_cast<int*>(data+168);
-    int run=-1,locomotion=-1;
+    int run=-1,authoredRun=-1,locomotion=-1;
     for(int i=0;i<count;++i){int activity=*reinterpret_cast<int*>(data+offset+i*176+40);
         if(activity==4){run=i;break;}
+        const char* label=reinterpret_cast<const char*>(data+offset+i*176);
+        if(activity==3&&authoredRun<0&&!std::strncmp(label,"run",3))authoredRun=i;
         if(activity==3&&locomotion<0)locomotion=i;
     }
     // Several original GoldSrc zombie models mark their authored run cycle as
     // ACT_WALK (3), and some have no ACT_RUN entry at all. Keep those models'
     // original locomotion cycle instead of leaving a stale sequence selected.
-    if(run<0)run=locomotion;
+    if(run<0)run=authoredRun>=0?authoredRun:locomotion;
     if(run>=0){
         int oldAct=(e->v.sequence>=0&&e->v.sequence<count)?*reinterpret_cast<int*>(data+offset+e->v.sequence*176+40):-1;
         float preserved=(oldAct==3||oldAct==4)?e->v.frame:0.f;

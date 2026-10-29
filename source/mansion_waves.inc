@@ -13,6 +13,7 @@ static int mansionScientistWaveSpawned=0;
 static bool mansionInvaded=false;
 static float mansionScientistAppearAt=0;
 static float mansionScientistKnockAt=0,mansionScientistVoiceAt=0,mansionScientistThankUntil=0;
+static float mansionScientistEntryAt=0;
 static int mansionScientistVoiceLine=0;
 static bool mansionScientistFemale=false;
 static float mansionScientistLastHealth=0,mansionScientistPainAt=0;
@@ -347,6 +348,19 @@ static float mansionChaseSpeed(edict_t* e){
     if(!std::strcmp(name,"monster_poisionzombie"))return 110.f;
     return 125.f;
 }
+static float mansionLocomotionSpeed(edict_t* e,bool& running){
+    if(qzIs(e)){running=false;return 35.f;}
+    if(auto state=davidState(e)){
+        if(davidCrawling(*state)){running=false;return 16.f;}
+        running=maxModel(e)||state->running;
+        return running?mansionChaseSpeed(e):55.f;
+    }
+    auto model=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));running=false;
+    if(model){int count=*reinterpret_cast<int*>(model+164),offset=*reinterpret_cast<int*>(model+168);
+        for(int i=0;i<count;++i){auto seq=model+offset+i*176;int activity=*reinterpret_cast<int*>(seq+40);
+            if(activity==4||(activity==3&&!std::strncmp(reinterpret_cast<const char*>(seq),"run",3))){running=true;break;}}}
+    return running?mansionChaseSpeed(e):(!std::strcmp(text(e->v.classname),"monster_poisionzombie")?52.f:55.f);
+}
 static bool mansionChaseVisiblePlayer(edict_t* e,edict_t* player,float dt){
     if(!valid(e)||!valid(player)||zombieBusy(e))return false;Vector delta=player->v.origin-e->v.origin;float distance=length2d(delta);
     if(distance<=80.f)return true;
@@ -524,7 +538,9 @@ static bool mansionTacticalMove(edict_t* e,float dt){
     if(zombieBusy(e))return true;
     Vector delta=s.lastSeen-e->v.origin;float distance=length2d(delta);
     if(distance<=72.f){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;return true;}
-    mansionReleaseDoorRole(e);mansionNavWalk(e,s.lastSeen,dt,mansionChaseSpeed(e),true);return true;
+    if(auto state=davidState(e)){state->target=s.target;state->targetSerial=s.targetSerial;state->movedAt=globals->time;}
+    bool running=false;float speed=mansionLocomotionSpeed(e,running);
+    mansionReleaseDoorRole(e);mansionNavWalk(e,s.lastSeen,dt,speed,running);return true;
 }
 static void mansionMove(edict_t* e,float dt){
     if(mansionEventMove(e,dt))return;
@@ -605,7 +621,7 @@ static bool mansionScientistSpawn(int wave){
     engine.pfnSetOrigin(scientist,&scientist->v.origin.x);
     mansionScientist={scientist,scientist->serialnumber,wave,false};
     mansionScientistFemale=choice>=2;mansionScientistLastHealth=scientist->v.health;mansionScientistPainAt=0;
-    mansionScientistKnockAt=globals->time+2.f;mansionScientistVoiceAt=globals->time+.4f;mansionScientistVoiceLine=0;mansionScientistThankUntil=0;
+    mansionScientistKnockAt=globals->time+2.f;mansionScientistVoiceAt=globals->time+.4f;mansionScientistVoiceLine=0;mansionScientistThankUntil=0;mansionScientistEntryAt=0;
     char detail[128];std::snprintf(detail,sizeof detail,"wave=%d variant=%d skin=%d front_door=64,-256,56",wave,choice,int(scientist->v.skin));startupTrace("MansionScientistSpawn",detail);
     return true;
 }
@@ -641,11 +657,15 @@ static void mansionScientistFrame(float dt){
     e->v.velocity=Vector(0,0,0);mansionEventAnimate(e,dt);if(ref.rescued)return;
     if(mansionScientistThankUntil>0){if(globals->time>=mansionScientistThankUntil)mansionScientistRescue(ref);return;}
     auto door=mansionDoor(1);
-    if(valid(door)&&(std::fabs(door->v.angles.x)>30.f||std::fabs(door->v.angles.y)>30.f||std::fabs(door->v.angles.z)>30.f||door->v.solid==SOLID_NOT)){
+    bool open=valid(door)&&(std::fabs(door->v.angles.x)>30.f||std::fabs(door->v.angles.y)>30.f||std::fabs(door->v.angles.z)>30.f||door->v.solid==SOLID_NOT);
+    if(open){
+        if(mansionScientistEntryAt==0){mansionScientistEntryAt=globals->time+3.f;return;}
+        if(globals->time<mansionScientistEntryAt)return;
         Vector inside(-64,-256,56.1f);engine.pfnSetOrigin(e,&inside.x);
         engine.pfnEmitSound(e,CHAN_VOICE,mansionScientistFemale?"cremation/scientist_rescue/female_thanks.wav":"cremation/scientist_rescue/male_thanks.wav",1.f,ATTN_NORM,0,100);
         mansionScientistThankUntil=globals->time+1.5f;startupTrace("MansionScientistThank", "inside before teleport");return;
     }
+    mansionScientistEntryAt=0;
     if(globals->time>=mansionScientistKnockAt){engine.pfnEmitSound(e,CHAN_BODY,"debris/wood1.wav",1.f,ATTN_NORM,0,100);mansionScientistKnockAt=globals->time+engine.pfnRandomFloat(2.f,3.5f);}
     if(globals->time>=mansionScientistVoiceAt){bool fear=(mansionScientistVoiceLine++%2)!=0;const char* line=mansionScientistFemale?(fear?"cremation/scientist_rescue/female_fear.wav":"cremation/scientist_rescue/female_help.wav"):(fear?"cremation/scientist_rescue/male_fear.wav":"cremation/scientist_rescue/male_help.wav");
         engine.pfnEmitSound(e,CHAN_VOICE,line,1.f,ATTN_NORM,0,100);mansionScientistVoiceAt=globals->time+engine.pfnRandomFloat(3.5f,5.f);}
@@ -687,7 +707,10 @@ static bool mansionEventMove(edict_t* e,float dt){
         if(!aliveEnemy(sc))return true;
         mansionEventAnimate(e,dt);
         Vector goal=(mansionScientist.rescued?sc->v.origin:Vector(-624,-176,192.1f))+Vector(0,i?48.f:-48.f,0);
-        if(!mansionScientist.rescued||length(sc->v.origin-e->v.origin)>72.f)mansionNavWalk(e,goal,dt,95.f,true);
+        if(!mansionScientist.rescued||length(sc->v.origin-e->v.origin)>72.f){
+            if(auto state=davidState(e))state->movedAt=globals->time;
+            bool running=false;float speed=mansionLocomotionSpeed(e,running);mansionNavWalk(e,goal,dt,speed,running);
+        }
         else if(mansionScientist.rescued&&globals->time>=mansionRaidHitAt[i]){
             Vector from=e->v.origin+Vector(0,0,36),to=sc->v.origin+Vector(0,0,36);TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,0,e,&tr);
             if(tr.flFraction==1||tr.pHit==sc){mansionRaidHitAt[i]=globals->time+1.f;
@@ -827,7 +850,7 @@ static void mansionActivate(){
     mansionAliveAt=-1;mansionAliveCached=0;mansionHordeAliveAt=-1;mansionHordeAliveCached=0;
     mansionCultists.clear();mansionDoorStrikes.clear();mansionSense.assign(globals->maxEntities,MansionSense{});mansionRouteIntents.assign(globals->maxEntities,MansionRouteIntent{});
     mansionController={};for(auto& door:mansionDoors)door={};for(auto& target:mansionUpperTargets)target=0;
-    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistVoiceLine=0;mansionScientistFemale=false;mansionScientistLastHealth=0;mansionScientistPainAt=0;mansionGroundAssigned=0;mansionTacticalSenses.clear();for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;
+    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistEntryAt=0;mansionScientistVoiceLine=0;mansionScientistFemale=false;mansionScientistLastHealth=0;mansionScientistPainAt=0;mansionGroundAssigned=0;mansionTacticalSenses.clear();for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;
     mansionNavReset();mansionAssignCultistRoles();
     mansionLightsReset();
 #ifdef CREMATION_ENABLE_VALIDATION
@@ -884,7 +907,9 @@ static void mansionRescueProbe(float dt){
         auto sc=mansionScientist.entity;int serial=sc->serialnumber;hp=sc->v.health;sc->v.health-=7.f;
         auto door=mansionDoor(1);Vector initial=sc->v.origin;mansionScientistFrame(.05f);
         bool waits=length(sc->v.origin-initial)<.1f&&!mansionScientist.rescued&&sc->v.sequence==13;
-        Vector oldAngles=door->v.angles;door->v.angles.y=45.f;mansionScientistFrame(.05f);door->v.angles=oldAngles;
+        Vector oldAngles=door->v.angles;door->v.angles.y=45.f;mansionScientistFrame(.05f);
+        waits=waits&&length(sc->v.origin-initial)<.1f&&mansionScientistEntryAt>globals->time;
+        mansionScientistEntryAt=globals->time;mansionScientistFrame(.05f);door->v.angles=oldAngles;
         bool thanked=!mansionScientist.rescued&&sc->v.origin.x<0&&sc->v.origin.z<100&&mansionScientistThankUntil>globals->time;
         mansionScientistThankUntil=globals->time;mansionScientistFrame(.05f);
         Vector upstairs=sc->v.origin;mansionScientistFrame(.05f);
@@ -896,7 +921,7 @@ static void mansionRescueProbe(float dt){
     auto sc=mansionScientist.entity;inMansionMove=true;mansionNavBeginTick();
     int arrived=0;for(auto& r:mansionRaiders)if(valid(r.entity)){mansionEventMove(r.entity,std::min(.1f,dt));if(length(r.entity->v.origin-sc->v.origin)<80.f)++arrived;}
     mansionNavFinishTick();inMansionMove=false;
-    if(arrived<2&&globals->time-started<18.f)return;
+    if(arrived<2&&globals->time-started<35.f)return;
     for(auto& r:mansionRaiders){char at[120];std::snprintf(at,sizeof at,"raider at %.0f,%.0f,%.0f",r.entity->v.origin.x,r.entity->v.origin.y,r.entity->v.origin.z);startupTrace("MansionRescueRoute",at);}
     stage=2;sc->v.takedamage=DAMAGE_AIM;
     auto table=*reinterpret_cast<void***>(sc->pvPrivateData);reinterpret_cast<TakeDamageFn>(table[ravenholm_abi::slot::TakeDamage])(sc->pvPrivateData,&mansionRaiders[0].entity->v,&mansionRaiders[0].entity->v,10000.f,1<<2);
