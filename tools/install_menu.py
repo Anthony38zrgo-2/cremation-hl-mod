@@ -11,20 +11,43 @@ SOURCE = MOD / 'assets-source/menu'
 RESOURCE = MOD / 'resource'
 BACKGROUND = RESOURCE / 'background'
 TILE = 256
-TITLE = 'HALF - DEATH'
 
 
 def _fit_image(path, size):
     from PIL import Image
     image = Image.open(path).convert('RGB')
-    from PIL import ImageDraw, ImageFont
-    draw = ImageDraw.Draw(image)
-    font_path = RESOURCE / 'fonts' / 'Nosifer-Regular.ttf'
-    font = ImageFont.truetype(str(font_path), 70)
-    draw.text((image.width // 2, image.height - 58), TITLE, font=font,
-              anchor='mm', fill=(205, 16, 28),
-              stroke_width=3, stroke_fill=(12, 0, 0))
-    image.thumbnail(size, Image.Resampling.LANCZOS)
+    from PIL import ImageDraw, ImageFont, ImageFilter
+    font_size = max(24, round(image.height * .09))
+    font = ImageFont.truetype(str(RESOURCE / 'fonts' / 'Nosifer-Regular.ttf'), font_size)
+    height = font_size * 3
+    parts = []
+    for label, skew, stroke in [('Half', True, 0), ('-', False, 0), ('DEATH', False, max(1, font_size // 60))]:
+        part_width = math.ceil(font.getlength(label)) + font_size
+        mask = Image.new('L', (part_width, height), 0)
+        ImageDraw.Draw(mask).text((font_size // 3, font_size * 2), label, font=font,
+                                  anchor='ls', fill=255, stroke_width=stroke, stroke_fill=255)
+        if skew:
+            shear = .22
+            mask = mask.transform((part_width + math.ceil(height * shear), height), Image.Transform.AFFINE,
+                                  (1, shear, -height * shear, 0, 1, 0), Image.Resampling.BICUBIC)
+        bounds = mask.getbbox()
+        parts.append(mask.crop((bounds[0], 0, bounds[2], height)))
+    gap = max(8, font_size // 5)
+    title = Image.new('L', (sum(part.width for part in parts) + gap * 2, height), 0)
+    x = 0
+    for part in parts:
+        title.paste(part, (x, 0)); x += part.width + gap
+    bounds = title.getbbox()
+    title = title.crop(bounds)
+    if title.width > image.width * .85:
+        scale = image.width * .85 / title.width
+        title = title.resize((round(title.width * scale), round(title.height * scale)), Image.Resampling.LANCZOS)
+    x, y = (image.width - title.width) // 2, round(image.height * .045)
+    outline = title.filter(ImageFilter.MaxFilter(7))
+    image.paste((12, 0, 0), (x, y, x + title.width, y + title.height), outline)
+    image.paste((220, 26, 35), (x, y, x + title.width, y + title.height), title)
+    scale = min(size[0] / image.width, size[1] / image.height)
+    image = image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS)
     canvas = Image.new('RGB', size, (0, 0, 0))
     canvas.paste(image, ((size[0] - image.width) // 2, (size[1] - image.height) // 2))
     return canvas
@@ -33,7 +56,7 @@ def _fit_image(path, size):
 def _background_layout(prefix, size):
     from PIL import Image
     width, height = size
-    image = _fit_image(SOURCE / 'half_dead.jpg', size)
+    image = _fit_image(SOURCE / 'half_death_new.jpg', size)
     columns, rows = math.ceil(width / TILE), math.ceil(height / TILE)
     padded = Image.new('RGB', (columns * TILE, rows * TILE), (0, 0, 0))
     padded.paste(image, (0, 0))

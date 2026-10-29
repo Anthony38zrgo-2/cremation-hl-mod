@@ -4,7 +4,7 @@ struct TacticalHudState{int bomb=0,flags=0,doorHp[2]{2000,2000},zombies=0,wave=0
 static TacticalHudState tacticalHud;
 static HSPRITE tacticalCs=0,tacticalDmcNumbers=0,tacticalPowerIcons[3]{};
 static void tacticalHudTrace(const char* line){static int enabled=-1;if(enabled<0){char env[8]{};GetEnvironmentVariableA("CREMATION_HUD_VALIDATE",env,sizeof env);enabled=env[0]=='1';if(!enabled){GetEnvironmentVariableA("CREMATION_HUD_TRACE",env,sizeof env);enabled=env[0]=='1';}}if(enabled){if(FILE* f=std::fopen("Cremation/diagnostics/hud-client-trace.log","a")){std::fprintf(f,"%s\n",line);std::fclose(f);}}}
-static void tacticalHudClear(){mansionInvasionFog=mansionDefeat=false;mansionScientistHp=mansionScientistMaxHp=0;tacticalHud=TacticalHudState{};tacticalCs=tacticalDmcNumbers=0;for(auto& icon:tacticalPowerIcons)icon=0;tacticalHudTrace("HUDClear");}
+static void tacticalHudClear(){mansionInvasionFog=mansionDefeat=mansionNarration=false;mansionSceneFadePhase=-1;mansionScientistHp=mansionScientistMaxHp=0;tacticalHud=TacticalHudState{};tacticalCs=tacticalDmcNumbers=0;for(auto& icon:tacticalPowerIcons)icon=0;tacticalHudTrace("HUDClear");}
 static int tacticalHudMessage(const char*,int size,void* ptr){
     if(size!=17||!ptr)return 1;auto b=static_cast<unsigned char*>(ptr);if(b[0]!=1||b[1]>5)return 1;
     auto word=[&](int n){return unsigned(b[n])|(unsigned(b[n+1])<<8);};float now=eng.GetClientTime();int before=tacticalHud.bomb;
@@ -27,14 +27,24 @@ static void tacticalSprite(HSPRITE sprite,int x,int y,int left,int top,int width
     if(!sprite)return;wrect_t rect{left,left+width,top,top+height};eng.pfnSPR_Set(sprite,r,g,b);eng.pfnSPR_DrawAdditive(0,x,y,&rect);
 }
 static void tacticalText(const char* text,int cx,int y,int r,int g,int b){int w=0,h=0;eng.pfnDrawConsoleStringLen(text,&w,&h);eng.pfnDrawSetTextColor(r/255.f,g/255.f,b/255.f);eng.pfnDrawConsoleString(cx-w/2,y,const_cast<char*>(text));}
+static void drawMansionNarration(int width,int height,float now){
+    if(!mansionNarration)return;if(now<mansionNarrationStarted||now-mansionNarrationStarted>=8.f){mansionNarration=false;return;}static const char* first="You must protect the scientist,";static const char* second="she is discovering how to defeat Evil Dead";
+    int total=int(std::strlen(first)+std::strlen(second));int shown=std::min(total,std::max(0,int((now-mansionNarrationStarted)*17.f)));
+    int firstCount=std::min<int>(shown,int(std::strlen(first))),secondCount=std::max(0,std::min<int>(shown-int(std::strlen(first)),int(std::strlen(second))));
+    char line1[48]{},line2[64]{};std::memcpy(line1,first,firstCount);std::memcpy(line2,second,secondCount);
+    int y=int(height*.60f);if(eng.pfnFillRGBA)eng.pfnFillRGBA(0,y-10,width,58,0,0,0,185);
+    if(line1[0])tacticalText(line1,width/2,y,245,235,220);if(line2[0])tacticalText(line2,width/2,y+25,245,235,220);
+}
 static void tacticalDigits(int value,int x,int y,bool cs,int r,int g,int b,int count=2){
     static const int csX[]={0,23,47,70,95,119,144,169,192,216};int divisor=1;for(int i=1;i<count;++i)divisor*=10;
     for(int i=0;i<count;++i){int digit=(value/divisor)%10;divisor=std::max(1,divisor/10);
         tacticalSprite(cs?tacticalCs:tacticalDmcNumbers,x+i*22,y,cs?csX[digit]:digit*24,0,20,cs?25:24,r,g,b);}
 }
 static void drawTacticalHud(){
-    float now=eng.GetClientTime();if(!mansionDefeat&&(now-tacticalHud.received>1.2f||now<tacticalHud.received||eng.pfnGetCvarFloat("hud_draw")==0))return;
-    SCREENINFO screen{};screen.iSize=sizeof screen;if(!eng.pfnGetScreenInfo(&screen))return;int w=screen.iWidth,h=screen.iHeight;
+    float now=eng.GetClientTime();SCREENINFO screen{};screen.iSize=sizeof screen;if(!eng.pfnGetScreenInfo(&screen))return;int w=screen.iWidth,h=screen.iHeight;
+    if(mansionSceneFadePhase>=0){float t=std::max(0.f,std::min(1.f,(now-mansionSceneFadeStarted)/.5f));float alpha=(mansionSceneFadePhase==1||mansionSceneFadePhase==3)?t:1.f-t;if(alpha>0)eng.pfnFillRGBA(0,0,w,h,0,0,0,int(alpha*255));if(t>=1.f&&(mansionSceneFadePhase==0||mansionSceneFadePhase==2))mansionSceneFadePhase=-1;}
+    drawMansionNarration(w,h,now);
+    if(!mansionDefeat&&!mansionNarration&&(now-tacticalHud.received>1.2f||now<tacticalHud.received||eng.pfnGetCvarFloat("hud_draw")==0))return;
     if(!tacticalCs)tacticalCs=eng.pfnSPR_Load("sprites/cremation/hud/cz/640hud7.spr");
     if(!tacticalDmcNumbers)tacticalDmcNumbers=eng.pfnSPR_Load("sprites/cremation/hud/dmc/640hud7.spr");
     static const char* icons[]={"sprites/cremation/hud/dmc/icnquad.spr","sprites/cremation/hud/dmc/icninvin.spr","sprites/cremation/hud/dmc/icninvis.spr"};

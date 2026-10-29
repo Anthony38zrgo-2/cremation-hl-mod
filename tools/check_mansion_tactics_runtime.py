@@ -16,7 +16,12 @@ with using_validation_dll(MOD):
                 if process.poll() is not None:break
                 time.sleep(.25)
             print('\n'.join(line for line in text.splitlines() if 'MansionTacticsProbe' in line))
-            assert 'MansionTacticsProbe PASS sight=1 memory=1 expired=1 door=1 closed=1 combat=1 auto=1 stairs=1 group=1' in text, 'Inspect startup-diagnostics.txt and diagnostics/mansion-tactics-server.log'
+            assert 'MansionTacticsProbe PASS sight=1 memory=1 expired=1 door=1 closed=1 combat=1 auto=1 stairs=1 group=1 priority=1 bridge=1' in text, 'Inspect startup-diagnostics.txt and diagnostics/mansion-tactics-server.log'
+            assert 'MansionNearRecovery PASS' in text, 'Recovery did not work with a nearby player'
+            assert 'MansionBridgeObstacle PASS' in text, 'Blocked bridge pursuit did not follow its route'
+            assert 'MansionVisionRange PASS' in text, 'Player beyond 120 units was detected'
+            assert 'MansionCZRoomPolicy PASS' in text, 'CZ scientist and room-defense policy failed'
+            assert 'MansionRunRange PASS' in text, 'Zombie run threshold failed'
         finally:
             if process.poll() is None:process.terminate()
             process.wait(timeout=5)

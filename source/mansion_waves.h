@@ -27,6 +27,7 @@ static constexpr float cultistPerimeter[40][3]={
 // Distribute types through the wave, while CT locations rotate independently.
 inline int kind(int wave,int index) {
     if(index==hordeTotal(wave))return 5;
+    if(wave>=1&&wave<=3&&index==0)return 5;
     if(wave==1)return 0;
     int sector=index%4,round=index/4;
     if(wave==2)return (round+sector)%2;

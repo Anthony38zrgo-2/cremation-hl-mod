@@ -42,7 +42,7 @@ static constexpr const char* PipeWrenchViewModel="models/cremation/v_pipe_wrench
 static constexpr const char* PipeWrenchPlayerModel="models/cremation/p_pipe_wrench.mdl";
 static constexpr const char* RicochetRedModel="models/cremation/v_ricochet_red.mdl";
 static int trailSprite=0, flashSprite=0;
-static int msgTacticalHUD=0,msgJudgmentHUD=0,msgMansionDoors=0,msgCremationWaveHUD=0;
+static int msgTacticalHUD=0,msgJudgmentHUD=0,msgMansionDoors=0,msgCremationWaveHUD=0,msgMansionNarration=0;
 static int msgMansionEvent=0;
 static int msgLinkMuzzle=0,msgLinkShot=0,msgFlakMuzzle=0;
 static int msgWeaponList=0,msgCurWeapon=0,msgItemPickup=0,msgAmmoX=0,msgSetFov=0,msgAmmoPickup=0;
@@ -61,7 +61,7 @@ static std::vector<HordeProbe> hordeProbes;
 static float hordeReportAt=0;
 static int hordeReportsRemaining=0;
 static float hordeStartedAt=0;
-static constexpr float MansionZombieNoticeRange=640.f;
+static constexpr float MansionZombieNoticeRange=120.f;
 static void startupTrace(const char* stage,const char* detail="") {
     if(FILE* file=std::fopen("Cremation/startup-diagnostics.txt","a")) {
         std::fprintf(file,"%s %s\n",stage,detail);std::fclose(file);
@@ -613,7 +613,7 @@ static bool zombieBusy(edict_t* e){
     if(!valid(e)||!aliveEnemy(e))return false;
     if(auto s=davidState(e)){
         if(s->dying||s->johnnyGuarding||s->johnnyThrowing)return true;
-        if(davidBusy(e)&&e->v.frame<250.f)return true;
+        return davidBusy(e)&&e->v.frame<250.f;
     }
     if(czIs(e))return czMeleeBusy(e);
     if(qzIs(e))return e->v.impulse==QZAttack||e->v.impulse==QZPain||e->v.impulse==QZDown||e->v.impulse==QZRise||e->v.impulse==QZDead;
@@ -1046,7 +1046,7 @@ static void extensionPrecache(){
             bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
         startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
-        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionEvent=engine.pfnRegUserMsg("MnEvent",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",8);msgCremationWaveHUD=engine.pfnRegUserMsg("CrWaveHUD",6);
+        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionEvent=engine.pfnRegUserMsg("MnEvent",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",8);msgCremationWaveHUD=engine.pfnRegUserMsg("CrWaveHUD",6);msgMansionNarration=engine.pfnRegUserMsg("MnNarration",1);
         czPrecache();
         heartPrecache();
         mansionRadarPrecache();

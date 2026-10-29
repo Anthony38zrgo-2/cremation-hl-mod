@@ -17,8 +17,9 @@ static int __fastcall czClassify(void*,void*){return 7;}
 static edict_t* czObject(void* object){for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(czIs(e)&&e->pvPrivateData==object)return e;}return nullptr;}
 static void __fastcall czKilled(void* object,void*,entvars_t* attacker,int gib){
     auto e=czObject(object);if(!valid(e))return;
-    bool first=e->v.deadflag==DEAD_NO;e->v.health=std::min(0.f,e->v.health);e->v.deadflag=DEAD_DYING;
-    e->v.enemy=nullptr;e->v.solid=SOLID_NOT;e->v.sequence=101;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;e->v.nextthink=globals->time+.05f;
+    bool first=e->v.deadflag==DEAD_NO;e->v.health=std::min(0.f,e->v.health);
+    if(first&&mansionMap()&&mansionActor(e)&&e->v.iuser1==5){e->v.iuser1=0;engine.pfnSetModel(e,CZModel);Vector lo(-16,-16,0),hi(16,16,72);engine.pfnSetSize(e,&lo.x,&hi.x);}
+    if(first){e->v.deadflag=DEAD_DYING;e->v.enemy=nullptr;e->v.solid=SOLID_NOT;e->v.sequence=101;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;e->v.nextthink=globals->time+.05f;}
     if(first)mansionCZDeath(e);
     if(first&&attacker&&(attacker->flags&FL_CLIENT))attacker->frags+=1;
     if(gib==2||(gib!=1&&e->v.health<-35)){
@@ -104,8 +105,8 @@ static bool czThink(edict_t* e){
     float dt=std::max(0.f,std::min(.15f,globals->time-e->v.radsuit_finished));e->v.radsuit_finished=globals->time;
     if(!aliveEnemy(e)){
         if(e->v.sequence<101||e->v.sequence>110){czSequence(e,101);e->v.pain_finished=globals->time+1.5f;}
-        e->v.frame=std::min(255.f,e->v.frame+dt*210);if(e->v.frame>=255)e->v.deadflag=DEAD_DEAD;
-        e->v.nextthink=globals->time+.1f;return true;
+        e->v.frame=std::min(255.f,e->v.frame+dt*210);if(e->v.frame>=255){e->v.deadflag=DEAD_DEAD;e->v.framerate=0;e->v.animtime=globals->time;e->v.nextthink=0;}
+        else e->v.nextthink=globals->time+.1f;return true;
     }
     float rate=slowed(e)?balance::SlowFactor:1.f;e->v.framerate=rate;
     auto h=static_cast<unsigned char*>(engine.pfnGetModelPtr(e));int so=*reinterpret_cast<int*>(h+168)+e->v.sequence*176;
@@ -118,6 +119,9 @@ static bool czThink(edict_t* e){
         if(e->v.flags&FL_FROZEN)e->v.velocity=Vector(0,0,0);
         e->v.nextthink=globals->time+.05f;return true;
     }
+    // Mansion owns this NPC's movement and scientist objective; do not enter
+    // the bomb-planter state machine or replace its target with the player.
+    if(mansionMap()&&mansionActor(e)){e->v.nextthink=globals->time+.05f;return true;}
     if(czObjectiveThink(e,dt)){e->v.nextthink=globals->time+.05f;return true;}
     if(e->v.impulse==2){e->v.impulse=0;czSequence(e,75);}
     if(czMeleeBusy(e)){e->v.nextthink=globals->time+.05f;return true;}

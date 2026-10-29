@@ -13,6 +13,12 @@ static void reactorPreviewFrame();
 #endif
 static const char* reactorWeapons[]={"weapon_bounce_shotgun","weapon_nailgun","weapon_shockrifle","weapon_rpg"};
 static const char* reactorWorldModels[]={"models/cremation/w_bounce_shotgun.mdl","models/cremation/w_nailgun.mdl","models/cremation/w_shockrifle.mdl","models/w_rpg.mdl"};
+static void reactorScientistStationActivate(){
+    if(!mansionMap())return;auto station=mansionFind("reactor_scientist_station");
+    if(!valid(station)){station=engine.pfnCreateNamedEntity(engine.pfnAllocString("info_target"));if(!valid(station))return;raven.pfnSpawn(station);station->v.targetname=engine.pfnAllocString("reactor_scientist_station");station->v.solid=SOLID_NOT;station->v.movetype=MOVETYPE_NOCLIP;}
+    // On the floor in front of the scientist, towards the centre of the room.
+    station->v.origin=Vector(-552,-248,216);engine.pfnSetOrigin(station,&station->v.origin.x);station->v.dmgtime=globals->time;
+}
 static bool reactorInside(float x,float y){
     bool inside=false;const int n=sizeof(reactorOutline)/sizeof(reactorOutline[0]);
     for(int i=0,j=n-1;i<n;j=i++){
@@ -104,7 +110,7 @@ static void reactorActivate(){
     if(reactorActive)startupTrace("ReactorActivate","depth=448 bridge=central island=small_house rewards=1 portal=rear_yard pickup_pool=4 stations=2 cooldown=10");
 }
 static void reactorFrame(){
-    if(!reactorActive)return;
+    bool scientistStation=valid(mansionFind("reactor_scientist_station"));if(!reactorActive&&!scientistStation)return;
 #ifdef CREMATION_ENABLE_VALIDATION
     reactorPreviewFrame();
     reactorTestFrame();
@@ -137,7 +143,7 @@ static void reactorFrame(){
         char report[160];std::snprintf(report,sizeof report,"player=%d velocity=%.1f,%.1f,%.1f flight=1.35",i,velocity.x,velocity.y,velocity.z);startupTrace("ReactorJump",report);
     }
     }
-    for(int stationIndex=0;stationIndex<2;++stationIndex){bool powerup=stationIndex==1;char marker[48];std::snprintf(marker,sizeof marker,powerup?"reactor_powerup_0":"reactor_pickup_0");auto station=mansionFind(marker);if(!valid(station))continue;
+    for(int stationIndex=0;stationIndex<3;++stationIndex){char marker[48];if(stationIndex==0)std::snprintf(marker,sizeof marker,"reactor_pickup_0");else if(stationIndex==1)std::snprintf(marker,sizeof marker,"reactor_powerup_0");else std::snprintf(marker,sizeof marker,"reactor_scientist_station");auto station=mansionFind(marker);if(!valid(station))continue;
         std::snprintf(marker,sizeof marker,"reactor_display_%d",stationIndex);auto display=mansionFind(marker);
         if(!valid(display)){
             display=engine.pfnCreateNamedEntity(engine.pfnAllocString("info_target"));if(!valid(display))continue;raven.pfnSpawn(display);

@@ -199,15 +199,18 @@ static bool davidCanRun(DavidState& s){
  Vector from=e->v.origin+e->v.view_ofs,to=t->v.origin+t->v.view_ofs;TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,1,e,&tr);return !tr.fStartSolid&&tr.flFraction>=.999f;
 }
 static void davidDecision(){
- for(auto& s:davidStates)if(valid(s.entity)&&s.entity->serialnumber==s.serial&&maxModel(s.entity))s.running=aliveEnemy(s.entity)&&!s.dying;
+ for(auto& s:davidStates)if(valid(s.entity)&&s.entity->serialnumber==s.serial){
+  if(mansionMap()&&mansionActor(s.entity)){auto p=s.target;s.running=aliveEnemy(s.entity)&&!s.dying&&!davidCrawling(s)&&valid(p)&&p->serialnumber==s.targetSerial&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO&&length2d(p->v.origin-s.entity->v.origin)>=70.f;}
+  else if(maxModel(s.entity))s.running=aliveEnemy(s.entity)&&!s.dying;
+ }
  if(globals->time<davidNextDecision)return;davidNextDecision=globals->time+.2f;
  std::array<bool,33> reserved{};
  // Keep a valid existing reservation before assigning newcomers by edict order.
- for(auto& s:davidStates)if(maxModel(s.entity))continue;else if(s.running){auto e=s.entity;bool keep=valid(e)&&e->serialnumber==s.serial&&davidEnable.value!=0&&davidCanRun(s)&&!davidCrowded(s,std::max(64.f,davidRadius.value));int target=keep?engine.pfnIndexOfEdict(s.target):0;
+ for(auto& s:davidStates)if(maxModel(s.entity)||(valid(s.entity)&&mansionMap()&&mansionActor(s.entity)))continue;else if(s.running){auto e=s.entity;bool keep=valid(e)&&e->serialnumber==s.serial&&davidEnable.value!=0&&davidCanRun(s)&&!davidCrowded(s,std::max(64.f,davidRadius.value));int target=keep?engine.pfnIndexOfEdict(s.target):0;
   if(target<1||target>=33||reserved[target])keep=false;
   if(keep)reserved[target]=true;else{s.running=false;s.clearSince=-1;s.cooldown=globals->time+1;}
  }
- for(auto& s:davidStates){if(maxModel(s.entity)||s.running||!valid(s.entity)||s.entity->serialnumber!=s.serial)continue;
+ for(auto& s:davidStates){if(maxModel(s.entity)||(valid(s.entity)&&mansionMap()&&mansionActor(s.entity))||s.running||!valid(s.entity)||s.entity->serialnumber!=s.serial)continue;
   if(davidEnable.value==0||!davidCanRun(s)||davidCrowded(s,std::max(davidRadius.value+16,davidClearRadius.value))){s.clearSince=-1;continue;}
   if(s.clearSince<0)s.clearSince=globals->time;
   int target=engine.pfnIndexOfEdict(s.target);if(target>0&&target<33&&!reserved[target]&&globals->time>=s.cooldown&&globals->time-s.clearSince>=.4f){s.running=true;reserved[target]=true;}
@@ -293,13 +296,13 @@ static void __fastcall davidActivity(void* object,void*,int requested){
   bool alive=aliveEnemy(s->entity),crawl=davidCrawling(*s);
   if(alive&&!death){
   if(requested==3||requested==4||requested==48||requested==49){
-   int desired=maxModel(e)?max_assets::seqRun:(johnnyModel(e)?(s->running?johnny_assets::seqRun:johnny_assets::seqWalk):(crawl?david_assets::seqCrawl:(s->running?david_assets::seqRun:david_assets::seqWalk)));
+   int desired=maxModel(e)?(s->running?max_assets::seqRun:max_assets::seqWalk):(johnnyModel(e)?(s->running?johnny_assets::seqRun:johnny_assets::seqWalk):(crawl?david_assets::seqCrawl:(s->running?david_assets::seqRun:david_assets::seqWalk)));
    // MoveExecute is called for every route step. Reapplying SetActivity there
    // resets the animation timer and made walk/run stutter. Preserve attacks,
    // pain and death clips until they finish; only switch when locomotion changes.
    if(e->v.sequence==desired)return;
    if(davidBusy(e)&&e->v.frame<254)return;
-   requested=maxModel(e)?4:(crawl?48:(s->running?4:3));
+   requested=crawl?48:(s->running?4:3);
   }
   else if(crawl&&(requested==1||requested==47||requested==61||requested==26||requested==27||requested==28||requested==29||requested==70||requested==71||requested==72||requested==73||requested==74||requested==75||requested==76))requested=18;
   // Select strikes for both native melee activities. Each selected sequence
@@ -357,7 +360,7 @@ static void __fastcall davidMove(void* object,void*,void* target,const Vector& d
   if(target){s->target=nullptr;
    for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->pvPrivateData==target){s->target=e;s->targetSerial=e->serialnumber;break;}}
   }
-  if(maxModel(s->entity))s->running=true;else if(s->target&&!(s->target->v.flags&FL_CLIENT))s->running=false;
+  if(maxModel(s->entity)&&!(mansionMap()&&mansionActor(s->entity)))s->running=true;else if(s->target&&!(s->target->v.flags&FL_CLIENT))s->running=false;
   if(johnnyModel(s->entity)){
    if(s->johnnyGuarding&&globals->time<s->johnnyGuardUntil)return;
    if(s->johnnyThrowing&&globals->time<s->johnnyThrowUntil)return;
@@ -502,7 +505,7 @@ static void davidSpawn(edict_t* e,bool restoring=false){
 static void davidFrame(){
  johnnyProjectileFrame();davidDecision();for(auto& s:davidStates)if(valid(s.entity)&&s.entity->serialnumber==s.serial&&davidModel(s.entity)&&!s.dying&&aliveEnemy(s.entity)){
   auto e=s.entity;
-  if(maxModel(e))s.running=true;
+  if(maxModel(e)&&!(mansionMap()&&mansionActor(e)))s.running=true;
   if(johnnyModel(e)){
    if(s.johnnyGuarding&&globals->time>=s.johnnyGuardUntil){s.johnnyGuarding=false;s.johnnyThrowing=false;davidActivity(e->pvPrivateData,nullptr,3);}
    if(s.johnnyThrowing&&globals->time>=s.johnnyThrowUntil){johnnyFinishThrow(s);if(e->v.sequence==johnny_assets::seqThrow){davidActivity(e->pvPrivateData,nullptr,s.running?4:3);if(e->v.sequence==johnny_assets::seqThrow){e->v.sequence=s.running?johnny_assets::seqRun:johnny_assets::seqWalk;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=slowed(e)?balance::SlowFactor:1.f;if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);}}}
@@ -510,7 +513,7 @@ static void davidFrame(){
   }
   int seq=e->v.sequence;bool locomotion=maxModel(e)?(seq==max_assets::seqWalk||seq==max_assets::seqRun):(johnnyModel(e)?(seq==johnny_assets::seqWalk||seq==johnny_assets::seqRun):(seq==1||seq==2||seq==20));
   bool moving=length2d(e->v.velocity)>1.0f||(globals->time-s.movedAt<.15f);
-  if((locomotion||(moving&&seq==0))&&(maxModel(e)||globals->time-s.movedAt<.45f)){int desired=maxModel(e)?max_assets::seqRun:(johnnyModel(e)?(s.running?johnny_assets::seqRun:johnny_assets::seqWalk):(davidCrawling(s)?david_assets::seqCrawl:(s.running?david_assets::seqRun:david_assets::seqWalk)));if(seq!=desired)davidActivity(e->pvPrivateData,nullptr,s.running?4:3);}
+  if((locomotion||(moving&&seq==0))&&(maxModel(e)||globals->time-s.movedAt<.45f)){int desired=maxModel(e)?(s.running?max_assets::seqRun:max_assets::seqWalk):(johnnyModel(e)?(s.running?johnny_assets::seqRun:johnny_assets::seqWalk):(davidCrawling(s)?david_assets::seqCrawl:(s.running?david_assets::seqRun:david_assets::seqWalk)));if(seq!=desired)davidActivity(e->pvPrivateData,nullptr,s.running?4:3);}
  }
 }
 static void davidSave(edict_t* e,SAVERESTOREDATA* data){auto s=davidState(e);if(s&&davidModel(e)&&raven.pfnSaveWriteFields){s->saved.johnnyGuardRemaining=johnnyModel(e)&&s->johnnyGuarding?std::max(0.f,s->johnnyGuardUntil-globals->time):0.f;raven.pfnSaveWriteFields(data,"CremationDavid1",&s->saved,davidSaveFields,ARRAYSIZE(davidSaveFields));}}

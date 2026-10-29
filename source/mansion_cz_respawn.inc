@@ -29,7 +29,6 @@ static void mansionCZDeath(edict_t* npc){
     char report[96];std::snprintf(report,sizeof report,"%s remaining=%d wave=%d",remaining>5?"queued":"stopped",remaining,int(wave->v.frags));startupTrace("MansionCZRespawn",report);
 }
 static void mansionCZRespawnFrame(){
-    return; // Special tactical NPC temporarily disabled.
     auto& ref=mansionCZRespawnController;
     if(!valid(ref.entity)||ref.entity->serialnumber!=ref.serial||ref.entity->v.impulse!=1)return;
     auto queue=ref.entity;auto state=mansionState();
@@ -41,7 +40,7 @@ static void mansionCZRespawnFrame(){
     // Reuse the validated farthest-free spawn selection, without advancing
     // the normal wave's spawn counter or changing its composition.
     float count=state->v.armorvalue,cursor=state->v.health,selected=state->v.dmg_save;
-    state->v.armorvalue=float(mansion::hordeTotal(int(state->v.frags)));
+    state->v.armorvalue=0; // The first slot in waves 1-3 is the tactical zombie.
     bool emitted=mansionEmit(state);
     state->v.armorvalue=count;state->v.health=cursor;state->v.dmg_save=selected;
     if(emitted){queue->v.impulse=0;mansionAliveAt=-1;startupTrace("MansionCZRespawn","revived");}

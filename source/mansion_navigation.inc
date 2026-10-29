@@ -288,18 +288,6 @@ static void mansionPlanNav(edict_t* e,MansionNavPath& path,const Vector& goal){
 
 }
 
-static float mansionNearestPlayerDistance(const Vector& at){
-
-    float nearest=1e30f;
-
-    for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);
-
-        if(valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO)nearest=std::min(nearest,length(p->v.origin-at));}
-
-    return nearest;
-
-}
-
 static bool mansionNavEdgeClear(edict_t* e,const Vector& a,const Vector& b){
 
     float sweep=std::max(a.z,b.z)+36.2f;Vector from(a.x,a.y,sweep),to(b.x,b.y,sweep);TraceResult tr{};
@@ -358,7 +346,7 @@ static bool mansionTryStuckStep(edict_t* e,MansionNavPath& path){
 
     // swept again, and the destination must be empty.
 
-    if(mansionCultist(e)||path.nodes.empty()||path.cursor>=path.nodes.size()||mansionNearestPlayerDistance(e->v.origin)<640.f)return false;
+    if(mansionCultist(e)||path.nodes.empty()||path.cursor>=path.nodes.size())return false;
 
     const size_t last=std::min(path.nodes.size()-1,path.cursor+4);size_t chosen=path.cursor;Vector destination{};bool found=false;
 
@@ -394,6 +382,13 @@ static bool mansionTryStuckStep(edict_t* e,MansionNavPath& path){
 
 }
 
+#ifdef CREMATION_ENABLE_VALIDATION
+static bool mansionNearRecoveryProbe(edict_t* actor,edict_t* player){
+    Vector start(224,-256,24.1f),nearPlayer(224,-356,60.1f);engine.pfnSetOrigin(actor,&start.x);engine.pfnSetOrigin(player,&nearPlayer.x);
+    int node=mansionNearestNav(Vector(288,-256,24.1f));MansionNavPath path{};if(node>=0)path.nodes.push_back(node);
+    return node>=0&&mansionTryStuckStep(actor,path)&&length2d(actor->v.origin-start)>=18.f&&length(actor->v.origin-start)<=96.1f;
+}
+#endif
 static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed,bool running){
 
     if(!valid(e)||!aliveEnemy(e)||CZNavCount<=0)return false;

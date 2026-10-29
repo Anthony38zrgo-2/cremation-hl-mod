@@ -68,9 +68,10 @@ por lo que sus cantidades son exactas. En las oleadas 3 y 4 sigue aplicándose
 Johnny seleccionado aleatoriamente ocupa una de las plazas `Normales*` y no
 aumenta el total.
 
-Cada oleada añade un [zombi con knife Leviathan](CZERO_ZOMBIE.md), con el
-modelo de la carpeta 0 del RAR. Aparece en un punto CT libre al azar, cuenta
-como enemigo y conserva compatibilidad con los efectos de Cremation.
+Las oleadas 1 a 3 incluyen un [zombi con knife Leviathan](CZERO_ZOMBIE.md).
+Busca a la científica; si ambos están en su habitación y entra un jugador,
+equipa la pistola para defenderse. Al quedar la habitación sin jugadores,
+recupera el cuchillo y vuelve a buscar a la científica. No planta una bomba.
 
 La primera oleada comienza cinco segundos después de entrar un jugador vivo.
 Se intenta generar un enemigo cada 0,75 segundos, alternando norte, este,
@@ -88,10 +89,9 @@ los enemigos y agotar las apariciones pendientes de la anterior. La cuarta
 termina con un mensaje de finalización; no se repite indefinidamente.
 
 ### Límite de concurrencia y reemplazo de bajas
-El mapa mantiene un límite estricto de **16 monstruos simultáneos** (mansionHordeAlive() <= 16),
-sin incluir al zombi táctico de CS Zero (monster_czero_zombie), el cual tiene asignado su propio rol
-independiente de infiltración y colocación de la bomba C4.
-Cuando el número de monstruos regulares vivos alcanza 16, la emisión de nuevos enemigos se pausa.
+El mapa mantiene un límite de **10 monstruos regulares simultáneos**,
+sin incluir al zombi táctico de CS Zero (monster_czero_zombie).
+Cuando el número de monstruos regulares vivos alcanza 10, la emisión de nuevos enemigos se pausa.
 En cuanto el jugador elimina a uno o varios enemigos y se desocupan plazas, el generador reanuda la
 emisión inmediatamente (comprobando cada 0,25 s) para reemplazar al caído, manteniendo la tensión y
 el ritmo constante sin saturar los accesos ni provocar atascos de colisión en las puertas.
@@ -117,15 +117,14 @@ jugador y los cadáveres no cuentan como enemigos vivos.
 Las rutas CT–puerta principal se calculan sobre el BSP, con casco humano,
 comprobación de suelo, escalones, altura adicional del zombi Quake y margen
 lateral. El movimiento normal utiliza `WalkMove` con colisiones, sin secuencias
-cinematográficas. Si un zombi permanece atascado sin avanzar durante 1,25 s y
-el jugador está a más de 640 unidades, puede dar un paso de recuperación de
-hasta 96 unidades por celdas ya presentes en su ruta. Solo salta a una celda
+cinematográficas. Si un zombi permanece atascado sin avanzar durante 1,25 s,
+puede dar un paso de recuperación de hasta 96 unidades por celdas ya presentes
+en su ruta, independientemente de la distancia al jugador. Solo salta a una celda
 libre con suelo y vuelve a comprobar cada tramo; no atraviesa puertas cerradas
 ni paredes. La ruta incluye las escaleras, así que el paso puede subir algunos
-peldaños cuando el jugador está lejos. La detección de objetivos visibles cede
-el combate a la IA de cada enemigo; al perder el contacto puede continuar la
-ruta. Si un zombi común ve al jugador a menos de 1024 unidades, corre hacia él
-por la ruta compartida y deja de esperar su turno de asedio, aunque haya otros
+peldaños cuando el jugador está lejos. Si un zombi común ve al jugador a menos
+de 120 unidades, lo persigue mientras siga vivo y puede correr desde 70 unidades
+de distancia. Deja de esperar su turno de asedio, aunque haya otros
 zombis alrededor. El Quake y el táctico de CS Zero conservan sus sistemas de
 combate propios. Los enemigos mantienen la alianza de facción zombi/cultista.
 

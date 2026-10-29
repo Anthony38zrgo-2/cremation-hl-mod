@@ -62,6 +62,12 @@ static void hotd2DeathFrame(){
     int nativeDeath=reinterpret_cast<int(__thiscall*)(void*)>(table[ravenholm_abi::slot::GetDeathActivity])(e->pvPrivateData);
     davidActivity(e->pvPrivateData,nullptr,nativeDeath);davidActivity(e->pvPrivateData,nullptr,nativeDeath==37?38:37);
     std::snprintf(msg,sizeof msg,"actor=%d repeated/native death requests preserve sequence=%d and frame=%.2f",i,sequence,frame);hotd2DeathResult(e->v.sequence==sequence&&e->v.frame==frame&&e->v.animtime==animtime,msg);
+    if(i==2){float health=e->v.health;int deadflag=e->v.deadflag;bool invaded=mansionInvaded;auto raider=mansionRaiders[0];auto attack=mansionRaidAttacks[0];
+     e->v.health=100;e->v.deadflag=DEAD_NO;mansionInvaded=true;mansionRaiders[0]={e,e->serialnumber};mansionRaidAttacks[0].active=true;
+     bool moved=mansionEventMove(e,.05f);mansionMove(e,.05f);bool melee=mansionRaidMelee(e,e,0,.05f);
+     hotd2DeathResult(!moved&&!melee&&!mansionRaidAttacks[0].active&&e->v.sequence==sequence&&e->v.frame==frame&&e->v.animtime==animtime,"dying Johnny cannot be animated or moved by scientist attacker logic");
+     e->v.health=health;e->v.deadflag=deadflag;mansionInvaded=invaded;mansionRaiders[0]=raider;mansionRaidAttacks[0]=attack;
+    }
    }
   }
   hotd2DeathProbePhase=2;hotd2DeathProbeAt=globals->time+.5f;return;
