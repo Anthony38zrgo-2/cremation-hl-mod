@@ -1,0 +1,39 @@
+{
+  "source": "assets-source/music/666_intro_source.wav",
+  "source_sha256": "9df68abfde29c53d29096cd042104b91990f22af1666f673550e696646a0a2e5",
+  "original_loudness": {
+    "input_i": "-17.13",
+    "input_tp": "-0.04",
+    "input_lra": "9.80",
+    "input_thresh": "-27.62",
+    "output_i": "-16.18",
+    "output_tp": "-1.50",
+    "output_lra": "7.50",
+    "output_thresh": "-26.48",
+    "normalization_type": "dynamic",
+    "target_offset": "0.18"
+  },
+  "mastered_loudness": {
+    "input_i": "-16.04",
+    "input_tp": "-1.50",
+    "input_lra": "7.30",
+    "input_thresh": "-26.39",
+    "output_i": "-16.85",
+    "output_tp": "-2.00",
+    "output_lra": "6.70",
+    "output_thresh": "-27.06",
+    "normalization_type": "dynamic",
+    "target_offset": "0.85"
+  },
+  "target": {
+    "integrated_lufs": -16,
+    "true_peak_dbtp": -1.5,
+    "lra": 11
+  },
+  "intro_seconds": 133.94,
+  "crossfade_seconds": 6.0,
+  "ost": "sound/music/myfuneral_loop.wav",
+  "ost_loop_start": 264600,
+  "combined": "sound/music/666_intro_myfuneral.wav",
+  "combined_loop_start": 5906754
+}

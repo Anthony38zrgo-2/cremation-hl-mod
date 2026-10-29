@@ -9,6 +9,7 @@ static std::thread musicThread;
 static std::string musicCurrentPath;
 static std::atomic<bool> musicStop{false};
 static std::atomic<float> musicGain{0};
+static bool musicIntroPlayed=false,musicIntroActive=false;
 static cvar_s* musicEnabled=nullptr;static cvar_s* musicVolume=nullptr;
 static void musicTrace(const char* what,unsigned value=0){if(FILE* f=std::fopen("Cremation/diagnostics/music-stream.log","a")){std::fprintf(f,"%s %u\n",what,value);std::fclose(f);}}
 static void musicWorker(std::string path){
@@ -38,11 +39,13 @@ static void musicShutdown(){musicStop=true;if(musicThread.joinable())musicThread
 static void musicUpdate(){
  static DWORD probeStart=0;static bool probeEnded=false;if(GetEnvironmentVariableA("CREMATION_AUDIO_VALIDATE",nullptr,0)&&musicThread.joinable()&&!probeEnded){if(!probeStart)probeStart=GetTickCount();if(GetTickCount()-probeStart>8000){probeEnded=true;eng.pfnClientCmd("disconnect\n");}}
  if(!musicEnabled){musicEnabled=eng.pfnRegisterVariable("cremation_music","1",1);musicVolume=eng.pfnRegisterVariable("cremation_music_volume","0.65",1);}
- const char* level=eng.pfnGetLevelName();bool inLevel=level&&*level;if(!inLevel)judgmentHudClear();
- if(!musicEnabled||musicEnabled->value<=0){if(musicThread.joinable())musicShutdown();return;}
+ const char* level=eng.pfnGetLevelName();bool inLevel=level&&*level;if(!inLevel){judgmentHudClear();musicIntroPlayed=false;musicIntroActive=false;}
+ if(!musicEnabled||musicEnabled->value<=0){if(musicThread.joinable())musicShutdown();if(inLevel&&musicIntroActive)musicIntroActive=false;return;}
  float master=eng.pfnGetCvarFloat("volume");musicGain=std::max(0.f,std::min(1.f,musicVolume->value*master));
  const char* gameDirectory=eng.pfnGetGameDirectory();std::string path=gameDirectory?gameDirectory:"";
- path+=judgmentMusicPath(inLevel);
+ if(inLevel&&judgmentHud.active)musicIntroActive=false;
+ else if(inLevel&&!musicIntroPlayed){musicIntroPlayed=true;musicIntroActive=true;}
+ path+=(inLevel&&musicIntroActive)?"/sound/music/666_intro_myfuneral.wav":judgmentMusicPath(inLevel);
  if(musicThread.joinable()&&path!=musicCurrentPath)musicShutdown();
  if(!musicThread.joinable()){musicStop=false;musicCurrentPath=path;musicThread=std::thread(musicWorker,path);}
 }
