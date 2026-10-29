@@ -2,7 +2,7 @@
 namespace mansion {
 static constexpr int SpawnCount=40, SectorCount=4;
 inline int hordeTotal(int wave) {return wave>=1&&wave<=4?(wave<=2?40:80):0;}
-inline int total(int wave) {return hordeTotal(wave)+(wave>=1&&wave<=4?1:0);}
+inline int total(int wave) {return hordeTotal(wave)+(wave==4?1:0);}
 inline int johnnyTotal(int wave) {return wave==1?10:(wave==2?15:0);}
 inline bool isJohnny(int wave,int index) {return index>=0&&index<johnnyTotal(wave)&&index<hordeTotal(wave);}
 inline int kind(int wave,int index);

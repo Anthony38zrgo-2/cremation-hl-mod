@@ -29,6 +29,7 @@ static void mansionCZDeath(edict_t* npc){
     char report[96];std::snprintf(report,sizeof report,"%s remaining=%d wave=%d",remaining>5?"queued":"stopped",remaining,int(wave->v.frags));startupTrace("MansionCZRespawn",report);
 }
 static void mansionCZRespawnFrame(){
+    return; // Special tactical NPC temporarily disabled.
     auto& ref=mansionCZRespawnController;
     if(!valid(ref.entity)||ref.entity->serialnumber!=ref.serial||ref.entity->v.impulse!=1)return;
     auto queue=ref.entity;auto state=mansionState();

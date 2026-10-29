@@ -43,6 +43,7 @@ static constexpr const char* PipeWrenchPlayerModel="models/cremation/p_pipe_wren
 static constexpr const char* RicochetRedModel="models/cremation/v_ricochet_red.mdl";
 static int trailSprite=0, flashSprite=0;
 static int msgTacticalHUD=0,msgJudgmentHUD=0,msgMansionDoors=0,msgCremationWaveHUD=0;
+static int msgMansionEvent=0;
 static int msgLinkMuzzle=0,msgLinkShot=0,msgFlakMuzzle=0;
 static int msgWeaponList=0,msgCurWeapon=0,msgItemPickup=0,msgAmmoX=0,msgSetFov=0,msgAmmoPickup=0;
 static bool singleGrenadePickup=false;
@@ -706,12 +707,11 @@ static void enemyCombatProbeFrame();
 static void dmcPreviewFrame();
 #endif
 static bool mansionScientistThink(edict_t* e);
-static bool mansionFrontDoorPlayerAction(edict_t* door,edict_t* actor);
-static edict_t* mansionDoor(int door);
-static void hookUse(edict_t* used,edict_t* other);
+static bool mansionEventThink(edict_t* e);
+static bool mansionGameOverFrame();
 static void hookThink(edict_t* e) {
     enemyCombatClearTargets(e);
-    if(mansionScientistThink(e))return;
+    if(mansionScientistThink(e)||mansionEventThink(e))return;
     if(judgmentIs(e)){judgmentThink(e,.05f);e->v.nextthink=0;return;}
     if(vostokCoverThink(e))return;
     if(czThink(e))return;
@@ -733,6 +733,7 @@ static void hookThink(edict_t* e) {
     }
 }
 static void hookStartFrame() {
+    if(mansionGameOverFrame())return;
 #ifdef CREMATION_ENABLE_VALIDATION
     tacticalHudProbeFrame();
     dmcPreviewFrame();
@@ -1014,12 +1015,7 @@ static void hookTouch(edict_t* a,edict_t* b) {
     if(rpgPickup(a,b)||rpgPickup(b,a))return;
     if(rpgTouch(a,b))return;
     if(bounce::engineerMetal(a,b)||bounce::engineerMetal(b,a))return;
-    mansionFrontDoorPlayerAction(a,b);mansionFrontDoorPlayerAction(b,a);
     if(raven.pfnTouch)raven.pfnTouch(a,b);
-}
-static void hookUse(edict_t* used,edict_t* other){
-    mansionFrontDoorPlayerAction(used,other);
-    if(raven.pfnUse)raven.pfnUse(used,other);
 }
 static const char* hookDescription() {return "Cremation";}
 static void extensionPrecache(){
@@ -1045,7 +1041,7 @@ static void extensionPrecache(){
             bounce_balance::Pellets,bounce_balance::SpreadMultiplier,int(bounce_balance::OverkillGib));
         startupTrace("WeaponBalance",summary);
         // World spawn is the legal precache phase, before clients enter.
-        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",8);msgCremationWaveHUD=engine.pfnRegUserMsg("CremationWaveHUD",6);
+        msgTacticalHUD=engine.pfnRegUserMsg("TacticalHUD",17);msgJudgmentHUD=engine.pfnRegUserMsg("JudgmentHUD",6);msgMansionEvent=engine.pfnRegUserMsg("MnEvent",6);msgMansionDoors=engine.pfnRegUserMsg("MnDoors",8);msgCremationWaveHUD=engine.pfnRegUserMsg("CremationWaveHUD",6);
         czPrecache();
         heartPrecache();
         mansionRadarPrecache();
@@ -1391,7 +1387,6 @@ static void installHooks(DLL_FUNCTIONS* table) {
     raven=*table;
     table->pfnSetAbsBox=hookSetAbsBox;
     table->pfnTouch=hookTouch;table->pfnSpawn=hookSpawn;table->pfnThink=hookThink;table->pfnStartFrame=hookStartFrame;
-    table->pfnUse=hookUse;
     table->pfnPlayerPreThink=hookPreThink;table->pfnPlayerPostThink=hookPostThink;
     table->pfnClientCommand=hookClientCommand;table->pfnServerActivate=hookActivate;table->pfnServerDeactivate=hookDeactivate;
     table->pfnCmdStart=hookCmdStart;
