@@ -56,7 +56,6 @@ struct DavidBonePose {Vector origin{0,0,0},axis[3];};
 struct DavidState {
  edict_t* entity=nullptr;int serial=0;DavidSaved saved;
  edict_t* target=nullptr;int targetSerial=0;float movedAt=-100,clearSince=-1,cooldown=0;bool running=false;
- Vector lastSeen{0,0,0},mansionRepositionGoal{0,0,0};float lastSeenAt=-1;int mansionRepositionCount=0;bool hasLastSeen=false,mansionRepositionReady=false;
  bool attackEventConsumed=false,dying=false;int attackSelections[3]{},meleeEvents=0,attackRequests[2]{};
  int deathActivity=0;bool deathStarted=false;
  float pendingAt=-100;entvars_t* pendingAttacker=nullptr;float pending[16]{};
@@ -216,16 +215,11 @@ static void davidDecision(){
 }
 static bool johnnyPlayerAlive(edict_t* p){return valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO;}
 static bool johnnyCanSee(edict_t* e,edict_t* p){if(!johnnyPlayerAlive(p)||length(p->v.origin-e->v.origin)>MansionZombieNoticeRange)return false;Vector from=e->v.origin+e->v.view_ofs,to=p->v.origin+p->v.view_ofs;TraceResult tr{};engine.pfnTraceLine(&from.x,&to.x,1,e,&tr);return !tr.fStartSolid&&(tr.flFraction>=.999f||tr.pHit==p);}
-static void johnnyRememberVisible(DavidState& s,edict_t* p){
- if(!johnnyCanSee(s.entity,p))return;
- if(!s.hasLastSeen||length2d(s.lastSeen-p->v.origin)>64.f)s.mansionRepositionCount=0;
- s.lastSeen=p->v.origin;s.lastSeenAt=globals->time;s.hasLastSeen=true;s.mansionRepositionReady=false;
-}
 static edict_t* johnnyTarget(DavidState& s){
- if(valid(s.target)&&s.target->serialnumber==s.targetSerial&&johnnyCanSee(s.entity,s.target)){johnnyRememberVisible(s,s.target);return s.target;}
+ if(valid(s.target)&&s.target->serialnumber==s.targetSerial&&johnnyCanSee(s.entity,s.target))return s.target;
  edict_t* best=nullptr;float bestDistance=MansionZombieNoticeRange;
  for(int i=1;i<=globals->maxClients;++i){auto p=engine.pfnPEntityOfEntIndex(i);if(!johnnyCanSee(s.entity,p))continue;float d=length(p->v.origin-s.entity->v.origin);if(d<bestDistance){bestDistance=d;best=p;}}
- if(best){s.target=best;s.targetSerial=best->serialnumber;johnnyRememberVisible(s,best);}return best;
+ if(best){s.target=best;s.targetSerial=best->serialnumber;}return best;
 }
 static void johnnyStartThrow(DavidState& s,edict_t* target){
  if(!johnnyModel(s.entity)||s.saved.johnnyAxes==0||s.johnnyGuarding||s.johnnyThrowing||globals->time<s.johnnyNextThrow||!johnnyPlayerAlive(target))return;
@@ -359,27 +353,20 @@ static void __fastcall davidActivity(void* object,void*,int requested){
 static void __fastcall davidMove(void* object,void*,void* target,const Vector& dir,float interval){
  auto t=davidTable(object);auto s=davidState(davidObject(object));if(!t)return;
  if(s&&s->dying)return;
- Vector moveDir=dir;
  if(s){s->movedAt=globals->time;
   if(target){s->target=nullptr;
    for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->pvPrivateData==target){s->target=e;s->targetSerial=e->serialnumber;break;}}
   }
   if(maxModel(s->entity))s->running=true;else if(s->target&&!(s->target->v.flags&FL_CLIENT))s->running=false;
   if(johnnyModel(s->entity)){
-   if(s->target&&johnnyCanSee(s->entity,s->target))johnnyRememberVisible(*s,s->target);
    if(s->johnnyGuarding&&globals->time<s->johnnyGuardUntil)return;
    if(s->johnnyThrowing&&globals->time<s->johnnyThrowUntil)return;
    if(s->saved.johnnyAxes){johnnyStartThrow(*s,s->target);if(s->johnnyThrowing)return;}
-   if(s->saved.johnnyAxes&&s->hasLastSeen&&globals->time-s->lastSeenAt<8.f&&johnnyPlayerAlive(s->target)&&!johnnyCanSee(s->entity,s->target)){
-    Vector toward=normal(Vector(s->lastSeen.x-s->entity->v.origin.x,s->lastSeen.y-s->entity->v.origin.y,0));
-    Vector flank(-toward.y,toward.x,0);if(s->serial&1)flank=flank*-1.f;
-    moveDir=normal(normal(dir)+flank*.55f);
-   }
   }
   davidActivity(object,nullptr,s->running?4:3);
   if(mansionMap()&&mansionActor(s->entity))return;
  }
- reinterpret_cast<void(__thiscall*)(void*,void*,const Vector&,float)>(t->move)(object,target,moveDir,interval);
+ reinterpret_cast<void(__thiscall*)(void*,void*,const Vector&,float)>(t->move)(object,target,dir,interval);
 }
 static void __fastcall davidEvent(void* object,void*,MonsterEvent_t* event){
  auto t=davidTable(object);auto e=davidObject(object);auto s=davidState(e);if(!t)return;MonsterEvent_t changed=*event;

@@ -2,10 +2,6 @@
 // player state, saves and the shotgun; this module adds the disc weapon and the
 // bouncing shotgun, and forwards every inherited export unchanged.
 #include "extdll.h"
-#include "plane.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
 #undef min
 #undef max
 #include "entity_handle.h"
@@ -73,18 +69,6 @@ static void startupTrace(const char* stage,const char* detail="") {
 
 static const char* text(string_t s) { return engine.pfnSzFromIndex(s); }
 static bool valid(edict_t* e) { return e && !e->free && !(e->v.flags&FL_KILLME); }
-static bool zombieVisionClass(const char* name){
-    return name&&(std::strstr(name,"zombie")||!std::strcmp(name,"monster_johnny")||!std::strcmp(name,"monster_max")||!std::strcmp(name,"monster_ken")||!std::strcmp(name,"monster_randy")||!std::strcmp(name,"monster_minion"));
-}
-static bool zombieHecuVision(edict_t* e){
-    if(!valid(e)||!e->pvPrivateData)return false;
-    // The compiled SDK layout supplies this field offset. Guard against donor
-    // DLL class-layout drift by only changing the native CZombie default (.5).
-    auto monster=reinterpret_cast<CBaseMonster*>(e->pvPrivateData);
-    if(!std::isfinite(monster->m_flFieldOfView)||std::fabs(monster->m_flFieldOfView-.5f)>.001f)return false;
-    monster->m_flFieldOfView=.2f;
-    return true;
-}
 static bool aliveEnemy(edict_t* e) {
     return valid(e) && (e->v.flags&FL_MONSTER) && e->v.deadflag==DEAD_NO && e->v.health>0;
 }
@@ -574,32 +558,10 @@ static bool fire(edict_t* p,bool secondary) {
     p->v.punchangle.x-=secondary?2.f:1.f;
     return true;
 }
-static bool zombieBusy(edict_t* e);
-static bool zombieSpreadActor(edict_t* e){
-    if(!valid(e)||!e->v.classname)return false;
-    const char* name=text(e->v.classname);
-    return std::strstr(name,"zombie")||!std::strcmp(name,"monster_johnny")||!std::strcmp(name,"monster_max")||!std::strcmp(name,"monster_ken")||!std::strcmp(name,"monster_randy")||!std::strcmp(name,"monster_minion")||davidModel(e);
-}
-static float zombieSpreadYaw(edict_t* e,float yaw){
-    if(!valid(e))return yaw;
-    if(valid(e->v.enemy)&&length2d(e->v.enemy->v.origin-e->v.origin)<112.f)return yaw;
-    Vector away(0,0,0);
-    for(auto other:getActiveEnemies()){
-        if(other==e||!zombieSpreadActor(other)||std::fabs(other->v.origin.z-e->v.origin.z)>64.f)continue;
-        Vector delta=e->v.origin-other->v.origin;float distance=length2d(delta);
-        if(distance<1.f||distance>=176.f)continue;
-        away=away+Vector(delta.x/distance,delta.y/distance,0)*((176.f-distance)/176.f);
-    }
-    float strength=length2d(away);if(strength<.08f)return yaw;
-    Vector forward(std::cos(yaw*3.14159265f/180.f),std::sin(yaw*3.14159265f/180.f),0);
-    Vector heading=normal(forward+normal(away)*std::min(.8f,strength*.7f));
-    return std::atan2(heading.y,heading.x)*180.f/3.14159265f;
-}
 static int hookWalkMove(edict_t* e,float yaw,float distance,int mode) {
     if(pushed(e))distance=0;
     else if(slowed(e))distance*=balance::SlowFactor;
     if(mansionMap()&&mansionActor(e)&&!inMansionMove)return 1;
-    if(zombieSpreadActor(e)&&!zombieBusy(e))yaw=zombieSpreadYaw(e,yaw);
     return engine.pfnWalkMove(e,yaw,distance,mode);
 }
 static void hookMoveToOrigin(edict_t* e,const float* goal,float distance,int mode) {
@@ -1117,8 +1079,8 @@ static int hookSpawn(edict_t* e) {
     if(valid(e)&&(!std::strcmp(text(e->v.classname),"weapon_necromancer")||!std::strcmp(text(e->v.classname),"weapon_hornetgun"))){engine.pfnRemoveEntity(e);return 0;}
     if(valid(e)&&!std::strcmp(text(e->v.classname),"weaponbox")){engine.pfnRemoveEntity(e);return 0;}
     if(vostokCoverSpawn(e))return 0;
-    if(czIs(e)){int result=raven.pfnSpawn(e);zombieHecuVision(e);czSpawn(e);enemyCombatInstall(e);return result;}
-    if(qzIs(e)){int result=raven.pfnSpawn(e);zombieHecuVision(e);qzSpawn(e);enemyCombatInstall(e);return result;}
+    if(czIs(e)){int result=raven.pfnSpawn(e);czSpawn(e);enemyCombatInstall(e);return result;}
+    if(qzIs(e)){int result=raven.pfnSpawn(e);qzSpawn(e);enemyCombatInstall(e);return result;}
     const char* classname=text(e->v.classname);
     bool johnnyNpc=classname&&!std::strcmp(classname,"monster_johnny");
     bool maxNpc=classname&&!std::strcmp(classname,"monster_max");
@@ -1130,11 +1092,9 @@ static int hookSpawn(edict_t* e) {
     bool wrenchItem=classname && (!std::strcmp(classname,"weapon_pipewrench")||!std::strcmp(classname,"weapon_crowbar"));
     bool shockItem=classname&&(!std::strcmp(classname,"weapon_shockrifle")||!std::strcmp(classname,"weapon_gauss"));
     bool minionItem=classname&&!std::strcmp(classname,"monster_minion");
-    bool widenZombieVision=zombieVisionClass(classname);
     bool world=classname && !std::strcmp(classname,"worldspawn");
     if(world)extensionPrecache();
     int result=raven.pfnSpawn(e);
-    if(widenZombieVision)zombieHecuVision(e);
     if(johnnyNpc)e->v.classname=engine.pfnAllocString("monster_johnny");
     if(maxNpc)e->v.classname=engine.pfnAllocString("monster_max");
     if(kenNpc)e->v.classname=engine.pfnAllocString("monster_ken");
