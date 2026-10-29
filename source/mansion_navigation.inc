@@ -495,9 +495,82 @@ static bool mansionNavWalk(edict_t* e,const Vector& goal,float dt,float speed,bo
 
     else if((path.blocked+=dt)>=1.25f){
 
-        if(globals->time>=path.recoveryAt&&mansionTryStuckStep(e,path)){path.blocked=0;path.recoveryAt=globals->time+2.f;}
+        // Si el actor quedo EMBEBIDO en un brush, ningun barrido desde su
+        // posicion valida: salta al nodo nav libre con suelo mas cercano.
+        if(!mansionNavSpotFree(e,e->v.origin)){
+
+            int best=-1;float bestD=160.f;
+
+            for(int n=0;n<CZNavCount;++n){
+
+                Vector at=czNavPoint(n);
+
+                if(length2d(at-e->v.origin)>160.f||std::fabs(at.z-e->v.origin.z)>64.f)continue;
+
+                if(!mansionNavSpotFree(e,at))continue;
+
+                Vector top=at+Vector(0,0,18),bottom=at-Vector(0,0,24);TraceResult ftr{};
+
+                engine.pfnTraceLine(&top.x,&bottom.x,1,e,&ftr);
+
+                if(ftr.fStartSolid||ftr.flFraction>=1.f||ftr.vecPlaneNormal.z<.65f)continue;
+
+                float d=length(at-e->v.origin);
+
+                if(d<bestD){bestD=d;best=n;}
+
+            }
+
+            if(best>=0){
+
+                Vector old=e->v.origin,at=czNavPoint(best);
+
+                engine.pfnSetOrigin(e,&at.x);engine.pfnDropToFloor(e);e->v.velocity=Vector(0,0,0);
+
+                path.nodes.clear();path.planning=false;path.pending={};path.retryAt=globals->time+.25f;path.blocked=0;path.recoveryAt=globals->time+2.f;
+
+                char report[192];std::snprintf(report,sizeof report,"class=%s from=%.0f,%.0f,%.0f to=%.0f,%.0f,%.0f",text(e->v.classname),old.x,old.y,old.z,e->v.origin.x,e->v.origin.y,e->v.origin.z);
+
+                startupTrace("MansionEmbeddedRecover",report);
+
+            }else if(path.blocked>=2.5f){
+
+                int from=path.cursor>0?path.nodes[path.cursor-1]:path.start;
+
+                int to=path.cursor<path.nodes.size()?path.nodes[path.cursor]:-1;
+
+                if(from>=0&&to>=0&&from!=to){path.blockedFrom=from;path.blockedTo=to;path.blockedUntil=globals->time+4.f;}
+
+                path.nodes.clear();path.planning=false;path.pending={};path.retryAt=globals->time+.25f;path.blocked=0;
+
+            }
+
+        }
+
+        else if(globals->time>=path.recoveryAt&&mansionTryStuckStep(e,path)){path.blocked=0;path.recoveryAt=globals->time+2.f;}
 
         else if(path.blocked>=2.5f){
+            {char dbg[200];std::snprintf(dbg,sizeof dbg,"class=%s nodes=%u cursor=%u planning=%d",text(e->v.classname),unsigned(path.nodes.size()),unsigned(path.cursor),int(path.planning));startupTrace("MansionStallState",dbg);}
+            // Retrocede al ultimo nodo libre del camino antes de invalidar:
+            // sale de esquinas concavas donde ningun paso adelante valida.
+            bool retreated=false;
+            for(int back=int(path.cursor);back>0&&!retreated;--back){
+                size_t bi=size_t(back-1);
+                if(bi>=path.nodes.size())continue;
+                Vector at=czNavPoint(path.nodes[bi]);
+                float d=length(at-e->v.origin);
+                if(d<7.f||d>128.f)continue;
+                if(!mansionNavEdgeClear(e,e->v.origin,at))continue;
+                if(!mansionNavSpotFree(e,at))continue;
+                Vector top=at+Vector(0,0,18),bottom=at-Vector(0,0,24);TraceResult ftr{};
+                engine.pfnTraceLine(&top.x,&bottom.x,1,e,&ftr);
+                if(ftr.fStartSolid||ftr.flFraction>=1.f||ftr.vecPlaneNormal.z<.65f)continue;
+                Vector old=e->v.origin;
+                engine.pfnSetOrigin(e,&at.x);engine.pfnDropToFloor(e);e->v.velocity=Vector(0,0,0);
+                retreated=true;
+                char report[192];std::snprintf(report,sizeof report,"class=%s from=%.0f,%.0f,%.0f to=%.0f,%.0f,%.0f",text(e->v.classname),old.x,old.y,old.z,e->v.origin.x,e->v.origin.y,e->v.origin.z);
+                startupTrace("MansionRetreat",report);
+            }
             int from=path.cursor>0?path.nodes[path.cursor-1]:path.start;
             int to=path.cursor<path.nodes.size()?path.nodes[path.cursor]:-1;
             if(from>=0&&to>=0&&from!=to){path.blockedFrom=from;path.blockedTo=to;path.blockedUntil=globals->time+4.f;}

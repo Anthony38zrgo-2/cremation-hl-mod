@@ -580,6 +580,28 @@ static void mansionRouteStep(edict_t* e,const Vector& goal,float dt,float speed,
     intent.blocked+=dt;
     intent.sideBias=int(-bias);
     if(intent.blocked>=1.25f&&globals->time>=intent.recoveryAt){
+        // Embebido en un brush: el nudge con arista falla en solido; busca
+        // punto libre en anillo sin exigir arista desde dentro.
+        if(!mansionBridgeSpotFree(e,e->v.origin)){
+            Vector self=e->v.origin;
+            for(float r:{32.f,48.f,64.f,96.f}){
+                bool freed=false;
+                for(float a:{0.f,90.f,180.f,270.f,45.f,135.f,225.f,315.f}){
+                    float rad=a*3.14159265f/180.f;
+                    Vector at=self+Vector(std::cos(rad)*r,std::sin(rad)*r,0);
+                    if(!mansionBridgeSpotFree(e,at)||!mansionInsideFloor(at))continue;
+                    Vector old=e->v.origin;
+                    engine.pfnSetOrigin(e,&at.x);engine.pfnDropToFloor(e);e->v.velocity=Vector(0,0,0);
+                    intent.blocked=0;intent.recoveryAt=globals->time+2.f;
+                    if(auto st=davidState(e))st->movedAt=globals->time;
+                    char rep[160];std::snprintf(rep,sizeof rep,"class=%s from=%.0f,%.0f,%.0f to=%.0f,%.0f,%.0f",text(e->v.classname),old.x,old.y,old.z,e->v.origin.x,e->v.origin.y,e->v.origin.z);
+                    startupTrace("MansionBridgeUnwedge",rep);
+                    freed=true;break;
+                }
+                if(freed)break;
+            }
+            if(intent.blocked==0){e->v.angles.y=yaw;mansionRouteAnimate(e,running);return;}
+        }
         if(mansionBridgeNudge(e,goal)){intent.blocked=0;intent.recoveryAt=globals->time+2.f;
             if(auto st=davidState(e))st->movedAt=globals->time;
             e->v.angles.y=yaw;mansionRouteAnimate(e,running);return;}
@@ -1397,7 +1419,7 @@ static void mansionFrame(float dt){
     if(mansionRouteTest){
         if(state->v.frags==0){state->v.frags=mansionCZRouteTest?4:3;state->v.armorvalue=0;state->v.health=0;state->v.max_health=0;}
         if(state->v.armorvalue<(mansionCZRouteTest?1:(mansionDoorTest?80:20)))mansionEmit(state);
-        for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(!mansionActor(e)||!aliveEnemy(e))continue;
+        for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(!mansionActor(e)||!aliveEnemy(e)||tposeIs(e))continue;
             const char* target=text(e->v.target);bool waitFront=target&&!std::strcmp(target,"mansion_wait_door_1")&&length2d(e->v.origin-Vector(64,-256,56.1f))<140;
             bool waitSide=target&&!std::strcmp(target,"mansion_wait_door_2")&&length2d(e->v.origin-Vector(-328,-792,48.1f))<140;
             bool czAtHostages=mansionCZRouteTest&&e->v.iuser1==4&&length(e->v.origin-Vector(-624,-176,192.1f))<24;

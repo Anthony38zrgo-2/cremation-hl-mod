@@ -5,10 +5,15 @@ static constexpr const char* TposeClass="monster_tpose";
 static constexpr const char* TposeModel="models/cremation/minion.mdl";
 static constexpr int TposeFrozenSeq=0;
 static constexpr float TposeHealth=80.f;
-static constexpr float TposeHover=90.f;
+// Techo de vuelo: la hull cuelga 80 bajo el origen y el zombie mide 72.
+// A +160 la base (+80) libra su cabeza (+72) con margen: vuela POR ENCIMA
+// de la horda sin taponar puentes ni colas de puerta con su casco.
+static constexpr float TposeHover=160.f;
 static constexpr float TposeSpeed=140.f;
 static constexpr float TposeShootCooldown=2.4f;
 static constexpr float TposeShootRange=1200.f;
+static constexpr float TposeRouteReach=48.f;
+static edict_t* mansionFind(const char* name);
 static bool tposeIs(edict_t* e){return valid(e)&&!std::strcmp(text(e->v.classname),TposeClass);}
 static void tposePrecache(){
     engine.pfnPrecacheModel(const_cast<char*>(TposeModel));
@@ -70,6 +75,72 @@ static void tposeShoot(edict_t* e,edict_t* player){
     ball->v.velocity=dir*speed;ball->v.owner=e;
     engine.pfnEmitSound(e,CHAN_WEAPON,"debris/zap4.wav",1,ATTN_NORM,0,100);
 }
+static bool tposeFree(edict_t* e,const Vector& at){TraceResult tr{};engine.pfnTraceMonsterHull(e,&at.x,&at.x,1,e,&tr);return !tr.fStartSolid&&!tr.fAllSolid;}
+static void tposeFlyTo(edict_t* e,const Vector& anchor){
+    // Vuela hacia el ancla manteniendo ~90u sobre el suelo; rodea muros.
+    Vector top=anchor+Vector(0,0,256),bottom=anchor-Vector(0,0,256);TraceResult g{};
+    engine.pfnTraceLine(&top.x,&bottom.x,1,e,&g);
+    float floorZ=!g.fStartSolid&&g.flFraction<1?g.vecEndPos.z:e->v.origin.z-TposeHover;
+    Vector want=Vector(anchor.x,anchor.y,floorZ+TposeHover);
+    Vector delta=want-e->v.origin;float dist=length(delta);
+    if(dist<=8.f)return;
+    float step=TposeSpeed*.1f*(slowed(e)?balance::SlowFactor:1.f);
+    Vector dir=normal(delta);float move=std::min(dist,step);
+    Vector to=e->v.origin+dir*move;TraceResult tr{};
+    engine.pfnTraceMonsterHull(e,&e->v.origin.x,&to.x,1,e,&tr);
+    if(!tr.fStartSolid&&!tr.fAllSolid&&tr.flFraction>=.999f){engine.pfnSetOrigin(e,&to.x);return;}
+    for(float turn:{45.f,-45.f,90.f,-90.f,135.f,-135.f}){
+        float a=std::atan2(dir.y,dir.x)*180.f/3.14159265f+turn;
+        float r=a*3.14159265f/180.f;Vector alt=e->v.origin+Vector(std::cos(r)*move,std::sin(r)*move,dir.z*move*.5f);
+        engine.pfnTraceMonsterHull(e,&e->v.origin.x,&alt.x,1,e,&tr);
+        if(!tr.fStartSolid&&!tr.fAllSolid&&tr.flFraction>=.999f){engine.pfnSetOrigin(e,&alt.x);break;}
+    }
+}
+static bool tposeRouteMove(edict_t* e){
+    // Sin jugador visible: sigue la ruta asignada sobrevolando la casa.
+    const char* target=text(e->v.target);
+    if(!target||!*target)return false;
+    Vector anchor;bool terminal=false;
+    if(!std::strcmp(target,"mansion_wait_door_1")){anchor=Vector(64,-256,56.1f);terminal=true;}
+    else if(!std::strcmp(target,"mansion_wait_door_2")){anchor=Vector(-328,-792,48.1f);terminal=true;}
+    else{
+        auto goal=mansionFind(target);
+        if(!valid(goal))return false;
+        if(length2d(goal->v.origin-e->v.origin)<TposeRouteReach){
+            if(goal->v.target){
+                e->v.target=goal->v.target;
+                char rep[128];std::snprintf(rep,sizeof rep,"route=%s at=%.0f,%.0f,%.0f",text(e->v.target),e->v.origin.x,e->v.origin.y,e->v.origin.z);
+                startupTrace("TposeRoute",rep);
+                goal=mansionFind(text(e->v.target));
+                if(!valid(goal))return true;
+            }else{
+                // Final de cadena como las terrestres: adopta espera de puerta
+                // y cuenta una vez para el completo de rutas (sin eliminarse).
+                const char* gn=text(goal->v.targetname);
+                bool side=gn&&!std::strncmp(gn,"mansion_side_route_",19);
+                e->v.target=engine.pfnAllocString(side?"mansion_wait_door_2":"mansion_wait_door_1");
+                if(e->v.iuser4!=77){
+                    e->v.iuser4=77;
+                    auto state=mansionFind("mansion_wave_state");
+                    if(valid(state))state->v.max_health+=1;
+                    char rep[240];std::snprintf(rep,sizeof rep,"%s type=%s at=%.1f,%.1f,%.1f target=%s phase=%d",text(e->v.targetname),text(e->v.classname),e->v.origin.x,e->v.origin.y,e->v.origin.z,text(e->v.target),e->v.iuser1);
+                    startupTrace("TposeRouteArrival",rep);
+                }
+                return true;
+            }
+        }
+        anchor=goal->v.origin;
+    }
+    if(terminal){
+        // Orbita amplia para no taponar la cola de asedio de la puerta.
+        float orbit=globals->time*.6f+float(engine.pfnIndexOfEdict(e))*1.7f;
+        anchor=anchor+Vector(std::cos(orbit)*200.f,std::sin(orbit)*200.f,0);
+    }
+    Vector d=anchor-e->v.origin;
+    if(length2d(d)>1.f)e->v.angles.y=std::atan2(d.y,d.x)*180.f/3.14159265f;
+    tposeFlyTo(e,anchor);
+    return true;
+}
 static bool tposeThink(edict_t* e){
     if(!tposeIs(e))return false;
     if(!aliveEnemy(e))return false;
@@ -86,35 +157,26 @@ static bool tposeThink(edict_t* e){
     // Sin animaciones: congelado salvo muerte nativa.
     e->v.sequence=TposeFrozenSeq;e->v.frame=0;e->v.framerate=0;e->v.animtime=globals->time;
     if(pushed(e))return true;
-    float step=TposeSpeed*.1f*(slowed(e)?balance::SlowFactor:1.f);
-    Vector want=e->v.origin;
+    // La hull cuelga 80u bajo el origen: si nace penetrando el suelo ningun
+    // barrido arranca. Sube hasta el primer volumen libre (como el vuelo del
+    // Judgment) antes de navegar.
+    if(!tposeFree(e,e->v.origin)){
+        for(float lift:{8.f,16.f,32.f,64.f,96.f,128.f}){
+            Vector at=e->v.origin+Vector(0,0,lift);
+            if(tposeFree(e,at)){engine.pfnSetOrigin(e,&at.x);break;}
+        }
+        if(!tposeFree(e,e->v.origin))return true;
+    }
     if(valid(player)){
         float orbit=globals->time*.6f+float(engine.pfnIndexOfEdict(e))*1.7f;
-        Vector anchor=player->v.origin+Vector(std::cos(orbit)*180.f,std::sin(orbit)*180.f,0);
-        Vector top=anchor+Vector(0,0,256),bottom=anchor-Vector(0,0,256);TraceResult g{};
-        engine.pfnTraceLine(&top.x,&bottom.x,1,e,&g);
-        float floorZ=!g.fStartSolid&&g.flFraction<1?g.vecEndPos.z:e->v.origin.z-TposeHover;
-        want=Vector(anchor.x,anchor.y,floorZ+TposeHover);
-        Vector delta=want-e->v.origin;float dist=length(delta);
-        if(dist>8.f){
-            Vector dir=normal(delta);float move=std::min(dist,step);
-            Vector to=e->v.origin+dir*move;TraceResult tr{};
-            engine.pfnTraceMonsterHull(e,&e->v.origin.x,&to.x,1,e,&tr);
-            if(!tr.fStartSolid&&!tr.fAllSolid&&tr.flFraction>=.999f)engine.pfnSetOrigin(e,&to.x);
-            else for(float turn:{45.f,-45.f,90.f,-90.f,135.f,-135.f}){
-                float a=std::atan2(dir.y,dir.x)*180.f/3.14159265f+turn;
-                float r=a*3.14159265f/180.f;Vector alt=e->v.origin+Vector(std::cos(r)*move,std::sin(r)*move,dir.z*move*.5f);
-                engine.pfnTraceMonsterHull(e,&e->v.origin.x,&alt.x,1,e,&tr);
-                if(!tr.fStartSolid&&!tr.fAllSolid&&tr.flFraction>=.999f){engine.pfnSetOrigin(e,&alt.x);break;}
-            }
-        }
+        tposeFlyTo(e,player->v.origin+Vector(std::cos(orbit)*180.f,std::sin(orbit)*180.f,0));
         if(globals->time>=e->v.teleport_time&&length(player->v.origin-e->v.origin)<=TposeShootRange){
             tposeShoot(e,player);
             e->v.teleport_time=globals->time+TposeShootCooldown;
         }
     }else{
-        // Sin jugador: flotar en su sitio sin caer.
-        e->v.velocity=Vector(0,0,0);
+        // Sin jugador visible: sigue la ruta asignada sobrevolando la casa.
+        if(!tposeRouteMove(e))e->v.velocity=Vector(0,0,0);
     }
     return true;
 }
