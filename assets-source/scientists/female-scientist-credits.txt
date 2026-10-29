@@ -1,0 +1,6 @@
+Eye oh the Aist: creator of models and textures. Animation port. editing animations. The author of the skin.
+ps: if you're going to use this, don't forget to include me in credits
+
+Special thanks to LeonelC for his awesome mod (Restored Neural NPCs) which was used as a texture base
+
+the skeleton and animations that were used as the base and the main motive for creating the skin were borrowed from the model (us_gal.mdl and schoolgirl.mdl) from the game counter strike condition zero deleted scenes

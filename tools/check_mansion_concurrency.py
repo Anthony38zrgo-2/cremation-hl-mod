@@ -1,4 +1,4 @@
-"""Test that the 16 monster concurrency cap and replacement mechanics operate properly in GoldSrc."""
+"""Test that the 10 monster concurrency cap and replacement mechanics operate properly in GoldSrc."""
 from pathlib import Path
 import os
 import re
@@ -16,7 +16,7 @@ env = dict(os.environ)
 env['PATH'] = str(Path(os.environ.get('ProgramFiles(x86)', 'C:/Program Files (x86)')) / 'Steam') + os.pathsep + env['PATH']
 (MOD / 'startup-diagnostics.txt').write_text('')
 
-# We run a test server where 1 fake client joins, and enemies spawn up to 16.
+# We run a test server where 1 fake client joins, and enemies spawn up to 10.
 with (MOD / 'diagnostics/mansion-concurrency-server.log').open('wb') as log:
     process = subprocess.Popen([str(ROOT / 'hlds.exe'), '-console', '-game', 'Cremation',
                                 '-num_edicts', '2048', '-insecure', '-nomaster', '-port', '27032',
@@ -33,9 +33,9 @@ with (MOD / 'diagnostics/mansion-concurrency-server.log').open('wb') as log:
         while time.monotonic() < deadline:
             phases = (MOD / 'startup-diagnostics.txt').read_text(errors='replace')
             spawns = re.findall(r'MansionSpawn wave=(\d+) index=(\d+)', phases)
-            # In a normal game with no kills, spawns should reach exactly 16 and stop!
-            if len(spawns) >= 16:
-                # Wait 3 more seconds to ensure it does NOT exceed 16 without kills!
+            # In a normal game with no kills, spawns should reach exactly 10 and stop!
+            if len(spawns) >= 10:
+                # Wait 3 more seconds to ensure it does NOT exceed 10 without kills!
                 time.sleep(3)
                 phases = (MOD / 'startup-diagnostics.txt').read_text(errors='replace')
                 spawns = re.findall(r'MansionSpawn wave=(\d+) index=(\d+)', phases)
@@ -43,8 +43,8 @@ with (MOD / 'diagnostics/mansion-concurrency-server.log').open('wb') as log:
             time.sleep(0.5)
 
         print(f'Observed spawns before any player kills: {len(spawns)}')
-        assert len(spawns) == 16, f'Expected exactly 16 spawns at concurrency cap, but got {len(spawns)}!'
-        print('PASS: Concurrency limit strictly halted wave emission at exactly 16 active monsters!')
+        assert len(spawns) == 10, f'Expected exactly 10 spawns at concurrency cap, but got {len(spawns)}!'
+        print('PASS: Concurrency limit strictly halted wave emission at exactly 10 active monsters!')
     finally:
         if process.poll() is None:
             process.terminate()

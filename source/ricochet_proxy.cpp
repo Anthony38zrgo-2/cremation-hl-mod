@@ -705,8 +705,13 @@ static void davidProbeFrame();
 static void enemyCombatProbeFrame();
 static void dmcPreviewFrame();
 #endif
+static bool mansionScientistThink(edict_t* e);
+static bool mansionFrontDoorPlayerAction(edict_t* door,edict_t* actor);
+static edict_t* mansionDoor(int door);
+static void hookUse(edict_t* used,edict_t* other);
 static void hookThink(edict_t* e) {
     enemyCombatClearTargets(e);
+    if(mansionScientistThink(e))return;
     if(judgmentIs(e)){judgmentThink(e,.05f);e->v.nextthink=0;return;}
     if(vostokCoverThink(e))return;
     if(czThink(e))return;
@@ -1009,7 +1014,12 @@ static void hookTouch(edict_t* a,edict_t* b) {
     if(rpgPickup(a,b)||rpgPickup(b,a))return;
     if(rpgTouch(a,b))return;
     if(bounce::engineerMetal(a,b)||bounce::engineerMetal(b,a))return;
+    mansionFrontDoorPlayerAction(a,b);mansionFrontDoorPlayerAction(b,a);
     if(raven.pfnTouch)raven.pfnTouch(a,b);
+}
+static void hookUse(edict_t* used,edict_t* other){
+    mansionFrontDoorPlayerAction(used,other);
+    if(raven.pfnUse)raven.pfnUse(used,other);
 }
 static const char* hookDescription() {return "Cremation";}
 static void extensionPrecache(){
@@ -1381,6 +1391,7 @@ static void installHooks(DLL_FUNCTIONS* table) {
     raven=*table;
     table->pfnSetAbsBox=hookSetAbsBox;
     table->pfnTouch=hookTouch;table->pfnSpawn=hookSpawn;table->pfnThink=hookThink;table->pfnStartFrame=hookStartFrame;
+    table->pfnUse=hookUse;
     table->pfnPlayerPreThink=hookPreThink;table->pfnPlayerPostThink=hookPostThink;
     table->pfnClientCommand=hookClientCommand;table->pfnServerActivate=hookActivate;table->pfnServerDeactivate=hookDeactivate;
     table->pfnCmdStart=hookCmdStart;
