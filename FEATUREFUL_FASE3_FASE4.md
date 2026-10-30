@@ -70,6 +70,19 @@ la capa, igual que `enemyCombatEntities`).
   pendiente de resultado abajo; si PASS, la policy de alianza sigue intacta
   con la capa encima.
 
+## Instalación production (2026-10-29, lista para probar)
+
+- Script: `source/build_production_ff.bat` (sin `CREMATION_ENABLE_VALIDATION`).
+- `source/build/production/cremation.dll` 896 000 bytes, 549 exports.
+  Original respaldado en `backups/ff-validation-test/cremation.dll.pre-ff-production`.
+- Instalada en `dlls/cremation.dll`; `check_server_startup.py --seconds 8`: **PASS**
+  (40 zombies, teleports=0, 12 HECU).
+- Lanzar con `Cremation.exe` (startmap `cs_mansion`) o `hl.exe -game Cremation`.
+- Cvars (consola servidor): `cremation_ff_forget_time 8`,
+  `cremation_ff_wander 1`, `cremation_ff_corpse_time 3`,
+  `cremation_ff_stop_dying 1`.
+- Rollback: copiar el backup `.pre-ff-production` sobre `dlls/cremation.dll`.
+
 ## Pendiente (fuera de Fase 3/4)
 
 1. Anexar `features/skill_featureful_additions.cfg` a `skill.cfg` SOLO tras
