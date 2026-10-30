@@ -335,6 +335,29 @@
             "chase_enemy_failed": "wander",
             "investigate_sounds": true,
             "cover_from_danger": false
+        },
+        "visuals": {
+            "Controller.ZapBall": {
+                "color": [
+                    255,
+                    64,
+                    64
+                ]
+            },
+            "Controller.EnergyBall": {
+                "color": [
+                    255,
+                    64,
+                    64
+                ]
+            },
+            "Controller.ZapElectro": {
+                "color": [
+                    255,
+                    96,
+                    96
+                ]
+            }
         }
     },
     "monster_human_grunt": {

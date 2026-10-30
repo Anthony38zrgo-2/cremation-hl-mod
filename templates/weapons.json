@@ -1,0 +1,90 @@
+{
+    "weapon_pipewrench": {
+        "view_model": "models/cremation/v_pipe_wrench.mdl",
+        "player_model": "models/cremation/p_pipe_wrench.mdl",
+        "world_model": "models/cremation/w_pipe_wrench.mdl",
+        "fire": {
+            "sound": {
+                "waves": ["weapons/pwrench_miss1.wav", "weapons/pwrench_miss2.wav"]
+            },
+            "hit_body_sound": {
+                "waves": ["weapons/pwrench_hit1.wav", "weapons/pwrench_hit2.wav"]
+            },
+            "hit_wall_sound": {
+                "waves": ["weapons/pwrench_big_hit1.wav", "weapons/pwrench_big_hit2.wav"]
+            }
+        }
+    },
+    "weapon_nailgun": {
+        "view_model": "models/cremation/v_nailgun.mdl",
+        "player_model": "models/cremation/p_nailgun.mdl",
+        "world_model": "models/cremation/w_nailgun.mdl",
+        "ammo_name": "nails",
+        "fire": {
+            "sound": {
+                "waves": ["weapons/spike1.wav", "weapons/spike2.wav"]
+            }
+        }
+    },
+    "weapon_shockrifle": {
+        "view_model": "models/cremation/v_shockrifle.mdl",
+        "player_model": "models/cremation/p_shockrifle.mdl",
+        "world_model": "models/cremation/w_shockrifle.mdl",
+        "ammo_name": "cells",
+        "fire": {
+            "sound": {
+                "waves": ["weapons/ut2004/link_fire.wav"]
+            }
+        },
+        "alt_fire": {
+            "sound": {
+                "waves": ["weapons/ut2004/link_altfire.wav"]
+            }
+        }
+    },
+    "weapon_eagle": {
+        "view_model": "models/cremation/deagle/v_deagle.mdl",
+        "player_model": "models/cremation/deagle/p_deagle.mdl",
+        "world_model": "models/cremation/deagle/w_deagle.mdl",
+        "ammo_name": "357",
+        "fire": {
+            "sound": {
+                "waves": ["weapons/deagle-1.wav", "weapons/deagle-2.wav"]
+            }
+        }
+    },
+    "weapon_shotgun2": {
+        "view_model": "models/cremation/v_winchester1887.mdl",
+        "player_model": "models/cremation/p_winchester1887.mdl",
+        "world_model": "models/cremation/w_winchester1887.mdl",
+        "ammo_name": "buckshot",
+        "fire": {
+            "type": "bullet",
+            "damage": 5,
+            "bullet_count": 8,
+            "bullet_distance": 2048,
+            "sound": {
+                "waves": ["weapons/shotgun_fire6.wav"]
+            }
+        }
+    },
+    "weapon_sniperrifle2": {
+        "view_model": "models/cremation/awp/v_awp.mdl",
+        "player_model": "models/cremation/awp/p_awp.mdl",
+        "world_model": "models/cremation/awp/w_awp.mdl",
+        "ammo_name": "762",
+        "fire": {
+            "type": "bullet",
+            "damage": 40,
+            "sound": {
+                "waves": ["weapons/awp1.wav"]
+            }
+        },
+        "zoom": {
+            "fov": 20,
+            "sound": {
+                "waves": ["weapons/zoom.wav"]
+            }
+        }
+    }
+}
