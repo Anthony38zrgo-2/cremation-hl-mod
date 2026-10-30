@@ -37,6 +37,8 @@ static cvar_t davidClearRadius={const_cast<char*>("david_clear_radius"),const_ca
 static cvar_t davidHeadThreshold={const_cast<char*>("david_head_fraction"),const_cast<char*>("0.35"),FCVAR_SERVER,.35f,nullptr};
 static cvar_t davidLimbThreshold={const_cast<char*>("david_limb_fraction"),const_cast<char*>("0.25"),FCVAR_SERVER,.25f,nullptr};
 static cvar_t davidLocalizedDamage={const_cast<char*>("cremation_david_local_damage"),const_cast<char*>("0"),FCVAR_SERVER,0,nullptr};
+static cvar_t davidRunDwell={const_cast<char*>("david_run_dwell"),const_cast<char*>("1.2"),FCVAR_SERVER,1.2f,nullptr};
+static cvar_t davidStuckFlee={const_cast<char*>("david_stuck_release"),const_cast<char*>("6"),FCVAR_SERVER,6.0f,nullptr};
 static cvar_t steveChance={const_cast<char*>("cremation_steve_chance"),const_cast<char*>("0.5"),FCVAR_SERVER,.5f,nullptr};
 static cvar_t kenChance={const_cast<char*>("cremation_ken_chance"),const_cast<char*>("0.3333333"),FCVAR_SERVER,1.f/3.f,nullptr};
 static cvar_t johnnyChance={const_cast<char*>("cremation_johnny_chance"),const_cast<char*>("0.1"),FCVAR_SERVER,.1f,nullptr};
@@ -57,6 +59,9 @@ struct DavidBonePose {Vector origin{0,0,0},axis[3];};
 struct DavidState {
  edict_t* entity=nullptr;int serial=0;DavidSaved saved;
  edict_t* target=nullptr;int targetSerial=0;float movedAt=-100,clearSince=-1,cooldown=0;bool running=false;
+ // Histeresis de la decision caminar/correr (anti-baile): el estado deseado
+ // debe mantenerse sin cambiar durante david_run_dwell antes de aplicar.
+ bool runWant=false;float runWantAt=-1000;float stuckSince=-1000;
  bool attackEventConsumed=false,dying=false;int attackSelections[3]{},meleeEvents=0,attackRequests[2]{};
  int deathActivity=0;bool deathStarted=false;
  float pendingAt=-100;entvars_t* pendingAttacker=nullptr;float pending[16]{};
@@ -96,7 +101,7 @@ static bool davidVisiblePart(edict_t* e,int node){return node==1||node==9||david
 static const float* davidPartBounds(edict_t* e,int node,int state){return kenModel(e)?ken_assets::partBounds[node][state]:maxModel(e)?max_assets::partBounds[node][state]:(johnnyModel(e)?johnny_assets::partBounds[node][state]:(steveModel(e)?steve_assets::partBounds[node][state]:david_assets::partBounds[node][state]));}
 static bool davidCrawling(const DavidState& s){return david_logic::legGone(s.saved.severMask);}
 static void davidPrecache(){
- if(!davidCvarsRegistered&&engine.pfnCVarRegister){for(auto v:{&davidEnable,&davidRadius,&davidClearRadius,&davidHeadThreshold,&davidLimbThreshold,&davidLocalizedDamage,&steveChance,&kenChance,&johnnyChance})engine.pfnCVarRegister(v);davidCvarsRegistered=true;}
+ if(!davidCvarsRegistered&&engine.pfnCVarRegister){for(auto v:{&davidEnable,&davidRadius,&davidClearRadius,&davidHeadThreshold,&davidLimbThreshold,&davidLocalizedDamage,&davidRunDwell,&davidStuckFlee,&steveChance,&kenChance,&johnnyChance})engine.pfnCVarRegister(v);davidCvarsRegistered=true;}
  for(auto m:{DavidModel,DavidCharred,SteveModel,SteveCharred,JohnnyModel,JohnnyCharred,JohnnyAxe,JohnnyAxeLeft,MaxModel,MaxCharred,KenModel,KenCharred})engine.pfnPrecacheModel(const_cast<char*>(m));
  engine.pfnPrecacheSound(const_cast<char*>(MaxSawSound));
  for(auto sound:{"debris/flesh1.wav","debris/flesh2.wav","debris/flesh3.wav"})engine.pfnPrecacheSound(const_cast<char*>(sound));
@@ -201,7 +206,16 @@ static bool davidCanRun(DavidState& s){
 }
 static void davidDecision(){
  for(auto& s:davidStates)if(valid(s.entity)&&s.entity->serialnumber==s.serial){
-  if(mansionMap()&&mansionActor(s.entity)){auto p=s.target;s.running=aliveEnemy(s.entity)&&!s.dying&&!davidCrawling(s)&&valid(p)&&p->serialnumber==s.targetSerial&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO&&length2d(p->v.origin-s.entity->v.origin)>=70.f;}
+  if(mansionMap()&&mansionActor(s.entity)){
+   // Decision con histeresis: en el borde de 70 u el umbral cruzaba de ida y
+   // vuelta en cada think y davidActivity(4<->3) reiniciaba la secuencia a
+   // frame 0 (el "baile"). El estado deseado debe mantenerse estable
+   // david_run_dwell segundos antes de aplicarse.
+   auto p=s.target;
+   bool desired=aliveEnemy(s.entity)&&!s.dying&&!davidCrawling(s)&&valid(p)&&p->serialnumber==s.targetSerial&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO&&length2d(p->v.origin-s.entity->v.origin)>=70.f;
+   if(desired!=s.runWant){s.runWant=desired;s.runWantAt=globals->time;}
+   if(desired!=s.running&&globals->time-s.runWantAt>=davidRunDwell.value)s.running=desired;
+  }
   else if(maxModel(s.entity))s.running=aliveEnemy(s.entity)&&!s.dying;
  }
  if(globals->time<davidNextDecision)return;davidNextDecision=globals->time+.2f;
@@ -215,6 +229,23 @@ static void davidDecision(){
   if(davidEnable.value==0||!davidCanRun(s)||davidCrowded(s,std::max(davidRadius.value+16,davidClearRadius.value))){s.clearSince=-1;continue;}
   if(s.clearSince<0)s.clearSince=globals->time;
   int target=engine.pfnIndexOfEdict(s.target);if(target>0&&target<33&&!reserved[target]&&globals->time>=s.cooldown&&globals->time-s.clearSince>=.4f){s.running=true;reserved[target]=true;}
+ }
+ // Anti-traba (mansion): si un actor engagado lleva minutos sin moverse con
+ // enemigo vivo, libera el latch pegajoso (silencioso, sin empujones) para
+ // que su IA nativa/Latch re-enganche o retome rutas por su cuenta.
+ if(davidStuckFlee.value>0){
+  for(auto& s:davidStates){
+   auto e=s.entity;
+   if(!valid(e)||e->serialnumber!=s.serial||!mansionMap()||!mansionActor(e))continue;
+   if(e->v.deadflag!=DEAD_NO||e->v.health<=0)continue;
+   if(!aliveEnemy(e))continue;
+   auto& latch=mansionEngageFor(e);
+   if(!latch.engaged||latch.actor!=e)continue;
+   if(s.stuckSince<0||globals->time-s.stuckSince<davidStuckFlee.value)continue;
+   latch.engaged=false;
+   s.cooldown=globals->time+1;s.clearSince=-1;
+   startupTrace("DavidStuckRelease","latch liberado por inmovilidad prolongada");
+  }
  }
 }
 static bool johnnyPlayerAlive(edict_t* p){return valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO;}
@@ -520,6 +551,13 @@ static void davidFrame(){
   }
   int seq=e->v.sequence;bool locomotion=maxModel(e)?(seq==max_assets::seqWalk||seq==max_assets::seqRun):(johnnyModel(e)?(seq==johnny_assets::seqWalk||seq==johnny_assets::seqRun):(seq==1||seq==2||seq==20));
   bool moving=length2d(e->v.velocity)>1.0f||(globals->time-s.movedAt<.15f);
+  // Detector de inmovilidad real (anti-traba): marca desde cuando el
+  // desplazamiento es ~0 con enemigo vivo; davidDecision lo usa para soltar
+  // el latch pegajoso despues de david_stuck_release segundos.
+  if(aliveEnemy(e)&&e->v.deadflag==DEAD_NO){
+   if(length2d(e->v.velocity)>2.0f)s.stuckSince=-1000;
+   else if(s.stuckSince<0)s.stuckSince=globals->time;
+  } else s.stuckSince=-1000;
   if((locomotion||(moving&&seq==0))&&(maxModel(e)||globals->time-s.movedAt<.45f)){int desired=maxModel(e)?(s.running?max_assets::seqRun:max_assets::seqWalk):(johnnyModel(e)?(s.running?johnny_assets::seqRun:johnny_assets::seqWalk):(davidCrawling(s)?david_assets::seqCrawl:(s.running?david_assets::seqRun:david_assets::seqWalk)));if(seq!=desired)davidActivity(e->pvPrivateData,nullptr,s.running?4:3);}
  }
 }
