@@ -1,0 +1,36 @@
+{
+    "Zombie.Alert": {
+        "waves": [
+            "blood/zombie/sfx_1103.wav"
+        ]
+    },
+    "Zombie.Idle": {
+        "waves": [
+            "blood/zombie/sfx_1104.wav",
+            "blood/zombie/sfx_1105.wav",
+            "blood/zombie/sfx_1100.wav"
+        ]
+    },
+    "Zombie.Pain": {
+        "waves": [
+            "blood/zombie/sfx_1106.wav"
+        ]
+    },
+    "Zombie.Die": {
+        "waves": [
+            "blood/zombie/sfx_1107.wav",
+            "blood/zombie/sfx_1108.wav",
+            "blood/zombie/sfx_1109.wav"
+        ]
+    },
+    "Zombie.Attack": {
+        "waves": [
+            "blood/zombie/sfx_1101.wav"
+        ]
+    },
+    "Zombie.AttackMiss": {
+        "waves": [
+            "blood/zombie/sfx_1101.wav"
+        ]
+    }
+}

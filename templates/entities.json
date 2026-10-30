@@ -1,11 +1,22 @@
 {
-    "_comment": "Cremation Fase 2 — 8 familias iniciales. Aplicar vía keyvalue 'Entity Template' en el FGD featureful, o renombrar a classname para default automático (ej. monster_zombie). Ver docs/entity-templates. Salud = [easy, medium, hard], alineada a skill.cfg actual.",
     "david_base": {
-        "health": [50, 50, 100],
+        "health": [
+            50,
+            50,
+            100
+        ],
         "classify": "Alien Monster",
         "size": {
-            "mins": [-16, -16, 0],
-            "maxs": [16, 16, 72]
+            "mins": [
+                -16,
+                -16,
+                0
+            ],
+            "maxs": [
+                16,
+                16,
+                72
+            ]
         },
         "field_of_view": 0.7,
         "open_door_capability": true,
@@ -35,14 +46,18 @@
             }
         },
         "npc_behavior": {
-            "chase_enemy_failed": "try_nearest",
+            "chase_enemy_failed": "wander",
             "investigate_sounds": true,
             "cover_from_danger": true
         }
     },
     "steve_tank": {
         "inherits": "david_base",
-        "health": [80, 80, 140],
+        "health": [
+            80,
+            80,
+            140
+        ],
         "skill": {
             "zombie_dmg_one_slash": 30,
             "zombie_dmg_both_slash": 50
@@ -50,7 +65,11 @@
     },
     "johnny_brute": {
         "inherits": "david_base",
-        "health": [90, 90, 160],
+        "health": [
+            90,
+            90,
+            160
+        ],
         "skill": {
             "zombie_dmg_one_slash": 35,
             "zombie_dmg_both_slash": 60
@@ -58,18 +77,34 @@
     },
     "ken_armored": {
         "inherits": "david_base",
-        "health": [120, 120, 200],
+        "health": [
+            120,
+            120,
+            200
+        ],
         "skill": {
             "zombie_dmg_one_slash": 25,
             "zombie_dmg_both_slash": 45
         }
     },
     "quake_zombie": {
-        "health": [80, 80, 120],
+        "health": [
+            80,
+            80,
+            120
+        ],
         "classify": "Alien Monster",
         "size": {
-            "mins": [-16, -16, 0],
-            "maxs": [16, 16, 104]
+            "mins": [
+                -16,
+                -16,
+                0
+            ],
+            "maxs": [
+                16,
+                16,
+                104
+            ]
         },
         "field_of_view": 0.7,
         "open_door_capability": false,
@@ -89,14 +124,14 @@
             }
         },
         "npc_behavior": {
-            "chase_enemy_failed": "try_nearest",
+            "chase_enemy_failed": "wander",
             "investigate_sounds": true,
             "cover_from_danger": false
         }
     },
     "czero_infiltrator": {
         "health": 100,
-        "classify": "Human Military",
+        "classify": "Alien Monster",
         "size": "human",
         "field_of_view": 0.7,
         "open_door_capability": true,
@@ -111,14 +146,18 @@
             }
         ],
         "npc_behavior": {
-            "chase_enemy_failed": "try_nearest",
+            "chase_enemy_failed": "wander",
             "investigate_sounds": true,
             "cover_from_danger": true
         }
     },
     "blood_cultist_hecu": {
-        "health": [50, 50, 80],
-        "classify": "Human Military",
+        "health": [
+            50,
+            50,
+            80
+        ],
+        "classify": "Alien Monster",
         "size": "human",
         "open_door_capability": true,
         "squad_capability": {
@@ -132,13 +171,17 @@
             }
         ],
         "npc_behavior": {
-            "chase_enemy_failed": "try_nearest",
+            "chase_enemy_failed": "wander",
             "investigate_sounds": true,
             "cover_from_danger": true
         }
     },
     "necro_minion": {
-        "health": [50, 50, 100],
+        "health": [
+            50,
+            50,
+            100
+        ],
         "classify": "Player Ally",
         "size": "human",
         "open_door_capability": true,
@@ -152,10 +195,149 @@
             "dot": 0.7
         },
         "npc_behavior": {
-            "chase_enemy_failed": "try_nearest",
+            "chase_enemy_failed": "wander",
             "investigate_sounds": true,
             "cover_from_danger": false
         },
-        "soundmask": 223
+        "soundmask": {
+            "sounds": [
+                "combat",
+                "danger",
+                "player",
+                "world"
+            ]
+        }
+    },
+    "monster_max": {
+        "health": [
+            120,
+            140,
+            180
+        ],
+        "classify": "Alien Monster",
+        "size": "human",
+        "open_door_capability": true,
+        "check_melee_attack1": {
+            "distance": 70,
+            "dot": 0.65
+        },
+        "trace_hull_attacks": {
+            "1": {
+                "distance": 78,
+                "spawn_blood": true
+            },
+            "2": {
+                "distance": 78,
+                "spawn_blood": true
+            },
+            "3": {
+                "distance": 78,
+                "spawn_blood": true
+            }
+        },
+        "npc_behavior": {
+            "chase_enemy_failed": "wander",
+            "investigate_sounds": true,
+            "cover_from_danger": true
+        }
+    },
+    "monster_randy": {
+        "health": [
+            150,
+            170,
+            220
+        ],
+        "classify": "Alien Monster",
+        "size": "human",
+        "open_door_capability": true,
+        "check_melee_attack1": {
+            "distance": 70,
+            "dot": 0.65
+        },
+        "trace_hull_attacks": {
+            "1": {
+                "distance": 76,
+                "spawn_blood": true
+            },
+            "2": {
+                "distance": 76,
+                "spawn_blood": true
+            }
+        },
+        "npc_behavior": {
+            "chase_enemy_failed": "wander",
+            "investigate_sounds": true,
+            "cover_from_danger": true
+        }
+    },
+    "monster_poisionzombie": {
+        "health": [
+            125,
+            150,
+            175
+        ],
+        "classify": "Alien Monster",
+        "size": "human",
+        "open_door_capability": true,
+        "trace_hull_attacks": {
+            "1": {
+                "distance": 70,
+                "spawn_blood": true,
+                "damage_info": {
+                    "type": [
+                        "poison"
+                    ],
+                    "type_policy": "add"
+                }
+            },
+            "2": {
+                "distance": 70,
+                "spawn_blood": true,
+                "damage_info": {
+                    "type": [
+                        "poison"
+                    ],
+                    "type_policy": "add"
+                }
+            },
+            "3": {
+                "distance": 70,
+                "spawn_blood": true,
+                "damage_info": {
+                    "type": [
+                        "poison"
+                    ],
+                    "type_policy": "add"
+                }
+            }
+        },
+        "npc_behavior": {
+            "chase_enemy_failed": "wander",
+            "investigate_sounds": true,
+            "cover_from_danger": false
+        }
+    },
+    "monster_czero_zombie": {
+        "inherits": "czero_infiltrator"
+    },
+    "monster_tpose": {
+        "health": [
+            60,
+            60,
+            100
+        ],
+        "classify": "Alien Monster",
+        "skill": {
+            "controller_dmgzap": 20,
+            "controller_dmgball": 4
+        },
+        "npc_behavior": {
+            "chase_enemy_failed": "wander",
+            "investigate_sounds": true,
+            "cover_from_danger": false
+        }
+    },
+    "monster_human_grunt": {
+        "inherits": "blood_cultist_hecu"
     }
 }

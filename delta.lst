@@ -1,10 +1,9 @@
-// Cremation: 32-bit world bodygroups for localized David damage.
 // structure name
 // none == no conditional encode routine
 // gamedll routine_name : before transmitting data, invoke the named function from the game .dll to reset fields as needed
 // clientdll routine_name : same as above, except the routine is called via the client.dll
 
-clientdata_t none
+clientdata_t none                    
 {
 	DEFINE_DELTA( flTimeStepSound, DT_INTEGER, 10, 1.0 ),
 	DEFINE_DELTA( origin[0], DT_SIGNED | DT_FLOAT, 21, 128.0 ),
@@ -22,7 +21,7 @@ clientdata_t none
 	DEFINE_DELTA( ammo_cells, DT_SIGNED | DT_INTEGER, 10, 1.0 ),
 	DEFINE_DELTA( ammo_rockets, DT_SIGNED | DT_INTEGER, 10, 1.0 ),
 
-	DEFINE_DELTA( m_iId, DT_INTEGER, 5, 1.0 ),
+	DEFINE_DELTA( m_iId, DT_INTEGER, 6, 1.0 ),
 
 	DEFINE_DELTA( punchangle[2], DT_SIGNED | DT_FLOAT, 16, 8.0 ),
 	DEFINE_DELTA( flags, DT_INTEGER, 32, 1.0 ), // Cut to 3 bits?
@@ -44,7 +43,7 @@ clientdata_t none
 	DEFINE_DELTA( flSwimTime, DT_INTEGER, 10, 1.0 ),
 	DEFINE_DELTA( waterjumptime, DT_INTEGER, 15, 1.0 ),
 	DEFINE_DELTA( waterlevel, DT_INTEGER, 2, 1.0 ),
-
+	
 	DEFINE_DELTA( iuser1, DT_INTEGER, 3, 1.0 ),
 	DEFINE_DELTA( iuser2, DT_INTEGER, 5, 1.0 ),
 
@@ -63,7 +62,7 @@ clientdata_t none
 	DEFINE_DELTA( vuser4[0], DT_SIGNED | DT_FLOAT, 10, 1.0 ),
 	DEFINE_DELTA( vuser4[1], DT_SIGNED | DT_FLOAT, 10, 1.0 ),
 	DEFINE_DELTA( vuser4[2], DT_SIGNED | DT_FLOAT, 10, 1.0 ),
-
+	
 	DEFINE_DELTA( fuser1, DT_SIGNED | DT_FLOAT, 22, 128.0 ),
 	DEFINE_DELTA( fuser2, DT_SIGNED | DT_FLOAT, 10, 128.0 ),
 	DEFINE_DELTA( fuser3, DT_SIGNED | DT_FLOAT, 10, 128.0 ),
@@ -98,22 +97,22 @@ entity_state_t gamedll Entity_Encode
 	DEFINE_DELTA( startpos[2], DT_SIGNED | DT_FLOAT, 13, 1.0 ),
 	DEFINE_DELTA( impacttime, DT_TIMEWINDOW_BIG, 13, 100.0 ),
 	DEFINE_DELTA( starttime, DT_TIMEWINDOW_BIG, 13, 100.0 ),
-
+	
 	DEFINE_DELTA( weaponmodel, DT_INTEGER, 10, 1.0 ),
 	DEFINE_DELTA( owner, DT_INTEGER, 5, 1.0 ),
-	DEFINE_DELTA( effects, DT_INTEGER, 8, 1.0 ),
+	DEFINE_DELTA( effects, DT_INTEGER, 12, 1.0 ),
 	DEFINE_DELTA( eflags, DT_INTEGER, 2, 1.0 ), // JoshA: Changed to 2 for EFLAG_FLESH_SOUND to fix flesh sounds on entities. If a mod ships updated DLLs and not this file, they just won't have that fix.
 	DEFINE_DELTA( angles[2], DT_ANGLE, 16, 1.0 ),
 	DEFINE_DELTA( colormap, DT_INTEGER, 16, 1.0 ),
 	DEFINE_DELTA( framerate, DT_SIGNED | DT_FLOAT, 8, 16.0 ),
-	DEFINE_DELTA( skin, DT_SHORT | DT_SIGNED, 9, 1.0 ),
+	DEFINE_DELTA( skin, DT_SHORT | DT_SIGNED, 12, 1.0 ),
 	DEFINE_DELTA( controller[0], DT_BYTE, 8, 1.0 ),
 	DEFINE_DELTA( controller[1], DT_BYTE, 8, 1.0 ),
 	DEFINE_DELTA( controller[2], DT_BYTE, 8, 1.0 ),
 	DEFINE_DELTA( controller[3], DT_BYTE, 8, 1.0 ),
 	DEFINE_DELTA( blending[0], DT_BYTE, 8, 1.0 ),
 	DEFINE_DELTA( blending[1], DT_BYTE, 8, 1.0 ),
-	DEFINE_DELTA( body, DT_INTEGER, 32, 1.0 ),
+	DEFINE_DELTA( body, DT_INTEGER, 8, 1.0 ),
 	DEFINE_DELTA( rendermode, DT_INTEGER, 8, 1.0 ),
 	DEFINE_DELTA( renderamt, DT_INTEGER, 8, 1.0 ),
 	DEFINE_DELTA( renderfx, DT_INTEGER, 8, 1.0 ),
@@ -233,7 +232,7 @@ weapon_data_t none
 	DEFINE_DELTA( m_flNextReload, DT_FLOAT | DT_SIGNED, 22, 1000.0 ),
 	DEFINE_DELTA( m_fNextAimBonus, DT_FLOAT | DT_SIGNED, 22, 1000.0 ),
 	DEFINE_DELTA( m_flNextSecondaryAttack, DT_FLOAT | DT_SIGNED, 22, 1000.0 ),
-	DEFINE_DELTA( m_iClip, DT_SIGNED | DT_INTEGER, 10, 1.0 ),
+	DEFINE_DELTA( m_iClip, DT_SIGNED | DT_INTEGER, 15, 1.0 ),
 	DEFINE_DELTA( m_flPumpTime, DT_FLOAT | DT_SIGNED, 22, 1000.0 ),
 	DEFINE_DELTA( m_fInSpecialReload, DT_INTEGER, 2, 1.0 ),
 	DEFINE_DELTA( m_fReloadTime, DT_FLOAT, 16, 100.0 ),
@@ -241,7 +240,7 @@ weapon_data_t none
 	DEFINE_DELTA( m_fAimedDamage, DT_FLOAT, 6, 0.1 ),
 	DEFINE_DELTA( m_fInZoom, DT_INTEGER, 1, 1.0 ),
 	DEFINE_DELTA( m_iWeaponState, DT_INTEGER, 2, 1.0 ),
-	DEFINE_DELTA( m_iId, DT_INTEGER, 5, 1.0 ),
+	DEFINE_DELTA( m_iId, DT_INTEGER, 6, 1.0 ),
 	DEFINE_DELTA( iuser1, DT_SIGNED | DT_INTEGER, 10, 1.0  ),
 	DEFINE_DELTA( iuser2, DT_SIGNED | DT_INTEGER, 10, 1.0  ),
 	DEFINE_DELTA( iuser3, DT_SIGNED | DT_INTEGER, 10, 1.0  ),
@@ -258,8 +257,8 @@ event_t none
 	DEFINE_DELTA( origin[0], DT_SIGNED | DT_FLOAT, 16, 8.0 ),
 	DEFINE_DELTA( origin[1], DT_SIGNED | DT_FLOAT, 16, 8.0 ),
 	DEFINE_DELTA( origin[2], DT_SIGNED | DT_FLOAT, 16, 8.0 ),
-	DEFINE_DELTA( fparam1, DT_FLOAT | DT_SIGNED, 20, 100.0 ),
-	DEFINE_DELTA( fparam2, DT_FLOAT | DT_SIGNED, 20, 100.0 ),
+	DEFINE_DELTA( fparam1, DT_FLOAT | DT_SIGNED, 22, 100.0 ),
+	DEFINE_DELTA( fparam2, DT_FLOAT | DT_SIGNED, 22, 100.0 ),
 	DEFINE_DELTA( iparam1, DT_INTEGER | DT_SIGNED, 16, 1.0 ),
 	DEFINE_DELTA( iparam2, DT_INTEGER | DT_SIGNED, 16, 1.0 ),
 	DEFINE_DELTA( angles[0], DT_SIGNED | DT_FLOAT, 16, 8.0 ),
