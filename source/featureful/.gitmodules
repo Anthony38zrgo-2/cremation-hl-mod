@@ -1,0 +1,6 @@
+[submodule "documentation/themes/hugo-book"]
+	path = documentation/themes/hugo-book
+	url = https://github.com/alex-shpak/hugo-book
+[submodule "freevgui"]
+	path = freevgui
+	url = https://github.com/FWGS/freevgui.git

@@ -1,0 +1,475 @@
+#include	"extdll.h"
+#include	"util.h"
+#include	"cbase.h"
+#include	"weapons.h"
+#include	"soundent.h"
+#include	"effects.h"
+#include	"customentity.h"
+#include	"decals.h"
+#include	"gamerules.h"
+#include	"skill.h"
+#include	"spore.h"
+#include	"game.h"
+#include	"player.h"
+#include	"visuals_utils.h"
+
+#define FEATURE_SPORE_AMMO_CEILING_LIGHT 1
+
+LINK_ENTITY_TO_CLASS(spore, CSpore)
+
+TYPEDESCRIPTION	CSpore::m_SaveData[] =
+{
+	DEFINE_FIELD(CSpore, m_SporeType, FIELD_INTEGER),
+	DEFINE_FIELD(CSpore, m_flIgniteTime, FIELD_TIME),
+	DEFINE_FIELD(CSpore, m_flSoundDelay, FIELD_TIME),
+	DEFINE_FIELD(CSpore, m_flExploDelay, FIELD_FLOAT),
+	DEFINE_FIELD(CSpore, m_hSprite, FIELD_EHANDLE)
+};
+
+IMPLEMENT_SAVERESTORE(CSpore, CGrenade)
+
+const NamedSoundScript CSpore::bounceSoundScript = {
+	CHAN_VOICE,
+	{"weapons/splauncher_bounce.wav"},
+	0.25f,
+	ATTN_NORM,
+	"Spore.Bounce"
+};
+
+const NamedSoundScript CSpore::impactSoundScript = {
+	CHAN_WEAPON,
+	{"weapons/splauncher_impact.wav"},
+	"Spore.Impact"
+};
+
+const NamedVisual CSpore::modelVisual = BuildVisual("Spore.Model")
+		.Model("models/spore.mdl");
+
+const NamedVisual CSpore::spriteVisual = BuildVisual("Spore.Sprite")
+		.Model("sprites/glow01.spr")
+		.RenderProps(kRenderTransAdd, Color3(180, 180, 40), 100, kRenderFxDistort)
+		.Scale(0.8f);
+
+const NamedVisual CSpore::blowVisual = BuildVisual::Animated("Spore.Blow")
+		.Model("sprites/spore_exp_01.spr")
+		.RenderMode(kRenderTransAdd)
+		.Scale(2.0f)
+		.Alpha(128);
+
+const NamedVisual CSpore::blowAltVisual = BuildVisual::Animated("Spore.BlowAlt")
+		.Model("sprites/spore_exp_c_01.spr")
+		.RenderMode(kRenderTransAdd)
+		.Scale(2.0f)
+		.Alpha(128);
+
+const NamedVisual CSpore::sprayVisual = BuildVisual::Spray("Spore.Spray")
+		.Model("sprites/tinyspit.spr");
+
+const NamedVisual CSpore::trailVisual = BuildVisual::Spray("Spore.Trail")
+		.Model("sprites/tinyspit.spr");
+
+const NamedVisual CSpore::lightVisual = BuildVisual("Spore.Light")
+		.Radius(100)
+		.RenderColor(15, 220, 40)
+		.Life(0.5f)
+		.Decay(100.0f);
+
+void CSpore::Precache()
+{
+	RegisterVisualAsMineOwn(modelVisual);
+	RegisterVisual(spriteVisual);
+
+	RegisterVisual(blowVisual);
+	RegisterVisual(blowAltVisual);
+	RegisterVisual(sprayVisual);
+	RegisterVisual(trailVisual);
+	RegisterVisual(lightVisual);
+
+	RegisterAndPrecacheSoundScript(bounceSoundScript);
+	RegisterAndPrecacheSoundScript(impactSoundScript);
+}
+
+void CSpore::Spawn()
+{
+	Precache();
+
+	if (m_SporeType == ROCKET)
+		pev->movetype = MOVETYPE_FLY;
+	else
+		pev->movetype = MOVETYPE_BOUNCE;
+
+	pev->solid = SOLID_BBOX;
+	pev->classname = MAKE_STRING("spore");
+
+	ApplyVisualWithOwn(GetVisual(modelVisual));
+
+	UTIL_SetSize(pev, g_vecZero, g_vecZero);
+	UTIL_SetOrigin(pev, pev->origin);
+
+	SetThink(&CSpore::FlyThink);
+
+	if (m_SporeType == ROCKET)
+	{
+		SetTouch(&CSpore::RocketTouch);
+	}
+	else
+	{
+		SetTouch(&CSpore::MyBounceTouch);
+
+		if (m_SporeType != GRENADE_PUKED)
+		{
+			pev->angles.x -= RANDOM_LONG(-5, 5) + 30;
+		}
+	}
+
+	if (m_SporeType != GRENADE_THROWN)
+	{
+		pev->gravity = 1;
+	}
+	else
+	{
+		pev->gravity = 0.5;
+		pev->friction = 0.7;
+	}
+
+	m_flIgniteTime = gpGlobals->time;
+
+	pev->nextthink = gpGlobals->time + 0.01;
+
+	CSprite* sprite = CreateSpriteFromVisual(GetVisual(spriteVisual), pev->origin);
+	if (sprite) {
+		sprite->SetAttachment(edict(), 0);
+		sprite->pev->spawnflags |= SF_SPRITE_TRANSIT;
+		m_hSprite = sprite;
+	}
+
+	m_fRegisteredSound = false;
+
+	m_flSoundDelay = gpGlobals->time;
+}
+
+void CSpore::IgniteThink()
+{
+	SetThink(NULL);
+	SetTouch(NULL);
+
+	UTIL_RemoveAndClean(m_hSprite);
+
+	EmitSoundScript(impactSoundScript);
+
+	const Vector vecDir = pev->velocity.Normalize();
+
+	TraceResult tr;
+
+	UTIL_TraceLine(
+		pev->origin, pev->origin + vecDir * (m_SporeType == ROCKET ? 32 : 64),
+		dont_ignore_monsters, edict(), &tr);
+
+	if (gDecals[DECAL_SPR_SPLT1].index >= 0)
+		UTIL_DecalTrace(&tr, DECAL_SPR_SPLT1 + RANDOM_LONG(0, 2));
+	else
+		UTIL_DecalTrace(&tr, DECAL_YBLOOD5 + RANDOM_LONG(0, 1));
+
+	SendSpray(pev->origin, tr.vecPlaneNormal, GetVisual(sprayVisual), 100, 40, 180);
+
+	SendDynLight(pev->origin, GetVisual(lightVisual));
+
+	SendSprite(pev->origin, GetVisual(RANDOM_LONG(0, 1) ? blowVisual : blowAltVisual));
+
+	SendSpray(pev->origin, Vector(RANDOM_FLOAT(-1, 1), 1, RANDOM_FLOAT(-1, 1)), GetVisual(trailVisual), 2, 20, 80);
+
+	::RadiusDamage(pev->origin, pev, VARS(pev->owner), GetProjectileRadiusDamageInfo());
+
+	SetThink(&CSpore::SUB_Remove);
+
+	pev->nextthink = gpGlobals->time;
+}
+
+void CSpore::FlyThink()
+{
+	if (m_SporeType == ROCKET || (gpGlobals->time <= m_flIgniteTime + m_flExploDelay))
+	{
+		Vector velocity = pev->velocity.Normalize();
+		SendSpray(pev->origin, velocity, GetVisual(trailVisual), 2, 20, 80);
+	}
+	else
+	{
+		SetThink(&CSpore::IgniteThink);
+	}
+
+	pev->nextthink = gpGlobals->time + 0.03;
+}
+
+void CSpore::RocketTouch(CBaseEntity* pOther)
+{
+	if (pOther->pev->takedamage != DAMAGE_NO)
+	{
+		pOther->TakeDamage(pev, VARS(pev->owner), GetProjectileDirectDamageInfo());
+	}
+
+	IgniteThink();
+}
+
+void CSpore::MyBounceTouch(CBaseEntity* pOther)
+{
+	bool shouldDetonate = pOther->pev->takedamage != DAMAGE_NO;
+	CheckDetonationOnTouch(shouldDetonate, pOther);
+
+	if (!shouldDetonate)
+	{
+		if (pOther->edict() != pev->owner)
+		{
+			if (gpGlobals->time > m_flSoundDelay)
+			{
+				InsertAISound(bits_SOUND_DANGER, (int)(GetProjectileRadiusDamageInfo().GetRadius()), 0.3f);
+
+				m_flSoundDelay = gpGlobals->time + 1.0;
+			}
+
+			if ((pev->flags & FL_ONGROUND) != 0)
+			{
+				pev->velocity = pev->velocity * 0.5;
+			}
+			else
+			{
+				EmitSoundScript(bounceSoundScript);
+			}
+		}
+	}
+	else
+	{
+		pOther->TakeDamage(pev, VARS(pev->owner), GetProjectileDirectDamageInfo());
+
+		IgniteThink();
+	}
+}
+
+void CSpore::UpdateOnRemove()
+{
+	CGrenade::UpdateOnRemove();
+	UTIL_RemoveAndClean(m_hSprite);
+}
+
+RadiusDamageInfo CSpore::GetDefaultProjectileRadiusDamageInfo()
+{
+	return RadiusDamageInfo(DamageInfo(GetSkillValue("plr_spore"), DMG_BLAST).SetGibPolicy(GIB_ALWAYS), 200.0f);
+}
+
+DamageInfo CSpore::GetDefaultProjectileDirectDamageInfo()
+{
+	return DamageInfo(GetSkillValue("plr_spore_direct"), DMG_GENERIC);
+}
+
+void CSpore::SetProjectileParamsBeforeSpawn(const ProjectileParameters& params)
+{
+	SetProjectileParamsBeforeSpawnImpl(params);
+
+	m_SporeType = static_cast<SporeType>(params.variant);
+
+	if (!params.time.has_value())
+	{
+		switch (m_SporeType) {
+		case GRENADE_THROWN:
+			m_flExploDelay = 4.0f;
+			break;
+		default:
+			m_flExploDelay = 2.0f;
+			break;
+		}
+	}
+	else
+		m_flExploDelay = *params.time;
+}
+
+void CSpore::LaunchAsProjectile(const ProjectileParameters& params)
+{
+	LaunchAsProjectileImpl(m_SporeType == ROCKET ? SPORE_ROCKET_SPEED : SPORE_GRENADE_SPEED, params);
+	SetMyProjectileEffectFlags();
+	if (m_SporeType == ROCKET)
+		SendProjectileTracer();
+}
+
+//=========================================================
+// Opposing Forces Spore Ammo
+//=========================================================
+#define		SACK_GROUP			1
+#define		SACK_EMPTY			0
+#define		SACK_FULL			1
+
+class CSporeAmmo : public CBaseEntity
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	void EXPORT IdleThink();
+	void EXPORT AmmoTouch( CBaseEntity *pOther );
+	TakeDamageResult TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, const DamageInfo& damageInfo ) override;
+
+	int SizeForGrapple() override { return GRAPPLE_FIXED; }
+
+	static const NamedSoundScript ammoSoundScript;
+
+	int m_iExplode;
+};
+
+
+typedef enum
+{
+	SPOREAMMO_IDLE = 0,
+	SPOREAMMO_SPAWNUP,
+	SPOREAMMO_SNATCHUP,
+	SPOREAMMO_SPAWNDOWN,
+	SPOREAMMO_SNATCHDOWN,
+	SPOREAMMO_IDLE1,
+	SPOREAMMO_IDLE2,
+} SPOREAMMO;
+
+LINK_ENTITY_TO_CLASS( ammo_spore, CSporeAmmo )
+
+const NamedSoundScript CSporeAmmo::ammoSoundScript = {
+	CHAN_ITEM,
+	{"weapons/spore_ammo.wav"},
+	"Spore.Ammo"
+};
+
+void CSporeAmmo::Precache()
+{
+	PRECACHE_MODEL("models/spore_ammo.mdl");
+	m_iExplode = PRECACHE_MODEL ("sprites/spore_exp_c_01.spr");
+	RegisterAndPrecacheSoundScript(ammoSoundScript);
+	UTIL_PrecacheOther ( "spore" );
+}
+//=========================================================
+// Spawn
+//=========================================================
+void CSporeAmmo::Spawn()
+{
+	Precache();
+	SET_MODEL(ENT(pev), "models/spore_ammo.mdl");
+	UTIL_SetSize(pev, Vector( -16, -16, -16 ), Vector( 16, 16, 16 ));
+	pev->takedamage = DAMAGE_YES;
+	pev->solid			= SOLID_BBOX;
+	pev->movetype		= MOVETYPE_NONE;
+	pev->framerate		= 1.0f;
+	pev->health			= 1.0f;
+	pev->animtime		= gpGlobals->time;
+
+	pev->sequence = SPOREAMMO_SPAWNDOWN;
+	pev->body = 1;
+
+	pev->origin.z += 16;
+	UTIL_SetOrigin( pev, pev->origin );
+
+	pev->angles.x -= 90;// :3
+#if FEATURE_SPORE_AMMO_CEILING_LIGHT
+	if (std::fabs(pev->angles.x - 180.0f) < 5.0f) {
+		pev->effects |= EF_INVLIGHT;
+	}
+#endif
+	SetThink (&CSporeAmmo::IdleThink);
+	SetTouch (&CSporeAmmo::AmmoTouch);
+
+	pev->nextthink = gpGlobals->time + 4;
+}
+
+//=========================================================
+// Override all damage
+//=========================================================
+TakeDamageResult CSporeAmmo::TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, const DamageInfo& damageInfo )
+{
+	if (pev->body != 0)
+	{
+		Vector vecSrc = pev->origin + gpGlobals->v_forward * -32;
+
+		MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
+			WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound
+			WRITE_VECTOR( vecSrc );	// Send to PAS because of the sound
+			WRITE_SHORT( m_iExplode );
+			WRITE_BYTE( 25  ); // scale * 10
+			WRITE_BYTE( 12  ); // framerate
+			WRITE_BYTE( TE_EXPLFLAG_NOSOUND );
+		MESSAGE_END();
+
+
+		//ALERT( at_console, "angles %f %f %f\n", pev->angles.x, pev->angles.y, pev->angles.z );
+
+		Vector angles = pev->angles;
+		angles.x -= 90;
+		angles.y += 180;
+
+		Vector vecLaunchAngle = angles;
+
+		vecLaunchAngle.x += RANDOM_FLOAT( -20, 20 );
+		vecLaunchAngle.y += RANDOM_FLOAT( -20, 20 );
+		vecLaunchAngle.z += RANDOM_FLOAT( -20, 20 );
+
+		UTIL_MakeVectors( vecLaunchAngle );
+		ProjectileParameters params("spore", pev->origin, vecLaunchAngle, gpGlobals->v_forward, this, GetProjectileOverrides());
+		params.variant = CSpore::GRENADE_PUKED;
+		CBaseEntity::CreateAndLaunchAsProjectile(params);
+
+		pev->frame = 0;
+		pev->animtime		= gpGlobals->time + 0.1;
+		pev->sequence		= SPOREAMMO_SNATCHDOWN;
+		pev->body			= 0;
+		pev->nextthink = gpGlobals->time + 0.66f;
+		SetThink (&CSporeAmmo::IdleThink);
+		return TakeDamageResult().SetTookDamageToHealth();
+	}
+	return TakeDamageResult();
+}
+
+void CSporeAmmo::IdleThink()
+{
+	switch (pev->sequence)
+	{
+	case SPOREAMMO_SPAWNDOWN:
+	{
+		pev->sequence = SPOREAMMO_IDLE1;
+		pev->animtime = gpGlobals->time;
+		pev->frame = 0;
+		break;
+	}
+	case SPOREAMMO_SNATCHDOWN:
+	{
+		pev->sequence = SPOREAMMO_IDLE;
+		pev->animtime = gpGlobals->time;
+		pev->frame = 0;
+		pev->nextthink = gpGlobals->time + 10.0f;
+		break;
+	}
+	case SPOREAMMO_IDLE:
+	{
+		pev->body = 1;
+		pev->sequence = SPOREAMMO_SPAWNDOWN;
+		pev->animtime = gpGlobals->time;
+		pev->frame = 0;
+		pev->nextthink = gpGlobals->time + 4.0f;
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void CSporeAmmo::AmmoTouch( CBaseEntity *pOther )
+{
+	if ( !pOther->IsPlayer() || pev->body == 0 )
+		return;
+
+	CBasePlayer* pPlayer = (CBasePlayer*)pOther;
+	if (!pPlayer->CanHaveItem(this))
+		return;
+
+	bool bResult = pOther->GiveAmmo( AMMO_SPORE_GIVE, "spores" ) != -1;
+	if (bResult)
+	{
+		EmitSoundScript(ammoSoundScript);
+
+		pev->frame = 0;
+		pev->animtime		= gpGlobals->time;
+		pev->sequence = SPOREAMMO_SNATCHDOWN;
+		pev->body = 0;
+		pev->nextthink = gpGlobals->time + 0.66f;
+	}
+}

@@ -1,0 +1,142 @@
+/***
+*
+*	Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+*	
+*	This product contains software technology licensed from Id 
+*	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc. 
+*	All Rights Reserved.
+*
+*   Use, distribution, and modification of this source code and/or resulting
+*   object code is restricted to non-commercial enhancements to products from
+*   Valve LLC.  All other use, distribution, or modification is prohibited
+*   without written permission from Valve LLC.
+*
+****/
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "monsters.h"
+#include "ggrenade.h"
+#include "player.h"
+
+class CAirtank : public CGrenade
+{
+	void Spawn() override;
+	void Precache() override;
+	const char* DefaultModel() override { return "models/w_oxygen.mdl"; }
+	float DefaultHealth() override { return 20; }
+	const char* DefaultDisplayName() override { return "Airtank"; }
+	void EXPORT TankThink();
+	void EXPORT TankTouch( CBaseEntity *pOther );
+	int  BloodColor() override { return DONT_BLEED; }
+	KilledResult Killed( entvars_t *pevInflictor, entvars_t *pevAttacker, int iGib ) override;
+	RadiusDamageInfo GetDefaultProjectileRadiusDamageInfo() override {
+		return RadiusDamageInfo(DamageInfo(50, DMG_BLAST));
+	}
+
+	int Save( CSave &save ) override;
+	int Restore( CRestore &restore ) override;
+
+	static	TYPEDESCRIPTION m_SaveData[];
+
+	int m_state;
+	float m_denySoundTime;
+
+	static const NamedSoundScript supplySoundScript;
+	static const NamedSoundScript denySoundScript;
+};
+
+LINK_ENTITY_TO_CLASS( item_airtank, CAirtank )
+
+TYPEDESCRIPTION	CAirtank::m_SaveData[] =
+{
+	DEFINE_FIELD( CAirtank, m_state, FIELD_INTEGER ),
+};
+
+IMPLEMENT_SAVERESTORE( CAirtank, CGrenade )
+
+const NamedSoundScript CAirtank::supplySoundScript = {
+	CHAN_VOICE,
+	{"doors/aliendoor3.wav"},
+	"AirTank.Supply"
+};
+
+const NamedSoundScript CAirtank::denySoundScript = {
+	CHAN_BODY,
+	{"player/pl_swim2.wav"},
+	"AirTank.Deny"
+};
+
+void CAirtank::Spawn()
+{
+	Precache();
+	// motor
+	pev->movetype = MOVETYPE_FLY;
+	pev->solid = SOLID_BBOX;
+
+	SetMyModel();
+	UTIL_SetSize( pev, Vector( -16, -16, 0), Vector( 16, 16, 36 ) );
+	UTIL_SetOrigin( pev, pev->origin );
+
+	SetTouch( &CAirtank::TankTouch );
+	SetThink( &CAirtank::TankThink );
+
+	pev->flags |= FL_MONSTER;
+	pev->takedamage = DAMAGE_YES;
+	SetMyHealth();
+	pev->max_health = pev->health;
+	m_state = 1;
+}
+
+void CAirtank::Precache()
+{
+	PrecacheBaseGrenadeSounds();
+	PrecacheMyModel();
+	RegisterAndPrecacheSoundScript(supplySoundScript);
+	RegisterAndPrecacheSoundScript(denySoundScript);
+}
+
+KilledResult CAirtank::Killed( entvars_t *pevInflictor, entvars_t *pevAttacker, int iGib )
+{
+	pev->owner = ENT( pevAttacker );
+
+	// UNDONE: this should make a big bubble cloud, not an explosion
+
+	ExplodeDownwards();
+	return KilledResult();
+}
+
+void CAirtank::TankThink()
+{
+	// Fire trigger
+	m_state = 1;
+	SUB_UseTargets( this, USE_TOGGLE, 0 );
+}
+
+void CAirtank::TankTouch( CBaseEntity *pOther )
+{
+	if( !pOther->IsPlayer() )
+		return;
+
+	if( !m_state )
+	{
+		// "no oxygen" sound
+		if (m_denySoundTime <= gpGlobals->time)
+		{
+			EmitSoundScript(denySoundScript);
+			m_denySoundTime = gpGlobals->time + 1.0f;
+		}
+		return;
+	}
+
+	// give player 12 more seconds of air
+	pOther->pev->air_finished = gpGlobals->time + 12;
+
+	// suit recharge sound
+	EmitSoundScript(supplySoundScript);
+
+	// recharge airtank in 30 seconds
+	pev->nextthink = gpGlobals->time + 30;
+	m_state = 0;
+	SUB_UseTargets( this, USE_TOGGLE, 1 );
+}

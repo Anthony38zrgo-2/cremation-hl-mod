@@ -1,0 +1,199 @@
+#pragma once
+#ifndef HGRUNT_H
+#define HGRUNT_H
+
+#include	"cbase.h"
+#include	"monsters.h"
+#include	"followingmonster.h"
+
+#define RAPPEL_LANDING_TRACE_DIST			4096.0f
+#define RAPPEL_LANDING_ANTICIPATION			24.0f
+
+//=========================================================
+// monster-specific schedule types
+//=========================================================
+enum
+{
+	SCHED_GRUNT_SUPPRESS = LAST_FOLLOWINGMONSTER_SCHEDULE+1,
+	SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE,// move to a location to set up an attack against the enemy. (usually when a friendly is in the way).
+	SCHED_GRUNT_COVER_AND_RELOAD,
+	SCHED_GRUNT_SWEEP,
+	SCHED_GRUNT_FOUND_ENEMY,
+	SCHED_GRUNT_REPEL,
+	SCHED_GRUNT_REPEL_ATTACK,
+	SCHED_GRUNT_WAIT_FACE_ENEMY,
+	SCHED_GRUNT_TAKECOVER_FAILED,// special schedule type that forces analysis of conditions and picks the best possible schedule to recover from this type of failure.
+	SCHED_GRUNT_ELOF_FAIL
+};
+
+//=========================================================
+// monster-specific tasks
+//=========================================================
+enum
+{
+	TASK_GRUNT_FACE_TOSS_DIR = LAST_FOLLOWINGMONSTER_TASK+1,
+	TASK_GRUNT_SPEAK_SENTENCE,
+};
+
+typedef enum
+{
+	HGRUNT_SENT_NONE = -1,
+	HGRUNT_SENT_GREN = 0,
+	HGRUNT_SENT_ALERT,
+	HGRUNT_SENT_MONSTER,
+	HGRUNT_SENT_COVER,
+	HGRUNT_SENT_THROW,
+	HGRUNT_SENT_CHARGE,
+	HGRUNT_SENT_TAUNT,
+	HGRUNT_SENT_CHECK,
+	HGRUNT_SENT_QUEST,
+	HGRUNT_SENT_IDLE,
+	HGRUNT_SENT_CLEAR,
+	HGRUNT_SENT_ANSWER,
+	HGRUNT_SENT_HOSTILE,
+	HGRUNT_SENT_COUNT,
+} HGRUNT_SENTENCE_TYPES;
+
+class CHGrunt : public CFollowingMonster
+{
+public:
+	void KeyValue(KeyValueData* pkvd) override;
+	void Spawn() override;
+	void Precache() override;
+	const char* DefaultModel() override { return "models/hgrunt.mdl"; }
+	float DefaultHealth() override { return GetSkillValue("hgrunt_health"); }
+	void SetYawSpeed() override;
+	int DefaultClassify() override;
+	const char* DefaultDisplayName() override { return "Human Grunt"; }
+	const char* ReverseRelationshipModel() override;
+	int DefaultISoundMask() override;
+	void HandleAnimEvent( MonsterEvent_t *pEvent ) override;
+	bool FCanCheckAttacks() override;
+	bool CheckMeleeAttack1( float flDot, float flDist ) override;
+	bool CheckRangeAttack1( float flDot, float flDist ) override;
+	bool CheckRangeAttack2( float flDot, float flDist ) override;
+	int LookupActivity(int activity) override;
+	int LookupRegenerationActivity() override;
+	void StartTask( Task_t *pTask ) override;
+	void RunTask( Task_t *pTask ) override;
+	void DeathSound() override;
+	PainSoundRule DefaultPainSoundRule() override;
+	void PainSound() override;
+	void IdleSound() override;
+	Vector GetGunPosition() override;
+	void Shoot();
+	void Shotgun();
+	void PrescheduleThink() override;
+	bool ShouldAnticipateLanding();
+	void GibMonster() override;
+	virtual void SpeakSentence();
+	bool PlayGruntSentence(int sentence, int flags = 0);
+	bool PlaySentenceGroup(const char* group, int flags = 0);
+	bool EmitSoundScriptTalk(const char* soundScript) override;
+	bool PlayUseSentence() override;
+	bool PlayUnUseSentence() override;
+	bool PlayFriendlyFireComplaint() override;
+
+	int Save( CSave &save ) override;
+	int Restore( CRestore &restore ) override;
+	static TYPEDESCRIPTION m_SaveData[];
+
+	void PerformKick(int eventIndex, float damage, float zpunch = 0);
+	Schedule_t *GetSchedule() override;
+	Schedule_t *GetScheduleOfType( int Type ) override;
+	bool DefaultInterestedInCoverFromDanger() override { return true; }
+	DamageInfo DefaultHandleTraceAttack(entvars_t *pevInflictor, entvars_t *pevAttacker, const DamageInfo &inputDamageInfo, Vector vecDir, TraceResult *ptr) override;
+	TakeDamageResult TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, const DamageInfo& damageInfo ) override;
+
+	int IRelationship( CBaseEntity *pTarget ) override;
+
+	virtual bool FOkToSpeak();
+	virtual bool CanDropGrenade() const;
+	void JustSpoke() override;
+	void DropMyItems(bool isGibbed);
+	CBaseEntity* DropMyItem(const char *entityName, const Vector &vecGunPos, const Vector &vecGunAngles, bool isGibbed);
+
+	CUSTOM_SCHEDULES
+
+	int DefaultSizeForGrapple() override { return GRAPPLE_MEDIUM; }
+	bool IsDisplaceable() override { return true; }
+	Vector DefaultMinHullSize() override { return VEC_HUMAN_HULL_MIN; }
+	Vector DefaultMaxHullSize() override { return VEC_HUMAN_HULL_MAX; }
+
+	void ReportAIState(ALERT_TYPE level) override;
+
+	// checking the feasibility of a grenade toss is kind of costly, so we do it every couple of seconds,
+	// not every server frame.
+	float m_flNextGrenadeCheck;
+	float m_flLastEnemySightTime;
+
+	Vector m_vecTossVelocity;
+
+	bool m_fThrowGrenade;
+	bool m_fStanding;
+	bool m_fFirstEncounter;// only put on the handsign show in the squad's first encounter.
+
+	int m_voicePitch;
+
+	int m_iBrassShell;
+	int m_iShotgunShell;
+
+	int m_iSentence;
+
+	bool m_fStandingGround;
+	float m_flStandGroundRange;
+
+	short m_desiredSkin;
+protected:
+	void OnBecomingLeader() override;
+
+	static const char *pGruntSentences[HGRUNT_SENT_COUNT];
+
+	void SpawnHelper(int bloodColor = BLOOD_COLOR_RED);
+	void PrecacheHelper();
+	virtual void PlayFirstBurstSounds();
+	virtual void PlayReloadSound();
+	virtual void PlayGrenadeLaunchSound();
+	virtual void PlayShogtunSound();
+	bool CheckRangeAttack2Impl(float grenadeSpeed, float flDot, float flDist, bool contact);
+	virtual int GetRangeAttack1Sequence();
+	virtual int GetRangeAttack2Sequence();
+	virtual Schedule_t* ScheduleOnRangeAttack1();
+	virtual float LimpHealth();
+
+	virtual float SentenceVolume();
+	virtual float SentenceAttn();
+	virtual const char* SentenceByNumber(int sentence);
+	virtual int* GruntQuestionVar();
+
+	virtual void SpeakCaughtEnemy();
+	virtual bool AlertSentenceIsForPlayerOnly();
+	virtual bool CanFireWhileRappelling();
+
+public:
+	static const NamedSoundScript painSoundScript;
+	static const NamedSoundScript dieSoundScript;
+
+	static constexpr const char* reloadSoundScript = "HGrunt.Reload";
+	static constexpr const char* burst9mmSoundScript = "HGrunt.9MM";
+	static constexpr const char* grenadeLaunchSoundScript = "HGrunt.GrenadeLaunch";
+	static constexpr const char* shotgunSoundScript = "HGrunt.Shotgun";
+
+	static const NamedSoundScript useSoundScript;
+	static const NamedSoundScript unuseSoundScript;
+	static const NamedSoundScript friendlyFireComplaintSoundScript;
+};
+
+class CHGruntRepel : public CFollowingMonster
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	void KeyValue(KeyValueData* pkvd) override;
+	void EXPORT RepelUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	int m_iSpriteTexture;	// Don't save, precache
+	virtual const char* TrooperName();
+	virtual void PrepareBeforeSpawn(CBaseEntity* pEntity);
+};
+
+#endif

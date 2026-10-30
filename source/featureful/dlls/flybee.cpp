@@ -1,0 +1,1304 @@
+
+//---------------------------------------------------------
+//-	based on code by JujU						-----------
+//-		julien.lecorre@free.fr					-----------
+//---------------------------------------------------------
+
+#include	"extdll.h"
+#include	"util.h"
+#include	"cbase.h"
+#include	"monsters.h"
+#include	"effects.h"
+#include	"schedule.h"
+#include	"combat.h"
+#include	"flyingmonster.h"
+#include	"nodes.h"
+#include	"soundent.h"
+#include	"game.h"
+#include	"decals.h"
+#include	"visuals_utils.h"
+
+#define FLYBEE_SPEED		150
+#define PROBE_LENGTH		150
+
+#define FEAR_LEVEL		10
+#define HATE_LEVEL		-10
+
+enum 
+{
+	TASK_FLYBEE_CIRCLE_ENEMY = LAST_COMMON_TASK + 1,
+	TASK_FLYBEE_SWIM,
+	TASK_FLYBEE_STOP_MOVING,
+	TASK_FLYBEE_RUN_ATTACK,
+	TASK_FLYBEE_RANGE_ATTACK2,
+};
+
+#define FLYBEE_AE_HIT		1
+#define FLYBEE_AE_ATTACK1	2
+#define FLYBEE_AE_ATTACK2	3
+
+class CFlybee : public CFlyingMonster
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	const char* DefaultModel() override { return "models/flybee.mdl"; }
+	float DefaultHealth() override { return GetSkillValue("flybee_health"); }
+	int DefaultClassify() override { return CLASS_ALIEN_MONSTER; }
+	const char* DefaultDisplayName() override { return "Flybee"; }
+
+	int		Save( CSave &save ) override;
+	int		Restore( CRestore &restore ) override;
+	static	TYPEDESCRIPTION m_SaveData[];
+	CUSTOM_SCHEDULES
+
+	void	HandleAnimEvent( MonsterEvent_t *pEvent ) override;
+	Schedule_t *GetSchedule() override;
+	Schedule_t *GetScheduleOfType( int Type ) override;
+
+	void	StartTask( Task_t *pTask ) override;
+	void	RunTask( Task_t *pTask ) override;
+
+	bool	CheckMeleeAttack1( float flDot, float flDist ) override;
+	bool	CheckRangeAttack1( float flDot, float flDist ) override;
+	bool	CheckRangeAttack2( float flDot, float flDist ) override;
+
+	Activity GetStoppedActivity() override;
+
+	void	MonsterThink() override;
+
+	void	Move( float flInterval ) override;
+	void	MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval ) override;
+
+	void	Stop() override;
+	void	Swim();
+
+	void	SetYawSpeed() override;
+	float	ChangeYaw( int speed ) override;
+
+	float	VectorToPitch( const Vector &vec);
+	float	FlPitchDiff();
+	float	ChangePitch( int speed );
+
+	Vector	m_SaveVelocity;
+	float	m_idealDist;
+
+	float	m_flMaxSpeed;
+	float	m_flMinSpeed;
+	float	m_flMaxDist;
+
+	float m_flNextAlert;
+	float m_flNextBallAttack;
+
+	static const NamedSoundScript idleSoundScript;
+	static const NamedSoundScript alertSoundScript;
+	static const NamedSoundScript attackSoundScript;
+	static const NamedSoundScript biteSoundScript;
+	static const NamedSoundScript painSoundScript;
+	static const NamedSoundScript dieSoundScript;
+	static const NamedSoundScript beamSoundScript;
+
+	void IdleSound() override;
+	void AlertSound() override;
+	void AttackSound();
+	void BiteSound();
+	void DeathSound() override;
+	void PainSound() override;
+
+	int DefaultSizeForGrapple() override { return GRAPPLE_MEDIUM; }
+	bool IsDisplaceable() override { return true; }
+	Vector DefaultMinHullSize() override { return Vector( -24.0f, -24.0f, 0.0f ); }
+	Vector DefaultMaxHullSize() override { return Vector( 24.0f, 24.0f, 24.0f ); }
+
+	static const NamedVisual zapBeamVisual;
+	static const NamedVisual zapBeamAltVisual;
+};
+
+LINK_ENTITY_TO_CLASS( monster_flybee, CFlybee );
+
+TYPEDESCRIPTION	CFlybee::m_SaveData[] = 
+{
+	DEFINE_FIELD( CFlybee, m_SaveVelocity, FIELD_VECTOR ),
+	DEFINE_FIELD( CFlybee, m_idealDist, FIELD_FLOAT ),
+	DEFINE_FIELD( CFlybee, m_flMaxSpeed, FIELD_FLOAT ),
+	DEFINE_FIELD( CFlybee, m_flMinSpeed, FIELD_FLOAT ),
+	DEFINE_FIELD( CFlybee, m_flMaxDist, FIELD_FLOAT ),
+	DEFINE_FIELD( CFlybee, m_flNextAlert, FIELD_TIME ),
+	DEFINE_FIELD( CFlybee, m_flNextBallAttack, FIELD_TIME ),
+};
+
+IMPLEMENT_SAVERESTORE( CFlybee, CFlyingMonster );
+
+#define FLYBALL_SPEED 1000.0f
+
+class CFlyBall : public CBaseEntity
+{
+public :
+	void Spawn() override;
+	void Precache() override;
+	void EXPORT AnimateThink();
+	void EXPORT ExplodeTouch( CBaseEntity *pOther );
+
+	DamageInfo GetDefaultProjectileDirectDamageInfo() override {
+		return DamageInfo{GetSkillValue("flybee_dmg_flyball"), DMG_ENERGYBEAM};
+	}
+	void SetProjectileParamsBeforeSpawn(const ProjectileParameters& params) override {
+		SetProjectileParamsBeforeSpawnImpl(params);
+	}
+	void LaunchAsProjectile(const ProjectileParameters& params) override {
+		LaunchAsProjectileImpl(FLYBALL_SPEED, params);
+		SetMyProjectileEffectFlags();
+		SendProjectileTracer();
+	}
+
+	static CFlyBall *CreateFlyBall(Vector vecOrigin, Vector vecAngles, entvars_s *pevOwner , EntityOverrides entityOverrides);
+
+	static const NamedSoundScript electroSoundScript;
+
+	static const NamedVisual ballVisual;
+	static const NamedVisual ballTrailVisual;
+};
+LINK_ENTITY_TO_CLASS( flyball, CFlyBall )
+
+const NamedSoundScript CFlyBall::electroSoundScript = {
+	CHAN_STATIC,
+	{"weapons/electro4.wav"},
+	0.3f,
+	ATTN_NORM,
+	IntRange(90, 99),
+	"Flybee.Electro"
+};
+
+const NamedVisual CFlyBall::ballVisual = BuildVisual("Flybee.Ball")
+		.Model("sprites/muz7.spr")
+		.RenderProps(kRenderTransAdd, Color3(255, 255, 255), 190)
+		.Scale(0.2f);
+
+const NamedVisual CFlyBall::ballTrailVisual = BuildVisual("Flybee.BallTrail")
+		.Model("sprites/xspark3.spr")
+		.Framerate(22.0f)
+		.Scale(0.2f)
+		.RenderProps(kRenderTransAdd, Color3(230, 255, 230), 150, kRenderFxNone);
+
+class CFlybeeZapBomb : public CBaseEntity
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+
+	void Animate();
+	void EXPORT AnimateThink();
+	void EXPORT FadeThink();
+
+	float m_startTime;
+	float m_lastTime;
+	float m_maxFrame;
+
+	int Save( CSave &save ) override;
+	int Restore( CRestore &restore ) override;
+	static TYPEDESCRIPTION m_SaveData[];
+
+	static const NamedSoundScript zapSoundScript;
+
+	static const NamedVisual zapVisual;
+	static const NamedVisual zapWaveVisual;
+};
+
+LINK_ENTITY_TO_CLASS( flybee_zapbomb, CFlybeeZapBomb )
+
+TYPEDESCRIPTION	CFlybeeZapBomb::m_SaveData[] =
+{
+	DEFINE_FIELD( CFlybeeZapBomb, m_startTime, FIELD_TIME ),
+	DEFINE_FIELD( CFlybeeZapBomb, m_lastTime, FIELD_TIME ),
+	DEFINE_FIELD( CFlybeeZapBomb, m_maxFrame, FIELD_FLOAT ),
+};
+
+IMPLEMENT_SAVERESTORE( CFlybeeZapBomb, CBaseEntity )
+
+const NamedVisual CFlybeeZapBomb::zapVisual = BuildVisual("Flybee.Zap")
+		.Model("sprites/nhth1.spr")
+		.Framerate(10.0f)
+		.Scale(0.8f)
+		.RenderProps(kRenderTransAdd, Color3(230, 255, 230), 150, kRenderFxNone);
+
+const NamedVisual CFlybeeZapBomb::zapWaveVisual = BuildVisual("Flybee.ZapWave")
+		.Model("sprites/shockwave.spr")
+		.Life(0.2f)
+		.BeamWidth(16)
+		.RenderColor(206, 118, 255)
+		.Alpha(80)
+		.WaveType(Visual::WAVETYPE_CYLINDER);
+
+const NamedSoundScript CFlybeeZapBomb::zapSoundScript = {
+	CHAN_BODY,
+	{"debris/beamstart14.wav"},
+	0.9f,
+	ATTN_NORM,
+	IntRange(90, 99),
+	"Flybee.Zap"
+};
+
+constexpr float flybeeAttenuation = 0.6f;
+constexpr IntRange flybeePitch(95, 105);
+
+const NamedSoundScript CFlybee::idleSoundScript = {
+	CHAN_VOICE,
+	{"ichy/ichy_idle1.wav", "ichy/ichy_idle2.wav", "ichy/ichy_idle3.wav", "ichy/ichy_idle4.wav"},
+	1.0f,
+	flybeeAttenuation,
+	flybeePitch,
+	"Flybee.Idle"
+};
+
+const NamedSoundScript CFlybee::alertSoundScript = {
+	CHAN_VOICE,
+	{"ichy/ichy_alert2.wav", "ichy/ichy_alert3.wav"},
+	1.0f,
+	flybeeAttenuation,
+	flybeePitch,
+	"Flybee.Alert"
+};
+
+const NamedSoundScript CFlybee::attackSoundScript = {
+	CHAN_VOICE,
+	{"ichy/ichy_attack1.wav", "ichy/ichy_attack2.wav"},
+	1.0f,
+	flybeeAttenuation,
+	flybeePitch,
+	"Flybee.Attack"
+};
+
+const NamedSoundScript CFlybee::biteSoundScript = {
+	CHAN_WEAPON,
+	{"ichy/ichy_bite1.wav", "ichy/ichy_bite2.wav"},
+	1.0f,
+	flybeeAttenuation,
+	flybeePitch,
+	"Flybee.Bite"
+};
+
+const NamedSoundScript CFlybee::painSoundScript = {
+	CHAN_VOICE,
+	{"ichy/ichy_pain2.wav", "ichy/ichy_pain3.wav", "ichy/ichy_pain5.wav"},
+	1.0f,
+	flybeeAttenuation,
+	flybeePitch,
+	"Flybee.Pain"
+};
+
+const NamedSoundScript CFlybee::dieSoundScript = {
+	CHAN_VOICE,
+	{"ichy/ichy_die2.wav", "ichy/ichy_die4.wav"},
+	1.0f,
+	flybeeAttenuation,
+	flybeePitch,
+	"Flybee.Die"
+};
+
+const NamedSoundScript CFlybee::beamSoundScript = {
+	CHAN_STATIC,
+	{"debris/beamstart4.wav"},
+	0.9f,
+	ATTN_NORM,
+	IntRange(90, 99),
+	"Flybee.Beam"
+};
+
+const NamedVisual CFlybee::zapBeamVisual = BuildVisual("Flybee.ZapBeam")
+		.Model("sprites/laserbeam.spr")
+		.RenderColor(206, 118, 254)
+		.Alpha(192)
+		.BeamParams(8, 30)
+		.Life(0.35f);
+
+const NamedVisual CFlybee::zapBeamAltVisual = BuildVisual("Flybee.ZapBeamAlt")
+		.RenderColor(223, 224, 255)
+		.Mixin(&CFlybee::zapBeamVisual);
+
+void CFlybee::IdleSound()
+{
+	EmitSoundScript(idleSoundScript);
+}
+
+void CFlybee::AlertSound()
+{
+	EmitSoundScript(alertSoundScript);
+}
+
+void CFlybee::AttackSound()
+{
+	EmitSoundScript(attackSoundScript);
+}
+
+void CFlybee::BiteSound()
+{
+	EmitSoundScript(biteSoundScript);
+}
+
+void CFlybee::DeathSound()
+{ 
+	EmitSoundScript(dieSoundScript);
+}
+
+void CFlybee::PainSound()
+{
+	EmitSoundScript(painSoundScript);
+}
+
+void CFlybee::Spawn()
+{
+	Precache();
+
+	SetMyModel();
+	SetMySize();
+
+	pev->solid			= SOLID_BBOX;
+	pev->movetype		= MOVETYPE_FLY;
+	SetMyBloodColor(BLOOD_COLOR_YELLOW);
+	SetMyHealth();
+	pev->view_ofs		= Vector ( 0, 0, 16 );
+	SetMyFieldOfView(VIEW_FIELD_WIDE);
+	m_MonsterState		= MONSTERSTATE_NONE;
+	SetFlyingSpeed( FLYBEE_SPEED );
+	SetFlyingMomentum( 2.5f );
+
+	m_afCapability = bits_CAP_MELEE_ATTACK1 | bits_CAP_RANGE_ATTACK1 | bits_CAP_RANGE_ATTACK2 | bits_CAP_SWIM;
+
+	MonsterInit();
+
+	m_idealDist		= 384;
+	m_flMinSpeed	= 80;
+	m_flMaxSpeed	= GetSkillValue("flybee_maxspeed") * 0.75f;
+	m_flMaxDist		= 384;
+
+	Vector Forward;
+	UTIL_MakeVectorsPrivate(pev->angles, Forward, 0, 0);
+	pev->velocity = m_flightSpeed * Forward.Normalize();
+	m_SaveVelocity = pev->velocity;
+}
+
+void CFlybee::Precache()
+{
+	PrecacheMyModel();
+	PrecacheMyGibModel();
+
+	RegisterAndPrecacheSoundScript(idleSoundScript);
+	RegisterAndPrecacheSoundScript(alertSoundScript);
+	RegisterAndPrecacheSoundScript(attackSoundScript);
+	RegisterAndPrecacheSoundScript(biteSoundScript);
+	RegisterAndPrecacheSoundScript(painSoundScript);
+	RegisterAndPrecacheSoundScript(dieSoundScript);
+	RegisterAndPrecacheSoundScript(beamSoundScript);
+
+	RegisterVisual(zapBeamVisual);
+	RegisterVisual(zapBeamAltVisual);
+
+	UTIL_PrecacheOther("flybee_zapbomb", GetProjectileOverrides());
+	UTIL_PrecacheOther( "flyball", GetProjectileOverrides() );
+}
+
+bool CFlybee::CheckMeleeAttack1 ( float flDot, float flDist )
+{
+	if ( flDist <= 64  )
+	{
+		return true;
+	}
+	return false;
+}
+
+bool CFlybee::CheckRangeAttack1 ( float flDot, float flDist )
+{
+	return !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDot > -0.7f && m_flNextBallAttack <= gpGlobals->time;
+}
+
+bool CFlybee::CheckRangeAttack2 ( float flDot, float flDist )
+{
+	return !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDot > -0.7f && m_flNextAttack <= gpGlobals->time;
+}
+
+void CFlybee::SetYawSpeed()
+{
+	pev->yaw_speed = 100;
+}
+
+void CFlybee::HandleAnimEvent( MonsterEvent_t *pEvent )
+{
+	switch( pEvent->event )
+	{
+	case FLYBEE_AE_HIT:
+		{
+			TraceHullAttackParams params;
+			params.punchAngle.z = 25;
+			params.damageInfo.damage = GetSkillValue("flybee_dmg_kick");
+			params.damageInfo.type = DMG_CLUB;
+			SetTraceHullAttackParamsFromTemplate(pEvent->event, params);
+
+			PerformTraceHullAttack(params);
+
+			BiteSound();
+			break;
+		}
+
+	case FLYBEE_AE_ATTACK2:
+		{
+			UTIL_MakeVectors( pev->angles );
+			TraceResult tr;
+
+			const Vector vecStart = pev->origin + gpGlobals->v_up * 24 + gpGlobals->v_forward * 32;
+			const Vector vecTarget = m_hEnemy != 0 ? m_hEnemy->Center() : (vecStart + gpGlobals->v_forward * 256.0f);
+
+			UTIL_TraceLine( vecStart, vecTarget, dont_ignore_monsters, dont_ignore_glass, ENT(pev), &tr );
+
+			Vector vecEnd = tr.vecEndPos;
+
+			for ( int i = 0; i<4; i ++ )
+			{
+				const Visual* beamVisual = RANDOM_LONG(0,1) ? GetVisual(zapBeamVisual) : GetVisual(zapBeamAltVisual);
+				CBeam *pBeam = CreateBeamFromVisual(beamVisual);
+				if (pBeam)
+				{
+					pBeam->SetStartPos( vecStart );
+					pBeam->SetEndPos( vecEnd );
+					pBeam->RelinkBeam();
+
+					pBeam->LiveForTime(RandomizeNumberFromRange(beamVisual->life));
+				}
+			}
+
+			m_flNextAttack = gpGlobals->time + RANDOM_FLOAT(3.0f, 5.0f);
+			m_flNextBallAttack = Q_max(gpGlobals->time + 1.0f, m_flNextBallAttack);
+
+			CBaseEntity::Create("flybee_zapbomb", vecEnd, pev->angles, pev->owner, GetProjectileOverrides());
+			EmitSoundScriptAmbient(vecEnd, beamSoundScript);
+			break;
+		}
+	case FLYBEE_AE_ATTACK1:
+		{
+			UTIL_MakeVectors( pev->angles );
+
+			const Vector vecSrc	= pev->origin + gpGlobals->v_up * 24 + gpGlobals->v_forward * 32;
+			const Vector enemyPosition = m_hEnemy != 0 ? m_hEnemy->Center() : m_vecEnemyLKP;
+			const Vector ang		= UTIL_VecToAngles( (enemyPosition - vecSrc).Normalize() );
+
+			EntityOverrides flyBallOverrides = GetProjectileOverrides();
+
+			CFlyBall::CreateFlyBall( vecSrc + gpGlobals->v_right * 30, ang, pev, flyBallOverrides );
+			CFlyBall::CreateFlyBall( vecSrc + gpGlobals->v_right * 10, ang, pev, flyBallOverrides );
+			CFlyBall::CreateFlyBall( vecSrc - gpGlobals->v_right * 30, ang, pev, flyBallOverrides );
+			CFlyBall::CreateFlyBall( vecSrc - gpGlobals->v_right * 10, ang, pev, flyBallOverrides );
+
+			m_flNextBallAttack = gpGlobals->time + RANDOM_FLOAT(2.5f, 4.5f);
+			m_flNextAttack = Q_max(gpGlobals->time + 1.0f, m_flNextAttack);
+
+			break;
+		}
+	default:
+		CFlyingMonster::HandleAnimEvent( pEvent );
+		break;
+	}
+}
+
+static Task_t	tlFlybeeSwimAround[] =
+{
+	{ TASK_SET_ACTIVITY,			(float)ACT_WALK },
+	{ TASK_FLYBEE_SWIM,				(float)0 },
+};
+
+static Schedule_t	slFlybeeSwimAround[] =
+{
+	{ 
+		tlFlybeeSwimAround,
+		ARRAYSIZE(tlFlybeeSwimAround), 
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE	|
+		bits_COND_SEE_ENEMY		|
+		bits_COND_NEW_ENEMY		|
+		bits_COND_HEAR_SOUND,
+		bits_SOUND_PLAYER_IF_NOT_ALLY |
+		bits_SOUND_COMBAT,
+		"SwimAround"
+	},
+};
+
+static Task_t	tlFlybeeSwimAgitated[] =
+{
+	{ TASK_STOP_MOVING,				(float) 0 },
+	{ TASK_SET_ACTIVITY,			(float)ACT_WALK },
+	{ TASK_WAIT,					(float)2.0 },
+};
+
+static Schedule_t	slFlybeeSwimAgitated[] =
+{
+	{ 
+		tlFlybeeSwimAgitated,
+		ARRAYSIZE(tlFlybeeSwimAgitated), 
+		0, 
+		0, 
+		"SwimAgitated"
+	},
+};
+
+
+static Task_t	tlFlybeeCircleEnemy[] =
+{
+	{ TASK_SET_ACTIVITY,			(float)ACT_WALK },
+	{ TASK_FLYBEE_CIRCLE_ENEMY, 0.0 },
+};
+
+static Schedule_t	slFlybeeCircleEnemy[] =
+{
+	{ 
+		tlFlybeeCircleEnemy,
+		ARRAYSIZE(tlFlybeeCircleEnemy), 
+		bits_COND_NEW_ENEMY		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE	|
+		bits_COND_CAN_MELEE_ATTACK1 |
+		bits_COND_CAN_RANGE_ATTACK1 |
+		bits_COND_CAN_RANGE_ATTACK2,
+		0,
+		"CircleEnemy"
+	},
+};
+
+
+Task_t tlFlybeeTwitchDie[] =
+{
+	{ TASK_STOP_MOVING,			0		 },
+	{ TASK_SOUND_DIE,			(float)0 },
+	{ TASK_DIE,					(float)0 },
+};
+
+Schedule_t slFlybeeTwitchDie[] =
+{
+	{
+		tlFlybeeTwitchDie,
+		ARRAYSIZE( tlFlybeeTwitchDie ),
+		0,
+		0,
+		"Die"
+	},
+};
+
+Task_t tlFlybeeRangeAttack1[] =
+{
+	{ TASK_FLYBEE_STOP_MOVING,	0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	{ TASK_RANGE_ATTACK1,		(float)0		},
+};
+
+Schedule_t slFlybeeRangeAttack1[] =
+{
+	{
+		tlFlybeeRangeAttack1,
+		ARRAYSIZE( tlFlybeeRangeAttack1 ),
+
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_ENEMY_LOST		|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"Range attack 1"
+	},
+};
+
+Task_t tlFlybeeRangeAttack2[] =
+{
+	{ TASK_FLYBEE_STOP_MOVING,			(float)0		},
+	{ TASK_FACE_ENEMY,					(float)0		},
+	{ TASK_FLYBEE_RANGE_ATTACK2,		(float)0		},
+};
+
+Schedule_t slFlybeeRangeAttack2[] =
+{
+	{
+		tlFlybeeRangeAttack2,
+		ARRAYSIZE( tlFlybeeRangeAttack2 ),
+
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_ENEMY_LOST		|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"Range attack 2"
+	},
+};
+
+Task_t tlFlybeeRunAttack[] =
+{
+	{ TASK_FLYBEE_STOP_MOVING,	(float) 0					},
+	{ TASK_FLYBEE_RUN_ATTACK,	(float)	0					},
+};
+
+Schedule_t slFlybeeRunAttack[] =
+{
+	{
+		tlFlybeeRunAttack,
+		ARRAYSIZE( tlFlybeeRunAttack ),
+
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_ENEMY_LOST		|
+		bits_COND_CAN_MELEE_ATTACK1 |
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"Run attack"
+	},
+};
+
+Task_t	tlFlybeeMeleeAttack[] =
+{
+	{ TASK_FLYBEE_STOP_MOVING,	(float)0		},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	{ TASK_MELEE_ATTACK1,		(float)0		},
+};
+
+Schedule_t	slFlybeeMeleeAttack[] =
+{
+	{ 
+		tlFlybeeMeleeAttack,
+		ARRAYSIZE ( tlFlybeeMeleeAttack ), 
+		bits_COND_NEW_ENEMY|
+		bits_COND_ENEMY_DEAD|
+		bits_COND_ENEMY_LOST,
+		0,
+		"Flybee Melee Attack"
+	},
+};
+
+DEFINE_CUSTOM_SCHEDULES(CFlybee)
+{
+	slFlybeeSwimAround,
+	slFlybeeSwimAgitated,
+	slFlybeeCircleEnemy,
+	slFlybeeTwitchDie,
+	slFlybeeRangeAttack1,
+	slFlybeeRangeAttack2,
+	slFlybeeRunAttack,
+	slFlybeeMeleeAttack,
+};
+IMPLEMENT_CUSTOM_SCHEDULES(CFlybee, CFlyingMonster);
+
+Schedule_t* CFlybee::GetSchedule()
+{
+	switch(m_MonsterState)
+	{
+	case MONSTERSTATE_IDLE:
+		m_flightSpeed = 80;
+		return GetScheduleOfType( SCHED_IDLE_WALK );
+
+	case MONSTERSTATE_ALERT:
+		m_flightSpeed = 150;
+		return GetScheduleOfType( SCHED_IDLE_WALK );
+
+	case MONSTERSTATE_COMBAT:
+		m_flMaxSpeed = GetSkillValue("flybee_maxspeed");
+
+		if ( HasConditions( bits_COND_CAN_MELEE_ATTACK1 ) )
+		{
+			return GetScheduleOfType( SCHED_MELEE_ATTACK1 );
+		}
+
+		{
+			const bool canRangeAttack1 = HasConditions(bits_COND_CAN_RANGE_ATTACK1);
+			const bool canRangeAttack2 = HasConditions(bits_COND_CAN_RANGE_ATTACK2);
+
+			if (canRangeAttack1 && canRangeAttack2)
+			{
+				const bool doAttack2 = RANDOM_LONG(0, 2) > 0;
+				if (doAttack2)
+				{
+					return GetScheduleOfType(SCHED_RANGE_ATTACK2);
+				}
+				else
+				{
+					return GetScheduleOfType(SCHED_RANGE_ATTACK1);
+				}
+			}
+			else if (canRangeAttack1)
+			{
+				return GetScheduleOfType(SCHED_RANGE_ATTACK1);
+			}
+			else if (canRangeAttack2)
+			{
+				return GetScheduleOfType(SCHED_RANGE_ATTACK2);
+			}
+			else
+			{
+				if (m_hEnemy != 0 && (Center() - m_hEnemy->Center()).IsLengthLessThanOrEqual(300) && std::fabs(pev->origin.z - m_hEnemy->pev->origin.z) <= 128)
+					return slFlybeeRunAttack;
+			}
+		}
+
+		if ( HasConditions( bits_COND_HEAVY_DAMAGE ) )
+		{
+			m_flightSpeed = Q_min ( m_flMaxSpeed, m_flightSpeed + 40 );
+		}
+		return GetScheduleOfType( SCHED_STANDOFF );
+	default:
+		return CFlyingMonster::GetSchedule();
+	}
+}
+
+Schedule_t* CFlybee::GetScheduleOfType ( int Type )
+{
+	switch	( Type )
+	{
+	case SCHED_IDLE_WALK:
+		return slFlybeeSwimAround;
+
+	case SCHED_STANDOFF:
+		return slFlybeeCircleEnemy;
+
+	case SCHED_FAIL:
+		return slFlybeeSwimAgitated;
+
+	case SCHED_DIE:
+		return slFlybeeTwitchDie;
+
+	case SCHED_MELEE_ATTACK1:
+		return slFlybeeMeleeAttack;
+
+	case SCHED_RANGE_ATTACK1:
+		return slFlybeeRangeAttack1;
+
+	case SCHED_RANGE_ATTACK2:
+		return slFlybeeRangeAttack2;
+
+	case SCHED_CHASE_ENEMY:
+		AttackSound();
+		// pssthrough
+	default:
+		return CFlyingMonster::GetScheduleOfType( Type );
+	}
+}
+
+void CFlybee::StartTask(Task_t *pTask)
+{
+	switch (pTask->iTask)
+	{
+	case TASK_FLYBEE_CIRCLE_ENEMY:
+		break;
+
+	case TASK_FLYBEE_SWIM:
+		break;
+
+	case TASK_SMALL_FLINCH:
+		if (m_idealDist > 128)
+		{
+			m_flMaxDist = 512;
+			m_idealDist = 512;
+		}
+		CFlyingMonster::StartTask(pTask);
+		break;
+
+	case TASK_FLYBEE_STOP_MOVING:
+		m_flightSpeed = 1;
+
+		if ( m_IdealActivity == m_movementActivity )
+		{
+			m_IdealActivity = GetStoppedActivity();
+		}
+
+		RouteClear();
+		TaskComplete();
+		break;
+
+	case TASK_FLYBEE_RUN_ATTACK:
+		m_IdealActivity = ACT_CROUCH;
+		m_flightSpeed = 128;
+		RouteClear();
+		break;
+
+	case TASK_DIE:
+		pev->movetype	= MOVETYPE_STEP;
+		pev->angles.x = 0;
+		UTIL_SetSize( pev, Vector( -8, -8, 0 ), Vector( 8,8,1 ) );
+		pev->deadflag = DEAD_DYING;
+
+		CFlyingMonster::StartTask(pTask);
+		break;
+
+	case TASK_FLYBEE_RANGE_ATTACK2:
+		m_IdealActivity = ACT_RANGE_ATTACK2;
+		break;
+
+	default:
+		CFlyingMonster::StartTask(pTask);
+		break;
+	}
+}
+
+void CFlybee::RunTask ( Task_t *pTask )
+{
+	switch ( pTask->iTask )
+	{
+	case TASK_FLYBEE_CIRCLE_ENEMY:
+		if (m_hEnemy == 0)
+		{
+			TaskComplete();
+		}
+		else if (FVisible( m_hEnemy ))
+		{
+			Vector vecFrom = m_hEnemy->EyePosition();
+
+			Vector vecDelta = (pev->origin - vecFrom).Normalize();
+			Vector vecSwim = CrossProduct( vecDelta, Vector( 0, 0, 1 ) ).Normalize();
+			
+			if (DotProduct( vecSwim, m_SaveVelocity ) < 0)
+				vecSwim *= -1.0f;
+
+			Vector vecPos = vecFrom + vecDelta * m_idealDist + vecSwim * 32;
+
+			TraceResult tr;
+		
+			UTIL_TraceHull( vecFrom, vecPos, ignore_monsters, large_hull, m_hEnemy->edict(), &tr );
+
+			if (tr.flFraction > 0.5)
+				vecPos = tr.vecEndPos;
+
+			m_SaveVelocity = m_SaveVelocity * 0.8 + 0.2 * (vecPos - pev->origin).Normalize() * m_flightSpeed;
+
+			if (m_hEnemy->FVisible(this))
+			{
+				m_flNextAlert -= 0.1f;
+
+				if (m_idealDist < m_flMaxDist)
+				{
+					m_idealDist += 4;
+				}
+				if (m_flightSpeed < m_flMaxSpeed)
+				{
+					m_flightSpeed += 40;
+				}
+				else if (m_flightSpeed < m_flMinSpeed)
+				{
+					m_flightSpeed += 80;
+				}
+			}
+			else 
+			{
+				m_flNextAlert += 0.1f;
+
+				if (m_idealDist > 128)
+				{
+					m_idealDist -= 4;
+				}
+				if (m_flightSpeed > m_flMinSpeed)
+				{
+					m_flightSpeed -= 3;
+				}
+			}
+
+			if (m_flightSpeed < m_flMinSpeed)
+			{
+				m_flightSpeed = 128;
+			}
+
+			if (m_flightSpeed > m_flMaxSpeed)
+			{
+				m_flightSpeed = m_flMaxSpeed;
+			}
+		}
+		else
+		{
+			m_flNextAlert = gpGlobals->time + 0.2;
+		}
+
+		if (m_flNextAlert < gpGlobals->time)
+		{
+			AlertSound();
+			m_flNextAlert = gpGlobals->time + RANDOM_FLOAT( 3, 5 );
+		}
+		break;
+
+	case TASK_FLYBEE_RUN_ATTACK:
+		{
+			if (m_fSequenceFinished && m_IdealActivity == ACT_CROUCH )
+			{
+				m_IdealActivity = ACT_RUN;
+			}
+			else if (m_fSequenceFinished )
+				TaskComplete();
+			else if (m_hEnemy == 0)
+			{
+				TaskFail("no enemy");
+				break;
+			}
+			else
+			{
+				TraceResult tr;
+				UTIL_TraceHull( pev->origin, m_hEnemy->Center(), ignore_monsters, large_hull, m_hEnemy->edict(), &tr );
+
+				if (tr.flFraction < 0.9f)
+				{
+					TaskFail("path is obstructed");
+					break;
+				}
+
+				m_SaveVelocity = (tr.vecEndPos - pev->origin).Normalize() * m_flightSpeed;
+				m_flightSpeed = Q_min ( m_flMaxSpeed, m_flightSpeed * 1.2f );
+			}
+
+			break;
+		}
+
+	case TASK_FLYBEE_RANGE_ATTACK2:
+		{
+			if ( m_fSequenceFinished )
+			{
+				m_Activity = ACT_RESET;
+				TaskComplete();
+			}
+			break;
+		}
+
+	case TASK_FLYBEE_SWIM:
+		if (m_fSequenceFinished )
+		{
+			TaskComplete();
+		}
+		break;
+
+	case TASK_DIE:
+		if ((m_IdealActivity == ACT_FALL || pev->frame >= 175.0f) && m_IdealActivity != ACT_LAND && (FBitSet( pev->flags, FL_ONGROUND) || pev->waterlevel == WL_Eyes) )
+		{
+			m_IdealActivity = ACT_LAND;
+		}
+		else if (pev->frame >= 175.0f && m_IdealActivity != ACT_LAND && m_IdealActivity != ACT_FALL)
+		{
+			StopAnimation();
+			m_IdealActivity = ACT_FALL;
+		}
+		else if (m_fSequenceFinished && m_IdealActivity == ACT_LAND)
+		{
+			CFlyingMonster::RunTask(pTask);
+			pev->deadflag = DEAD_DEAD;
+		}
+		break;
+
+	default: 
+		CFlyingMonster::RunTask ( pTask );
+		break;
+	}
+}
+
+float CFlybee::VectorToPitch( const Vector &vec )
+{
+	float pitch;
+	if (vec.z == 0 && vec.x == 0)
+		pitch = 0;
+	else
+	{
+		pitch = (int) (std::atan2(vec.z, std::sqrt(vec.x*vec.x+vec.y*vec.y)) * 180.0f / M_PI_F);
+		if (pitch < 0)
+			pitch += 360;
+	}
+	return pitch;
+}
+
+void CFlybee::Move(float flInterval)
+{
+	CFlyingMonster::Move( flInterval );
+}
+
+float CFlybee::FlPitchDiff()
+{
+	float	flPitchDiff;
+	float	flCurrentPitch;
+
+	flCurrentPitch = UTIL_AngleMod( pev->angles.z );
+
+	if ( flCurrentPitch == pev->idealpitch )
+	{
+		return 0;
+	}
+
+	flPitchDiff = pev->idealpitch - flCurrentPitch;
+
+	if ( pev->idealpitch > flCurrentPitch )
+	{
+		if (flPitchDiff >= 180)
+			flPitchDiff = flPitchDiff - 360;
+	}
+	else 
+	{
+		if (flPitchDiff <= -180)
+			flPitchDiff = flPitchDiff + 360;
+	}
+	return flPitchDiff;
+}
+
+float CFlybee::ChangePitch( int speed )
+{
+	if ( pev->movetype == MOVETYPE_FLY )
+	{
+		float diff = FlPitchDiff();
+		float target = 0;
+		if ( m_IdealActivity != GetStoppedActivity() )
+		{
+			if (diff < -20)
+				target = 45;
+			else if (diff > 20)
+				target = -45;
+		}
+		pev->angles.x = UTIL_Approach(target, pev->angles.x, 220.0 * 0.1 );
+	}
+	return 0;
+}
+
+float CFlybee::ChangeYaw( int speed )
+{
+	if ( pev->movetype == MOVETYPE_FLY )
+	{
+		float diff = FlYawDiff();
+		float target = 0;
+
+		if ( m_IdealActivity != GetStoppedActivity() )
+		{
+			if ( diff < -20 )
+				target = 20;
+			else if ( diff > 20 )
+				target = -20;
+		}
+		pev->angles.z = UTIL_Approach( target, pev->angles.z, 220.0 * 0.1 );
+	}
+	return CFlyingMonster::ChangeYaw( speed );
+}
+
+Activity CFlybee::GetStoppedActivity()
+{ 
+	if ( pev->movetype != MOVETYPE_FLY )		// UNDONE: Ground idle here, IDLE may be something else
+		return ACT_IDLE;
+	return ACT_WALK;
+}
+
+void CFlybee::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
+{
+	m_SaveVelocity = vecDir * m_flightSpeed;
+}
+
+void CFlybee::MonsterThink()
+{
+	CFlyingMonster::MonsterThink();
+
+	if ( pev->deadflag == DEAD_NO && m_MonsterState != MONSTERSTATE_SCRIPT )
+	{
+		Swim();
+	}
+}
+
+void CFlybee::Stop()
+{
+	m_flightSpeed = 80.0;
+}
+
+void CFlybee::Swim()
+{
+	if (FBitSet( pev->flags, FL_ONGROUND))
+	{
+		FlyAwayFromGround();
+		return;
+	}
+
+	if (m_hEnemy != 0 && m_IdealActivity == ACT_WALK && m_flightSpeed < m_flMinSpeed)
+	{
+		m_flightSpeed += 40;
+	}
+
+	Vector SteeringVector = GetSteeringVector(pev->origin, PROBE_LENGTH, m_SaveVelocity);
+	m_SaveVelocity = SetFlyVelocityWithSteer(m_SaveVelocity, SteeringVector);
+
+	SmoothAngles(m_SaveVelocity);
+}
+
+CFlyBall *CFlyBall::CreateFlyBall( Vector vecOrigin, Vector vecAngles, entvars_s *pevOwner, EntityOverrides entityOverrides )
+{
+	CFlyBall *pBall = GetClassPtr( (CFlyBall *)NULL );
+
+	UTIL_MakeAimVectors ( vecAngles );
+
+	float x, y, z;
+	// TODO: why such weird code?
+	do
+	{
+		x = RANDOM_FLOAT(-0.5,0.5) + RANDOM_FLOAT(-0.5,0.5);
+		y = RANDOM_FLOAT(-0.5,0.5) + RANDOM_FLOAT(-0.5,0.5);
+		z = x*x+y*y;
+	}
+	while (z > 1);
+
+	Vector vecDir = gpGlobals->v_forward +
+					x * VECTOR_CONE_6DEGREES.x * gpGlobals->v_right +
+					y * VECTOR_CONE_6DEGREES.y * gpGlobals->v_up;
+	vecDir.NormalizeInPlace();
+
+	pBall->pev->angles = UTIL_VecToAngles(vecDir);
+
+	pBall->pev->angles.x = -pBall->pev->angles.x;
+
+	UTIL_SetOrigin( pBall->pev, vecOrigin );
+
+	pBall->pev->owner = ENT ( pevOwner );
+
+	pBall->AssignEntityOverrides(entityOverrides);
+
+	pBall->Spawn();
+	pBall->pev->velocity = vecDir * FLYBALL_SPEED;
+	
+	return pBall;
+}
+
+void CFlyBall::Spawn()
+{
+	Precache();
+
+	pev->movetype = MOVETYPE_FLY;
+	pev->solid = SOLID_BBOX;
+	pev->classname = MAKE_STRING("flyball");
+
+	ApplyVisualWithOwn(GetVisual(ballVisual));
+
+	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
+	UTIL_SetOrigin( pev, pev->origin );
+
+	SetThink( &CFlyBall::AnimateThink );
+	SetTouch( &CFlyBall::ExplodeTouch );
+
+	pev->dmgtime = gpGlobals->time; // keep track of when ball spawned
+	pev->nextthink = gpGlobals->time + 0.1f;
+}
+
+void CFlyBall::Precache()
+{
+	RegisterAndPrecacheSoundScript(electroSoundScript);
+
+	RegisterVisualAsMineOwn(ballVisual);
+	RegisterVisual(ballTrailVisual);
+}
+
+void CFlyBall::AnimateThink()
+{
+	pev->nextthink = gpGlobals->time + 0.05;
+
+	float delta = gpGlobals->time - pev->dmgtime;
+
+	if ( delta > 5 || pev->velocity.IsLengthLessThan(10) )
+	{
+		SetTouch( NULL );
+		UTIL_Remove( this );
+	}
+
+	if ( delta > 0.0f && delta < 0.9f )
+	{
+		CSprite *pTrail = CreateSpriteFromVisual(GetVisual(ballTrailVisual), pev->origin);
+		if (pTrail)
+		{
+			pTrail->AnimateAndDie ( pTrail->pev->framerate );
+			pTrail->Expand ( pTrail->pev->scale, 120 );
+		}
+	}
+}
+
+void CFlyBall::ExplodeTouch( CBaseEntity *pOther )
+{
+	SetTouch( NULL );
+	SetThink( NULL );
+
+	TraceResult tr = UTIL_GetGlobalTrace();
+
+	if (!pOther->pev->takedamage)
+	{
+		const int baseDecal = gDecals[DECAL_OPFOR_SCORCH1].index >= 0 ? DECAL_OPFOR_SCORCH1 : DECAL_SMALLSCORCH1;
+		UTIL_DecalTrace(&tr, baseDecal + RANDOM_LONG(0, 2));
+
+		int iContents = UTIL_PointContents(pev->origin);
+
+		if (iContents != CONTENTS_WATER)
+		{
+			UTIL_Sparks(tr.vecEndPos);
+		}
+	}
+
+	if (pOther->pev->takedamage)
+	{
+		if ( pOther->pev != VARS ( pev->owner ) )
+		{
+			CBaseEntity* pAttacker = !FNullEnt(pev->owner) ? CBaseEntity::Instance(pev->owner) : nullptr;
+			pOther->ApplyTraceAttack(pev, pAttacker ? pAttacker->pev : pev, GetProjectileDirectDamageInfo(), pev->velocity.Normalize(), &tr);
+		}
+	}
+
+	EmitSoundScriptAmbient(tr.vecEndPos, electroSoundScript);
+
+	pev->modelindex = 0;
+	pev->solid = SOLID_NOT;
+	SetThink( &CBaseEntity::SUB_Remove );
+	pev->nextthink = gpGlobals->time + 0.01f; // let the sound play
+}
+
+void CFlybeeZapBomb::Spawn()
+{
+	ApplyVisual(GetVisual(zapVisual));
+	m_maxFrame = (float)MODEL_FRAMES(pev->modelindex) - 1;
+	m_startTime = m_lastTime = gpGlobals->time;
+
+	SetThink(&CFlybeeZapBomb::AnimateThink);
+	pev->nextthink = gpGlobals->time + 0.1f;
+}
+
+void CFlybeeZapBomb::Precache()
+{
+	RegisterAndPrecacheSoundScript(zapSoundScript);
+	RegisterVisual(zapVisual);
+	RegisterVisual(zapWaveVisual);
+}
+
+void CFlybeeZapBomb::Animate()
+{
+	pev->frame += pev->framerate * (gpGlobals->time - m_lastTime);
+	m_lastTime = gpGlobals->time;
+
+	if (pev->frame > m_maxFrame)
+	{
+		if (m_maxFrame > 0)
+			pev->frame = fmod(pev->frame, m_maxFrame);
+		else
+			pev->frame = 0.0f;
+	}
+}
+
+void CFlybeeZapBomb::AnimateThink()
+{
+	Animate();
+	if (m_startTime + 0.5f <= gpGlobals->time)
+	{
+		CBaseEntity* pOwner = CBaseEntity::OwnInstance(pev->owner);
+		const int classifyToIgnore = pOwner ? pOwner->Classify() : CLASS_NONE;
+
+		SendBeamWave(pev->origin, 1000, GetVisual(zapWaveVisual), MSG_PVS, pev->origin);
+		::RadiusDamage(pev->origin, pev, pOwner ? pOwner->pev : pev, RadiusDamageInfo(DamageInfo{GetSkillValue("flybee_dmg_beam"), DMG_SHOCK}), classifyToIgnore);
+		EmitSoundScript(zapSoundScript);
+
+		pev->speed = pev->scale;
+		pev->health = 120;
+		SetThink(&CFlybeeZapBomb::FadeThink);
+	}
+	pev->nextthink = gpGlobals->time + 0.1f;
+}
+
+void CFlybeeZapBomb::FadeThink()
+{
+	const float frametime = gpGlobals->time - m_lastTime;
+	pev->scale += pev->speed * frametime;
+	pev->renderamt -= pev->health * frametime;
+
+	if (pev->renderamt <= 0)
+	{
+		pev->renderamt = 0;
+		SetThink(&CBaseEntity::SUB_Remove);
+		pev->nextthink = gpGlobals->time;
+	}
+	else
+	{
+		Animate();
+		pev->nextthink = gpGlobals->time + 0.1f;
+	}
+}
