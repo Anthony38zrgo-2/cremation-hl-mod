@@ -51,13 +51,13 @@ def main():
                          'alpha_partial':int(((alpha>0)&(alpha<255)).sum()), 'material_uses':uses[desc['index']]})
     banks = [('ans.bin','F12632_ans.bin',tuple(range(0x0,0xb))),
              ('szom.bin','F12585_szom.bin',tuple(range(0x11a,0x13d))+tuple(range(0x3a1,0x3ac))),
-             ('zom.bin','F12583_zom.bin',(0x3db,0x3da,0x3cc,0x3dc,0x3de,0x3f0))]
+             ('zom.bin','F12583_zom.bin',(0x3db,0x3da,0x3cc,0x3dc,0x3de,0x3f0,0x3c8))]
     clips=[]
     for name, filename, ids in banks:
         clips += shared.extract_motions(exe,count,ids,SOURCE/filename,name,{})
     result=dict(identity=dict(name='Randy',kind=25,nodes=count), geometry=dict(resource='zstin.bin',file_index=pol_index,
                 bank_models=bank_models, active_models=len(models),decoding=encoding),
-                source_motion_sets=dict(idle='0x7',run='0xA (ans.bin; original Randy leaper locomotion)',jump='0x3',attack=['0x9','0x8'],death='0x11D'),
+                source_motion_sets=dict(idle='0x7',run='0x3C8 (zom.bin; shared zombie charge, same as David run)',jump='0x3',attack=['0x9','0x8'],death='0x11D'),
                 alpha_policy='Preserve alpha for source materials with an alpha-enabled TSP pass.',
                 textures=textures,models=models,nodes=nodes,attachments=attachments,clips=clips)
     (BASE/'Randy_extracted.json').write_text(json.dumps(result,separators=(',',':')),encoding='utf8')

@@ -20,7 +20,7 @@ def main():
         assert mdl.i(at+40)==native.i(donor+40) and (mdl.i(at+36)&1)==(native.i(donor+36)&1)
         fps=struct.unpack_from('<f',mdl.data,at+32)[0]; donor_fps=struct.unpack_from('<f',native.data,donor+32)[0]
         duration=(mdl.i(at+56)-1)/fps
-        expected=52/60 if entry['name']=='run1' else (native.i(donor+56)-1)/donor_fps
+        expected=30/30 if entry['name']=='run1' else (native.i(donor+56)-1)/donor_fps
         assert abs(duration-expected)<.00001,(entry['name'],duration,expected)
         event_ids=[mdl.i(mdl.i(at+52)+i*76+4) for i in range(mdl.i(at+48))]
         donor_events=[native.i(native.i(donor+52)+i*76+4) for i in range(native.i(donor+48))]

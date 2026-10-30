@@ -2,8 +2,8 @@ $modelname "D:/SteamLibrary/steamapps/common/Half-Life/Cremation/assets-source/h
 $cd "D:/SteamLibrary/steamapps/common/Half-Life/Cremation/assets-source/hotd2-randy/goldsrc"
 $cdtexture "D:/SteamLibrary/steamapps/common/Half-Life/Cremation/assets-source/hotd2-randy/goldsrc"
 $origin 0 0 0 -90
-$eyeposition 0 0 64
-$bbox -16 -16 0 16 16 72
+$eyeposition 0 0 54
+$bbox -16 -16 0 16 16 61
 $attachment 0 "Head" 0 0 0
 $bodygroup Torso
 {
@@ -12,7 +12,7 @@ $bodygroup Torso
  studio "part_01_2"
  blank
 }
-$hbox 2 "Torso" -5.02144 -13.56423 -0.59633 14.74811 13.57585 32.23953
+$hbox 2 "Torso" -4.31539 -11.55302 -0.56633 12.55604 11.56287 27.37516
 $bodygroup Head
 {
  studio "part_02_0"
@@ -20,7 +20,7 @@ $bodygroup Head
  studio "part_02_2"
  blank
 }
-$hbox 1 "Head" -12.09174 -6.95610 -7.52913 2.96733 6.94484 11.38264
+$hbox 1 "Head" -10.30550 -5.95447 -6.43995 2.57510 5.94494 9.70474
 $bodygroup UpperArm_R
 {
  studio "part_03_0"
@@ -28,7 +28,7 @@ $bodygroup UpperArm_R
  studio "part_03_2"
  blank
 }
-$hbox 5 "UpperArm_R" -6.01732 -5.45081 -19.83054 5.67064 6.58490 7.42369
+$hbox 5 "UpperArm_R" -5.15912 -4.67916 -16.86199 4.86540 5.63998 6.35063
 $bodygroup Forearm_R
 {
  studio "part_04_0"
@@ -36,7 +36,7 @@ $bodygroup Forearm_R
  studio "part_04_2"
  blank
 }
-$hbox 5 "Forearm_R" -4.70787 -4.52204 -21.52354 6.01755 4.58309 9.23711
+$hbox 5 "Forearm_R" -4.04972 -3.89228 -18.29633 5.15931 3.94401 7.88700
 $bodygroup Hand_R
 {
  studio "part_05_0"
@@ -44,7 +44,7 @@ $bodygroup Hand_R
  studio "part_05_2"
  blank
 }
-$hbox 5 "Hand_R" -3.03259 -6.53152 -25.01258 10.29865 4.97681 1.42772
+$hbox 5 "Hand_R" -2.63039 -5.59476 -21.25232 8.78635 4.27758 1.27070
 $bodygroup UpperArm_L
 {
  studio "part_06_0"
@@ -52,7 +52,7 @@ $bodygroup UpperArm_L
  studio "part_06_2"
  blank
 }
-$hbox 4 "UpperArm_L" -5.94524 -6.56799 -19.83063 5.74272 5.46773 7.42360
+$hbox 4 "UpperArm_L" -5.09805 -5.62566 -16.86206 4.92647 4.69349 6.35055
 $bodygroup Forearm_L
 {
  studio "part_07_0"
@@ -60,7 +60,7 @@ $bodygroup Forearm_L
  studio "part_07_2"
  blank
 }
-$hbox 4 "Forearm_L" -4.63579 -4.56618 -21.52363 6.08963 4.53896 9.23703
+$hbox 4 "Forearm_L" -3.98865 -3.92968 -18.29641 5.22038 3.90662 7.88693
 $bodygroup Hand_L
 {
  studio "part_08_0"
@@ -68,12 +68,12 @@ $bodygroup Hand_L
  studio "part_08_2"
  blank
 }
-$hbox 4 "Hand_L" -2.96051 -4.95991 -25.01267 10.37073 6.54842 1.42763
+$hbox 4 "Hand_L" -2.56932 -4.26325 -21.25240 8.84742 5.60908 1.27063
 $bodygroup Pelvis
 {
  studio "part_09_0"
 }
-$hbox 3 "Pelvis" -7.83622 -10.82043 -16.61176 10.13361 10.80489 4.19761
+$hbox 3 "Pelvis" -6.70013 -9.22842 -14.13496 8.64653 9.21525 3.61742
 $bodygroup Thigh_R
 {
  studio "part_10_0"
@@ -81,7 +81,7 @@ $bodygroup Thigh_R
  studio "part_10_2"
  blank
 }
-$hbox 7 "Thigh_R" -5.91724 -4.67832 -21.73066 6.34716 5.89226 3.61195
+$hbox 7 "Thigh_R" -5.07433 -4.02469 -18.47181 5.43857 5.05316 3.12123
 $bodygroup Shin_R
 {
  studio "part_11_0"
@@ -89,13 +89,13 @@ $bodygroup Shin_R
  studio "part_11_2"
  blank
 }
-$hbox 7 "Shin_R" -8.29451 -5.23595 -22.90294 3.83381 5.23721 6.38465
+$hbox 7 "Shin_R" -7.08840 -4.49713 -19.46499 3.30920 4.49819 5.47033
 $bodygroup Foot_R
 {
  studio "part_12_0"
  blank
 }
-$hbox 7 "Foot_R" -14.36737 -3.87495 -6.23397 5.38665 4.63185 3.34587
+$hbox 7 "Foot_R" -12.23347 -3.34405 -5.34267 4.62480 3.98532 2.89581
 $bodygroup Thigh_L
 {
  studio "part_13_0"
@@ -103,7 +103,7 @@ $bodygroup Thigh_L
  studio "part_13_2"
  blank
 }
-$hbox 6 "Thigh_L" -5.91698 -5.92775 -21.72064 6.34748 4.64594 3.62597
+$hbox 6 "Thigh_L" -5.07411 -5.08323 -18.46332 5.43884 3.99726 3.13311
 $bodygroup Shin_L
 {
  studio "part_14_0"
@@ -111,13 +111,13 @@ $bodygroup Shin_L
  studio "part_14_2"
  blank
 }
-$hbox 6 "Shin_L" -8.25470 -5.31714 -22.90055 3.88307 5.15603 6.45147
+$hbox 6 "Shin_L" -7.05467 -4.56591 -19.46296 3.35093 4.42941 5.52694
 $bodygroup Foot_L
 {
  studio "part_15_0"
  blank
 }
-$hbox 6 "Foot_L" -14.57412 -4.71755 -6.11190 5.15372 3.78924 3.35797
+$hbox 6 "Foot_L" -12.40863 -4.05793 -5.23925 4.42745 3.27144 2.90605
 $body abdomen "abdomen"
 $sequence idle "idle" fps 3.750000 loop
 $sequence run1 "run1" fps 30.000000 loop LX

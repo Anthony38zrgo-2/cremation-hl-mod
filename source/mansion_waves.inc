@@ -781,6 +781,63 @@ static bool mansionPursuePlayer(edict_t* e,edict_t* player,float dt){
     if(length2d(e->v.origin-before)>.1f){if(auto state=davidState(e))state->movedAt=globals->time;}
     return true;
 }
+static void mansionEngageNotify(edict_t* victim,entvars_t* attacker){
+    if(!valid(victim)||!attacker||!attacker->pContainingEntity)return;
+    if(!(victim->v.flags&FL_MONSTER))return;
+    if(!tposeIs(victim)&&!mansionActor(victim))return;
+    auto src=attacker->pContainingEntity;
+    if(!valid(src)||!(src->v.flags&FL_CLIENT)||src->v.health<=0||src->v.deadflag!=DEAD_NO)return;
+    mansionEngageLatch(victim,src);
+}
+static bool mansionEngageChaser(edict_t* e){
+    // Los mismos que ya persiguen hoy: tacticos + zombie/Max de a pie.
+    // Tpose tiene su think; Judgment/CZ/QZ/cultistas conservan sus objetivos.
+    if(tposeIs(e)||czIs(e)||qzIs(e)||judgmentIs(e)||mansionCultist(e))return false;
+    return true;
+}
+static bool mansionEngageUpdate(edict_t* e,float dt){
+    if(!mansionEngageChaser(e))return false;
+    auto& s=mansionEngageFor(e);
+    if(!s.engaged)return false;
+    bool tactical=mansionTacticalZombie(e);
+    if(!tactical){
+        // En puentes los no-tacticos siguen hoy las rutas marcadas: no tocar.
+        if(mansionOnBridgeRoute(e)||mansionOutsideCentral(e->v.origin))return false;
+    }
+    auto livePlayer=[](edict_t* p){return valid(p)&&(p->v.flags&FL_CLIENT)&&p->v.health>0&&p->v.deadflag==DEAD_NO;};
+    edict_t* visible=tactical?mansionPriorityPlayer(e):mansionVisiblePlayer(e,MansionZombieNoticeRange);
+    if(!valid(visible))visible=nullptr;
+    // Comprometido: manda el jugador recordado; las rutas ya no existen.
+    if(visible){s.player=visible;s.playerSerial=visible->serialnumber;s.lastSeen=visible->v.origin;}
+    else if(!livePlayer(s.player)||s.player->serialnumber!=s.playerSerial){s.player=nullptr;s.playerSerial=0;}
+    if(zombieBusy(e))return true;
+    mansionReleaseDoorRole(e);
+    auto state=davidState(e);
+    if(state){if(livePlayer(s.player)&&s.player->serialnumber==s.playerSerial){state->target=s.player;state->targetSerial=s.playerSerial;}else{state->target=nullptr;state->targetSerial=0;}}
+    if(visible){
+        // Jugador a la vista: persecucion directa, identica a la de hoy.
+        if(tactical)return mansionPursuePlayer(e,visible,dt);
+        return mansionChaseVisiblePlayer(e,visible,dt);
+    }
+    if(livePlayer(s.player)&&s.player->serialnumber==s.playerSerial){
+        // Recuerdo: avanzar al ultimo punto visto; al llegar, esperar encarando.
+        // No anima en espera para no reiniciar la secuencia (el glitch).
+        Vector delta=s.lastSeen-e->v.origin;
+        if(length2d(delta)<=72.f){e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;return true;}
+        float speed=mansionChaseSpeed(e);
+        if(state&&davidCrawling(*state))speed=16.f;
+        Vector before=e->v.origin;
+        mansionNavWalk(e,s.lastSeen,dt,speed,true);
+        if(length2d(e->v.origin-before)>.1f){e->v.angles.y=std::atan2((s.lastSeen-e->v.origin).y,(s.lastSeen-e->v.origin).x)*180.f/3.14159265f;if(state)state->movedAt=globals->time;}
+        return true;
+    }
+    // Sin jugador vivo: esperar encarando la ultima vista. Jamas retomar ruta.
+    {
+        Vector delta=s.lastSeen-e->v.origin;
+        if(length2d(delta)>1.f)e->v.angles.y=std::atan2(delta.y,delta.x)*180.f/3.14159265f;
+    }
+    return true;
+}
 static bool mansionTacticalMove(edict_t* e,float dt){
     if(tposeIs(e))return false;
     if(!aliveEnemy(e)||pushed(e)||czIs(e)||judgmentIs(e)||mansionCultist(e))return false;
@@ -796,6 +853,7 @@ static bool mansionTacticalMove(edict_t* e,float dt){
         }
     }
     if(!valid(s.target)||s.target->serialnumber!=s.targetSerial||s.target->v.health<=0||globals->time>s.rememberUntil){s.target=nullptr;return false;}
+    mansionEngageLatch(e,s.target);
     if(globals->time<s.reactAt)return true;
     if(zombieBusy(e))return true;
     Vector delta=s.lastSeen-e->v.origin;float distance=length2d(delta);
@@ -810,7 +868,9 @@ static bool mansionTacticalMove(edict_t* e,float dt){
 static void mansionMove(edict_t* e,float dt){
     if(tposeIs(e))return;
     if(auto state=davidState(e))if(state->dying)return;
-    if(mansionMap()&&mansionActor(e)&&aliveEnemy(e)&&!pushed(e))if(auto player=mansionPriorityPlayer(e)){mansionPursuePlayer(e,player,dt);return;}
+    // Comprometidos primero: jamas retoman rutas/puertas/asedio.
+    if(mansionMap()&&mansionActor(e)&&aliveEnemy(e)&&!pushed(e)&&mansionEngageUpdate(e,dt))return;
+    if(mansionMap()&&mansionActor(e)&&aliveEnemy(e)&&!pushed(e))if(auto player=mansionPriorityPlayer(e)){mansionEngageLatch(e,player);mansionPursuePlayer(e,player,dt);return;}
     if(mansionEventMove(e,dt))return;
     if(judgmentZeal(e))return;
     bool cultist=mansionCultist(e),perimeterCultist=false;
@@ -823,6 +883,7 @@ static void mansionMove(edict_t* e,float dt){
     if(zombieBusy(e))return;
     if(!mansionTacticalZombie(e)&&!onBridge&&!cultist&&!perimeterCultist&&!czIs(e)&&!qzIs(e)&&!judgmentIs(e)&&!tposeIs(e)){
         if(auto player=mansionVisiblePlayer(e,MansionZombieNoticeRange)){
+            mansionEngageLatch(e,player);
             if(mansionChaseVisiblePlayer(e,player,dt))return;
         }
     }
@@ -1288,7 +1349,7 @@ static void mansionActivate(){
     mansionAliveAt=-1;mansionAliveCached=0;mansionHordeAliveAt=-1;mansionHordeAliveCached=0;
     mansionCultists.clear();mansionDoorStrikes.clear();mansionSense.assign(globals->maxEntities,MansionSense{});mansionRouteIntents.assign(globals->maxEntities,MansionRouteIntent{});
     mansionController={};for(auto& door:mansionDoors)door={};for(auto& target:mansionUpperTargets)target=0;
-    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistEntryAt=0;mansionScientistScenePhase=0;mansionScientistRunningIn=false;mansionScientistSceneEndAt=0;mansionScientistVoiceLine=0;mansionScientistFemale=false;mansionScientistLastHealth=0;mansionScientistPainAt=0;mansionGroundAssigned=0;mansionScientistSceneCamera(false);mansionTacticalSenses.clear();mansionPlayerPursuits.clear();for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;for(auto& a:mansionRaidAttacks)a={};
+    mansionScientist={};mansionScientistWaveSpawned=0;mansionInvaded=false;mansionScientistAppearAt=0;mansionScientistKnockAt=0;mansionScientistVoiceAt=0;mansionScientistThankUntil=0;mansionScientistEntryAt=0;mansionScientistScenePhase=0;mansionScientistRunningIn=false;mansionScientistSceneEndAt=0;mansionScientistVoiceLine=0;mansionScientistFemale=false;mansionScientistLastHealth=0;mansionScientistPainAt=0;mansionGroundAssigned=0;mansionScientistSceneCamera(false);mansionTacticalSenses.clear();mansionPlayerPursuits.clear();mansionEngaged.clear();for(auto& r:mansionRaiders)r={};for(auto& t:mansionRaidHitAt)t=0;for(auto& a:mansionRaidAttacks)a={};
     mansionNavReset();mansionAssignCultistRoles();
     mansionLightsReset();
 #ifdef CREMATION_ENABLE_VALIDATION

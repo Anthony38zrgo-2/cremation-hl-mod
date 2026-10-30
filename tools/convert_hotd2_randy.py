@@ -22,7 +22,10 @@ NAMES = ['Root','Torso','Head','UpperArm_R','Forearm_R','Hand_R','UpperArm_L',
 C = np.array([[0,0,-1],[-1,0,0],[0,1,0]],float)
 GROUP = [0,2,1,5,5,5,4,4,4,3,7,7,7,6,6,6]
 # Preserve native fast-zombie labels, order, activities and event protocol.
-SEQS=[('idle',0x7,1,True,0,0),('run1',0xA,3,True,125,0),
+# Randy mide menos que el zombie base (zstin 8.35 vs znsam2 9.85 en HOTD2):
+# altura 61 en vez de 72. Las hitbox/hull se derivan del mismo escalado.
+RANDY_HEIGHT = 61
+SEQS=[('idle',0x7,1,True,0,0),('run1',0x3C8,3,True,125,0),
       ('diesimple',0x11D,36,False,0,2001),('dieforward',0x3CC,38,False,0,2001),
       ('diebackward',0x3DA,37,False,0,2001),('attack1',0x9,30,True,0,1),
       ('jumpattack',0x3,28,False,0,4),('climb',0x124,0,False,0,1003),
@@ -48,7 +51,7 @@ def main():
         if n['model_id']:
             verts=np.array(models[n['model_id']]['vertices'])[:,:3]@C.T
             points.extend(verts@world_r[n['index']].T+world_p[n['index']])
-    points=np.array(points);scale=72/(points[:,2].max()-points[:,2].min());floor=-points[:,2].min()*scale
+    points=np.array(points);scale=RANDY_HEIGHT/(points[:,2].max()-points[:,2].min());floor=-points[:,2].min()*scale
     local_ref=np.array([n['offset'] for n in nodes])@C.T*scale;local_ref[0]=[0,0,floor]
     rest=local_ref.copy()
     for i in range(1,16):rest[i]+=rest[parents[i]]
@@ -99,7 +102,7 @@ def main():
                 v=list(verts[vi]);v[-2]/=du;v[-1]/=dv;text+=str(v[0])+' '+' '.join(f'{x:.7f}' for x in v[1:])+'\n'
         return text+'end\n'
     counts=[];bases=[];base=1;bodygroups=[];hitboxes=[];gibfiles=[];part_bounds=[[[0]*6 for _ in range(5)]]
-    qc=f'$modelname "{(OUT/"randy.mdl").as_posix()}"\n$cd "{OUT.as_posix()}"\n$cdtexture "{OUT.as_posix()}"\n$origin 0 0 0 -90\n$eyeposition 0 0 64\n$bbox -16 -16 0 16 16 72\n$attachment 0 "Head" 0 0 0\n'
+    qc=f'$modelname "{(OUT/"randy.mdl").as_posix()}"\n$cd "{OUT.as_posix()}"\n$cdtexture "{OUT.as_posix()}"\n$origin 0 0 0 -90\n$eyeposition 0 0 54\n$bbox -16 -16 0 16 16 61\n$attachment 0 "Head" 0 0 0\n'
     for n in nodes[1:]:
         i=n['index'];mid=n['model_id'];variants=[mid]
         if i==9:variants=[mid]
@@ -154,7 +157,7 @@ def main():
             count=248 if name=='climb' else 229
             indices=np.arange(count)%max(1,len(pos)-1)
             pos,rot=pos[indices].copy(),rot[indices].copy()
-        duration={'idle':4.0,'run1':52/60,'diesimple':20/30,'dieforward':20/35,
+        duration={'idle':4.0,'run1':30/30,'diesimple':20/30,'dieforward':20/35,
                   'diebackward':30/50,'attack1':20/30,'jumpattack':1.0,
                   'climb':247/30,'climb2':228/30}[name]
         fps=(len(pos)-1)/duration
@@ -228,7 +231,7 @@ def main():
     for i in range(nb):
         at=bo+i*112;name=bytes(data[at:at+32]).split(b'\0')[0].decode();compiled[name]=i
     assert set(compiled)==set(NAMES)
-    report=dict(source='HOTD2 PC Randy kind 0x19; zstin geometry and textures; ans/szom original leaper motions; run1 uses original Randy locomotion 0x0A',scale=scale,floor=floor,bones=compiled,bodygroups=bodygroups,hitboxes=hitboxes,sequences=seq_report,textures=len(textures),main_triangles=sum(len(models[n['model_id']]['faces']) for n in nodes if n['model_id']),sha256={})
+    report=dict(source='HOTD2 PC kind 0x19; zstin geometry and textures; ans/szom original leaper motions; run1 uses shared zombie charge 0x3C8 (same as David run) at Randy scale',scale=scale,floor=floor,bones=compiled,bodygroups=bodygroups,hitboxes=hitboxes,sequences=seq_report,textures=len(textures),main_triangles=sum(len(models[n['model_id']]['faces']) for n in nodes if n['model_id']),sha256={})
     DEST.mkdir(parents=True,exist_ok=True)
     backup=MOD/'backups/before-hotd2-randy';backup.mkdir(parents=True,exist_ok=True)
     install_paths=[OUT/'randy.mdl',OUT/'randy_charred.mdl',*[OUT/(stem+'.mdl') for stem in gibfiles]]

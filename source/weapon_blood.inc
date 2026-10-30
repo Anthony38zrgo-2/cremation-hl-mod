@@ -12,6 +12,8 @@ static int __fastcall weaponBloodDamage(void* object,void*,entvars_t* inflictor,
  amount*=dmcDamageScale(attacker)*davidMeleeScale(attacker);
  auto table=*reinterpret_cast<void***>(object);TakeDamageFn original=nullptr;for(auto& t:bloodDamageTables)if(t.table==table){original=t.original;break;}if(!original)return 0;
  edict_t* victim=nullptr;for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(valid(e)&&e->pvPrivateData==object){victim=e;break;}}
+ // Herir a un enemigo lo compromete: aunque no lo vea, ya no retomara rutas.
+ if(valid(victim)&&attacker)mansionEngageNotify(victim,attacker);
  bool wasAlive=aliveEnemy(victim);Vector lootAt=valid(victim)?center(victim):Vector(0,0,0);
  bool eligible=valid(victim)&&victim->v.health>0&&amount>0&&attacker&&(attacker->flags&FL_CLIENT);float before=eligible?victim->v.health:0;int serial=eligible?victim->serialnumber:0,color=-1;Vector at(0,0,0),direction(0,0,1);
  if(eligible){color=reinterpret_cast<int(__thiscall*)(void*)>(table[ravenholm_abi::slot::BloodColor])(object);at=center(victim);Vector source=(inflictor&&inflictor!=attacker)?inflictor->origin:attacker->origin+attacker->view_ofs;direction=normal(source-at);at=at+direction*std::min(12.f,length(victim->v.maxs-victim->v.mins)*.15f);int index=engine.pfnIndexOfEdict(victim);if(index<int(bloodHits.size())){auto& hit=bloodHits[index];if(hit.serial==serial&&globals->time-hit.time<=.025f){at=hit.point;direction=hit.direction;}}}

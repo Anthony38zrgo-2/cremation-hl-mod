@@ -97,6 +97,29 @@ static Vector normal(const Vector& a) { float n=length(a); return n>.001f ? a*(1
 static float dot(const Vector&a,const Vector&b) { return a.x*b.x+a.y*b.y+a.z*b.z; }
 static Vector center(edict_t* e) { return (e->v.absmin+e->v.absmax)*.5f; }
 #include "enemy_combat_policy.inc"
+// Enganche de combate pegajoso: una vez que un enemigo ve al jugador (o recibe
+// dano suyo) queda marcado de por vida y nunca retoma rutas/patrullas. Si lo
+// pierde de vista va a la ultima posicion vista y espera; jamas vuelve a la
+// ruta. Asi se elimina el "baile" entre perseguir y patrullar que reiniciaba
+// las animaciones a frame 0 cada pocos ticks.
+struct MansionEngageState{edict_t* actor=nullptr;int serial=0;edict_t* player=nullptr;int playerSerial=0;bool engaged=false;Vector lastSeen{0,0,0};};
+static std::vector<MansionEngageState> mansionEngaged;
+static MansionEngageState& mansionEngageFor(edict_t* e){
+    static MansionEngageState dummy{};
+    int idx=engine.pfnIndexOfEdict(e);if(idx<=0)return dummy;
+    if(size_t(idx)>=mansionEngaged.size())mansionEngaged.resize(idx+1);
+    auto& s=mansionEngaged[idx];
+    if(s.actor!=e||s.serial!=e->serialnumber)s=MansionEngageState{e,e->serialnumber};
+    return s;
+}
+static void mansionEngageLatch(edict_t* e,edict_t* player){
+    if(!valid(e)||!valid(player))return;
+    auto& s=mansionEngageFor(e);if(s.engaged)return;
+    s.engaged=true;s.player=player;s.playerSerial=player->serialnumber;s.lastSeen=player->v.origin;
+    char rep[128];std::snprintf(rep,sizeof rep,"%s engaged player",
+        text(e->v.targetname)?text(e->v.targetname):(text(e->v.classname)?text(e->v.classname):"?"));
+    startupTrace("MansionEngaged",rep);
+}
 static bool ricochet(edict_t* e) {
     return valid(e) && e->v.health>0 && e->v.viewmodel && (!std::strcmp(text(e->v.viewmodel),"models/v_9mmhandgun.mdl") || !std::strcmp(text(e->v.viewmodel),RicochetRedModel));
 }
@@ -463,6 +486,8 @@ static bool fireNailgun(edict_t* p,bool secondary) {
 static bool heartRollDeath(edict_t* e);
 static edict_t* heartSpawn(const Vector& origin);
 static float davidMeleeScale(entvars_t* attacker);
+static bool mansionActor(edict_t* e);
+static void mansionEngageNotify(edict_t* victim,entvars_t* attacker);
 #include "dmc_powerups.inc"
 #include "weapon_blood.inc"
 #include "link_gun.inc"
@@ -590,6 +615,17 @@ static void* hookModelPtr(edict_t* e) {
             e->v.sequence=0;e->v.frame=0;e->v.animtime=globals->time;
         }
     }
+    if(model && tposeIs(e)) {
+        int count=*reinterpret_cast<int*>(static_cast<unsigned char*>(model)+164);
+        if(e->v.sequence<0 || e->v.sequence>=count) {
+            // El codigo del donor (controller) puede pedir actividades de rango
+            // que el minion no tiene (LookupActivity devuelve -1). Sin este
+            // clamp el renderer lee fuera de la tabla y se sale el juego.
+            if(!invalidFastSequenceLogged){startupTrace("AnimationFallback","tpose missing activity: using safe death/idle");invalidFastSequenceLogged=true;}
+            e->v.sequence=(e->v.deadflag==DEAD_NO&&e->v.health>0)?TposeFrozenSeq:TposeDieSeq;
+            e->v.frame=0;e->v.animtime=globals->time;
+        }
+    }
     return model;
 }
 // Passive patrol relinquishes control permanently after contact. No cinematic
@@ -690,8 +726,11 @@ static void hordeRunAnimation(edict_t* e) {
         if(trueRun<0){
             // Fix 4: sin ACT_RUN no alternar ciclos por velocidad. Mantiene el
             // walk y compensa con framerate para no deslizar ni cortar.
+            // Randy: su run1 lleva la carrera del zombie (130u por ciclo de
+            // 31 frames a 30 fps = 125.8 u/s nativas); a 150 u/s de caza el
+            // factor que clava la zancada es 150/125.8 ~= 1.2.
             const char* cn=text(e->v.classname);
-            if(!std::strcmp(cn,"monster_randy")||!std::strcmp(cn,"monster_fastzombie"))base=2.2f;
+            if(!std::strcmp(cn,"monster_randy")||!std::strcmp(cn,"monster_fastzombie"))base=1.2f;
             else if(!std::strcmp(cn,"monster_poisionzombie"))base=1.2f;
             else if(!std::strcmp(cn,"monster_max"))base=1.4f;
             if(e->v.sequence==run){e->v.framerate=slowed(e)?base*balance::SlowFactor:base;e->v.animtime=globals->time;return;}
@@ -824,7 +863,9 @@ static void hookStartFrame() {
         float elapsed=std::max(.001f,globals->time-probe.previousTime);
         if(length2d(displacement)>96.f+1200.f*elapsed)probe.jumped=true;
         else probe.walked+=length2d(displacement);
-        probe.combat=hordeAlert(probe);
+        probe.combat=probe.combat||hordeAlert(probe);
+        // Combate pegajoso: una vez que ve al jugador (o recibe dano) la IA
+        // nativa se queda con el para siempre; jamas retoma la patrulla.
         // Idle-only collision-checked patrol; native AI owns all combat thereafter.
         if(!probe.fallback && globals->time-hordeStartedAt>3 && probe.walked<8 && length2d(probe.patrol-probe.origin)>32 && length2d(probe.patrol-probe.origin)<140)probe.fallback=true;
         if(probe.fallback && aliveEnemy(probe.entity) && !qzIs(probe.entity)) {
@@ -1320,7 +1361,7 @@ static int hookRestore(edict_t* e,SAVERESTOREDATA* data,int globalEntity) {
     if(qzIs(e)){qzInstall(e);weaponBloodInstall(e);enemyCombatInstall(e);Vector mins(-16,-16,0),maxs(16,16,QZHeight);engine.pfnSetSize(e,&mins.x,&maxs.x);e->v.view_ofs=Vector(0,0,QZEye);e->v.nextthink=globals->time+.1f;return result;}
     if(qzGib(e)){e->v.nextthink=std::max(globals->time+.1f,e->v.dmgtime);return result;}
     if(restoredClass&&!std::strcmp(restoredClass,"monster_minion"))necroInstall(e);
-    if(tposeIs(e)){engine.pfnSetModel(e,TposeModel);Vector lo(-32,-32,-80),hi(32,32,8);engine.pfnSetSize(e,&lo.x,&hi.x);e->v.view_ofs=Vector(0,0,-36);e->v.movetype=MOVETYPE_FLY;e->v.flags|=FL_FLY;e->v.renderfx=kRenderFxGlowShell;e->v.rendercolor=Vector(255,0,255);e->v.renderamt=25;e->v.nextthink=globals->time+.1f;}
+    if(tposeIs(e)){tposeInstall(e);engine.pfnSetModel(e,TposeModel);Vector lo(-32,-32,-80),hi(32,32,8);engine.pfnSetSize(e,&lo.x,&hi.x);e->v.view_ofs=Vector(0,0,-36);e->v.movetype=MOVETYPE_FLY;e->v.flags|=FL_FLY;e->v.renderfx=kRenderFxGlowShell;e->v.rendercolor=Vector(255,0,255);e->v.renderamt=25;weaponBloodInstall(e);enemyCombatInstall(e);e->v.nextthink=globals->time+.1f;}
     if(restoredClass&&!std::strcmp(restoredClass,"weapon_hornetgun"))e->v.classname=engine.pfnAllocString("weapon_necromancer");
     if(e->v.targetname&&!std::strcmp(text(e->v.targetname),"cremation_necro_fx"))e->v.flags|=FL_KILLME;
     if(restoredClass && !std::strcmp(restoredClass,"monster_human_grunt")) {cremationAllyHecu(e->pvPrivateData);cultistInstall(e);}

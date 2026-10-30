@@ -1,9 +1,13 @@
 // Tpose: calavera roja del minion con brillo magenta, invertida en T-pose,
 // vuelo + bolas de energia como el alien controller. Sin animaciones propias:
 // la locomocion queda congelada y el disparo es una bola nativa directa.
+// La muerte NO usa el schedule nativo del controller (mezcla codigo de
+// controller con modelo de minion sin attachments y con actividades
+// distintas): usa muerte propia con diesimple del minion + gibs humanos.
 static constexpr const char* TposeClass="monster_tpose";
 static constexpr const char* TposeModel="models/cremation/minion.mdl";
 static constexpr int TposeFrozenSeq=0;
+static constexpr int TposeDieSeq=16;
 static constexpr float TposeHealth=80.f;
 // Techo de vuelo: la hull cuelga 80 bajo el origen y el zombie mide 72.
 // A +160 la base (+80) libra su cabeza (+72) con margen: vuela POR ENCIMA
@@ -15,6 +19,52 @@ static constexpr float TposeShootRange=1200.f;
 static constexpr float TposeRouteReach=48.f;
 static edict_t* mansionFind(const char* name);
 static bool tposeIs(edict_t* e){return valid(e)&&!std::strcmp(text(e->v.classname),TposeClass);}
+static edict_t* tposeObject(void* object){for(int i=1;i<globals->maxEntities;++i){auto e=engine.pfnPEntityOfEntIndex(i);if(tposeIs(e)&&e->pvPrivateData==object)return e;}return nullptr;}
+struct TposeTable{void** base;std::array<void*,128> slots;};
+static std::vector<std::unique_ptr<TposeTable>> tposeTables;
+static int __fastcall tposeBloodColor(void*,void*){return 247;}
+static void __fastcall tposeKilled(void* object,void*,entvars_t* attacker,int gib){
+    auto e=tposeObject(object);if(!tposeIs(e))return;
+    bool first=e->v.deadflag==DEAD_NO;
+    e->v.health=std::min(0.f,e->v.health);
+    if(!first){
+        if(gib==2&&!(e->v.effects&EF_NODRAW)){
+            if(engine.pfnCVarGetFloat("violence_hgibs")!=0)humanGibSpawn(center(e),e->v.velocity);
+            e->v.effects|=EF_NODRAW;e->v.flags|=FL_KILLME;e->v.takedamage=DAMAGE_NO;
+        }
+        return;
+    }
+    // Muerte propia: nada del schedule/GibMonster nativo del controller
+    // (Attachments 2-3 y bola del controller no existen en el minion).
+    e->v.deadflag=DEAD_DYING;e->v.enemy=nullptr;
+    e->v.solid=SOLID_NOT;e->v.movetype=MOVETYPE_TOSS;e->v.velocity=Vector(0,0,0);
+    e->v.sequence=TposeDieSeq;e->v.frame=0;e->v.animtime=globals->time;e->v.framerate=1;
+    e->v.button=0;e->v.nextthink=globals->time+.1f;
+    engine.pfnEmitSound(e,CHAN_VOICE,"controller/con_die1.wav",1,ATTN_NORM,0,100);
+    if(attacker&&(attacker->flags&FL_CLIENT))attacker->frags+=1;
+    if(gib==2||(gib!=1&&e->v.health<-35)){
+        if(engine.pfnCVarGetFloat("violence_hgibs")!=0)humanGibSpawn(center(e),e->v.velocity);
+        e->v.effects|=EF_NODRAW;e->v.flags|=FL_KILLME;e->v.takedamage=DAMAGE_NO;
+    }
+}
+static int __fastcall tposeDamage(void* object,void*,entvars_t* inflictor,entvars_t* attacker,float amount,int bits){
+    if(enemyCombatBlocked(object,inflictor,attacker))return 0;
+    auto e=tposeObject(object);if(!tposeIs(e)||e->v.takedamage==DAMAGE_NO||amount<=0)return 0;
+    if(e->v.deadflag!=DEAD_NO){if(amount>=40&&!(bits&(1<<12)))tposeKilled(object,nullptr,attacker,2);return 0;}
+    e->v.health-=amount;
+    if(e->v.health<=0){auto table=*reinterpret_cast<void***>(object);reinterpret_cast<void(__thiscall*)(void*,entvars_t*,int)>(table[ravenholm_abi::slot::Killed])(object,attacker,(bits&(1<<13))?2:((bits&(1<<12))?1:0));}
+    return 1;
+}
+static void tposeInstall(edict_t* e){
+    if(!valid(e)||!e->pvPrivateData)return;
+    auto table=*reinterpret_cast<void***>(e->pvPrivateData);
+    for(auto& t:tposeTables){if(table==t->slots.data())return;if(table==t->base){*reinterpret_cast<void***>(e->pvPrivateData)=t->slots.data();return;}}
+    auto t=std::make_unique<TposeTable>();t->base=table;std::copy_n(table,t->slots.size(),t->slots.begin());
+    t->slots[ravenholm_abi::slot::TakeDamage]=reinterpret_cast<void*>(&tposeDamage);
+    t->slots[ravenholm_abi::slot::Killed]=reinterpret_cast<void*>(&tposeKilled);
+    t->slots[ravenholm_abi::slot::BloodColor]=reinterpret_cast<void*>(&tposeBloodColor);
+    *reinterpret_cast<void***>(e->pvPrivateData)=t->slots.data();tposeTables.push_back(std::move(t));
+}
 static void tposePrecache(){
     engine.pfnPrecacheModel(const_cast<char*>(TposeModel));
     // Las bolas del controller se crean en caliente con raven.pfnSpawn; aqui
@@ -28,6 +78,8 @@ static void tposePrecache(){
 static void tposeSpawn(edict_t* e){
     // El Spawn nativo del controller ya corrio: casco, vuelo, faccion y sonidos.
     // Solo se sustituye la visual por el minion invertido con brillo magenta.
+    // La muerte y el dano son propios (tposeInstall): el Killed nativo del
+    // controller asumiria attachments/bolas del controller que el minion no tiene.
     // El minion mide ~72 de alto con origen en los pies: invertido (pitch 180)
     // cuelga de 0 a -72. La hull se centra sobre lo visual (-80..+8) y se
     // extiende (+-32) para que los impactos correspondan al modelo.
@@ -41,7 +93,8 @@ static void tposeSpawn(edict_t* e){
     e->v.rendercolor=Vector(255,0,255);e->v.renderamt=25;
     e->v.sequence=TposeFrozenSeq;e->v.frame=0;e->v.framerate=0;e->v.animtime=globals->time;
     e->v.angles.x=180;e->v.angles.z=0;
-    e->v.teleport_time=globals->time+1.f;
+    e->v.teleport_time=globals->time+1.f;e->v.button=0;
+    tposeInstall(e);
     if(e->pvPrivateData)reinterpret_cast<void(__thiscall*)(void*)>(ravenholm_abi::address(ravenModule,ravenholm_abi::ResetSequenceInfoRva))(e->pvPrivateData);
     startupTrace("TposeSpawn","minion invertido magenta; vuelo + bolas controller");
 }
@@ -143,7 +196,20 @@ static bool tposeRouteMove(edict_t* e){
 }
 static bool tposeThink(edict_t* e){
     if(!tposeIs(e))return false;
-    if(!aliveEnemy(e))return false;
+    if(!aliveEnemy(e)){
+        // Cadaver con muerte propia: diesimple del minion hasta frame 255.
+        // Asi el Think nativo del controller (attachments/bolas del modelo
+        // original) nunca corre sobre el minion y no puede tumbar el juego.
+        if(e->v.flags&FL_KILLME)return true;
+        if(e->v.sequence<14||e->v.sequence>18){e->v.sequence=TposeDieSeq;e->v.frame=0;e->v.animtime=globals->time;}
+        e->v.nextthink=globals->time+.1f;
+        e->v.button=std::min(10,e->v.button+1);
+        e->v.frame=e->v.button*25.5f;e->v.animtime=globals->time;
+        e->v.framerate=e->v.button<10?1.f:0.f;
+        if(e->v.button>=10){e->v.deadflag=DEAD_DEAD;e->v.nextthink=0;}
+        return true;
+    }
+    e->v.button=0;
     e->v.nextthink=globals->time+.1f;
     // Visual permanente: minion + magenta + invertido + congelado en T-pose.
     if(std::strcmp(text(e->v.model),TposeModel))engine.pfnSetModel(e,TposeModel);
@@ -151,10 +217,11 @@ static bool tposeThink(edict_t* e){
     e->v.rendercolor=Vector(255,0,255);e->v.renderamt=25;
     e->v.movetype=MOVETYPE_FLY;e->v.flags|=FL_FLY;
     auto player=tposeEnemy(e);
+    if(valid(player))mansionEngageLatch(e,player);
     float yaw=e->v.angles.y;
     if(valid(player)){Vector d=player->v.origin-e->v.origin;yaw=std::atan2(d.y,d.x)*180.f/3.14159265f;}
     e->v.angles=Vector(180,yaw,0);
-    // Sin animaciones: congelado salvo muerte nativa.
+    // Sin animaciones en vida: congelado en T-pose (la muerte usa diesimple).
     e->v.sequence=TposeFrozenSeq;e->v.frame=0;e->v.framerate=0;e->v.animtime=globals->time;
     if(pushed(e))return true;
     // La hull cuelga 80u bajo el origen: si nace penetrando el suelo ningun
@@ -175,8 +242,17 @@ static bool tposeThink(edict_t* e){
             e->v.teleport_time=globals->time+TposeShootCooldown;
         }
     }else{
+        auto& en=mansionEngageFor(e);
+        if(en.engaged){
+            // Comprometido sin vista: esperar flotando encarando la ultima
+            // vista. Jamas retoma la ruta (evita el salto ruta<->orbita).
+            Vector d=en.lastSeen-e->v.origin;
+            if(length2d(d)>1.f)e->v.angles.y=std::atan2(d.y,d.x)*180.f/3.14159265f;
+            e->v.angles.x=180;e->v.angles.z=0;
+            e->v.velocity=Vector(0,0,0);
+        }
         // Sin jugador visible: sigue la ruta asignada sobrevolando la casa.
-        if(!tposeRouteMove(e))e->v.velocity=Vector(0,0,0);
+        else if(!tposeRouteMove(e))e->v.velocity=Vector(0,0,0);
     }
     return true;
 }
