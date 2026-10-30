@@ -457,3 +457,17 @@ class CZombieCremPoison : public CZombie
 };
 
 LINK_ENTITY_TO_CLASS(monster_poisionzombie, CZombieCremPoison);
+
+class CZombieCremQuake : public CZombie
+{
+	const char* DefaultModel() override { return "models/cremation/quake/zombie.mdl"; }
+};
+
+LINK_ENTITY_TO_CLASS(monster_quake_zombie, CZombieCremQuake);
+
+class CZombieCremMinion : public CZombie
+{
+	const char* DefaultModel() override { return "models/cremation/minion.mdl"; }
+};
+
+LINK_ENTITY_TO_CLASS(monster_minion, CZombieCremMinion);
