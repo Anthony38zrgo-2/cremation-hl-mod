@@ -120,6 +120,7 @@ static void mansionEngageLatch(edict_t* e,edict_t* player){
         text(e->v.targetname)?text(e->v.targetname):(text(e->v.classname)?text(e->v.classname):"?"));
     startupTrace("MansionEngaged",rep);
 }
+#include "featureful_ai.inc"
 static bool ricochet(edict_t* e) {
     return valid(e) && e->v.health>0 && e->v.viewmodel && (!std::strcmp(text(e->v.viewmodel),"models/v_9mmhandgun.mdl") || !std::strcmp(text(e->v.viewmodel),RicochetRedModel));
 }
@@ -772,6 +773,7 @@ static bool mansionEventThink(edict_t* e);
 static bool mansionGameOverFrame();
 static void hookThink(edict_t* e) {
     enemyCombatClearTargets(e);
+    featurefulAiPreThink(e);
     if(mansionScientistThink(e)||mansionEventThink(e))return;
     if(judgmentIs(e)){judgmentThink(e,.05f);e->v.nextthink=0;return;}
     if(tposeThink(e))return;
@@ -788,6 +790,7 @@ static void hookThink(edict_t* e) {
     if(active)e->v.framerate=expected;
     raven.pfnThink(e);
     incendiaryAfterThink(e,incendiary,grenadeOwner,grenadeOwnerSerial);
+    featurefulAiPostThink(e);
     // Fix 4: la mansion posee su animacion (mansionRouteAnimate/NavWalk). El
     // fallback de hordeProbes no debe pisar walk/run cada Think en el puente.
     for(const auto& probe:hordeProbes)if(probe.entity==e && probe.fallback && !probe.combat && aliveEnemy(e) && !(mansionMap()&&mansionActor(e)))hordeWalkAnimation(e);
@@ -1086,6 +1089,7 @@ static void hookTouch(edict_t* a,edict_t* b) {
 static const char* hookDescription() {return "Cremation";}
 static void extensionPrecache(){
         enemyCombatReset();
+        featurefulAiReset();
         davidStates.clear();davidNextDecision=0;davidPrecache();
         invalidFastSequenceLogged=false;
         startupTrace("worldspawn");
@@ -1211,6 +1215,7 @@ static int hookSpawn(edict_t* e) {
     weaponBloodInstall(e);
     davidSpawn(e);
     enemyCombatInstall(e);
+    featurefulAiInstall(e);
     return result;
 }
 #include "judgment_boss.inc"

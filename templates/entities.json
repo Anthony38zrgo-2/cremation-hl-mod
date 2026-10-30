@@ -1,0 +1,161 @@
+{
+    "_comment": "Cremation Fase 2 — 8 familias iniciales. Aplicar vía keyvalue 'Entity Template' en el FGD featureful, o renombrar a classname para default automático (ej. monster_zombie). Ver docs/entity-templates. Salud = [easy, medium, hard], alineada a skill.cfg actual.",
+    "david_base": {
+        "health": [50, 50, 100],
+        "classify": "Alien Monster",
+        "size": {
+            "mins": [-16, -16, 0],
+            "maxs": [16, 16, 72]
+        },
+        "field_of_view": 0.7,
+        "open_door_capability": true,
+        "squad_capability": {
+            "can_recruit": false,
+            "deny_recruiting": false,
+            "allow_different_classification": false,
+            "require_same_classname": false,
+            "require_same_ent_template": false
+        },
+        "check_melee_attack1": {
+            "distance": 64,
+            "dot": 0.7
+        },
+        "trace_hull_attacks": {
+            "1": {
+                "distance": 70,
+                "spawn_blood": true
+            },
+            "2": {
+                "distance": 70,
+                "spawn_blood": true
+            },
+            "3": {
+                "distance": 70,
+                "spawn_blood": true
+            }
+        },
+        "npc_behavior": {
+            "chase_enemy_failed": "try_nearest",
+            "investigate_sounds": true,
+            "cover_from_danger": true
+        }
+    },
+    "steve_tank": {
+        "inherits": "david_base",
+        "health": [80, 80, 140],
+        "skill": {
+            "zombie_dmg_one_slash": 30,
+            "zombie_dmg_both_slash": 50
+        }
+    },
+    "johnny_brute": {
+        "inherits": "david_base",
+        "health": [90, 90, 160],
+        "skill": {
+            "zombie_dmg_one_slash": 35,
+            "zombie_dmg_both_slash": 60
+        }
+    },
+    "ken_armored": {
+        "inherits": "david_base",
+        "health": [120, 120, 200],
+        "skill": {
+            "zombie_dmg_one_slash": 25,
+            "zombie_dmg_both_slash": 45
+        }
+    },
+    "quake_zombie": {
+        "health": [80, 80, 120],
+        "classify": "Alien Monster",
+        "size": {
+            "mins": [-16, -16, 0],
+            "maxs": [16, 16, 104]
+        },
+        "field_of_view": 0.7,
+        "open_door_capability": false,
+        "squad_capability": {
+            "can_recruit": false,
+            "allow_different_classification": false,
+            "require_same_classname": true
+        },
+        "check_melee_attack1": {
+            "distance": 64,
+            "dot": 0.6
+        },
+        "trace_hull_attacks": {
+            "1": {
+                "distance": 75,
+                "spawn_blood": true
+            }
+        },
+        "npc_behavior": {
+            "chase_enemy_failed": "try_nearest",
+            "investigate_sounds": true,
+            "cover_from_danger": false
+        }
+    },
+    "czero_infiltrator": {
+        "health": 100,
+        "classify": "Human Military",
+        "size": "human",
+        "field_of_view": 0.7,
+        "open_door_capability": true,
+        "squad_capability": {
+            "can_recruit": true,
+            "allow_different_classification": false,
+            "require_same_classname": true
+        },
+        "primary_weapon": [
+            {
+                "max_clip": 20
+            }
+        ],
+        "npc_behavior": {
+            "chase_enemy_failed": "try_nearest",
+            "investigate_sounds": true,
+            "cover_from_danger": true
+        }
+    },
+    "blood_cultist_hecu": {
+        "health": [50, 50, 80],
+        "classify": "Human Military",
+        "size": "human",
+        "open_door_capability": true,
+        "squad_capability": {
+            "can_recruit": true,
+            "allow_different_classification": false,
+            "require_same_classname": false
+        },
+        "primary_weapon": [
+            {
+                "max_clip": 0
+            }
+        ],
+        "npc_behavior": {
+            "chase_enemy_failed": "try_nearest",
+            "investigate_sounds": true,
+            "cover_from_danger": true
+        }
+    },
+    "necro_minion": {
+        "health": [50, 50, 100],
+        "classify": "Player Ally",
+        "size": "human",
+        "open_door_capability": true,
+        "squad_capability": {
+            "can_recruit": false,
+            "deny_recruiting": false,
+            "allow_different_classification": false
+        },
+        "check_melee_attack1": {
+            "distance": 64,
+            "dot": 0.7
+        },
+        "npc_behavior": {
+            "chase_enemy_failed": "try_nearest",
+            "investigate_sounds": true,
+            "cover_from_danger": false
+        },
+        "soundmask": 223
+    }
+}
