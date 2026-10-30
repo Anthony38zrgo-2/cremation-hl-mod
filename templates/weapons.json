@@ -5,13 +5,22 @@
         "world_model": "models/cremation/w_pipe_wrench.mdl",
         "fire": {
             "sound": {
-                "waves": ["weapons/pwrench_miss1.wav", "weapons/pwrench_miss2.wav"]
+                "waves": [
+                    "weapons/pwrench_miss1.wav",
+                    "weapons/pwrench_miss2.wav"
+                ]
             },
             "hit_body_sound": {
-                "waves": ["weapons/pwrench_hit1.wav", "weapons/pwrench_hit2.wav"]
+                "waves": [
+                    "weapons/pwrench_hit1.wav",
+                    "weapons/pwrench_hit2.wav"
+                ]
             },
             "hit_wall_sound": {
-                "waves": ["weapons/pwrench_big_hit1.wav", "weapons/pwrench_big_hit2.wav"]
+                "waves": [
+                    "weapons/pwrench_big_hit1.wav",
+                    "weapons/pwrench_big_hit2.wav"
+                ]
             }
         }
     },
@@ -22,7 +31,10 @@
         "ammo_name": "nails",
         "fire": {
             "sound": {
-                "waves": ["weapons/spike1.wav", "weapons/spike2.wav"]
+                "waves": [
+                    "weapons/spike1.wav",
+                    "weapons/spike2.wav"
+                ]
             }
         }
     },
@@ -33,12 +45,30 @@
         "ammo_name": "cells",
         "fire": {
             "sound": {
-                "waves": ["weapons/ut2004/link_fire.wav"]
+                "waves": [
+                    "weapons/ut2004/link_fire.wav"
+                ]
             }
         },
         "alt_fire": {
             "sound": {
-                "waves": ["weapons/ut2004/link_altfire.wav"]
+                "waves": [
+                    "weapons/ut2004/link_altfire.wav"
+                ]
+            }
+        },
+        "deploy": {
+            "sound": {
+                "waves": [
+                    "weapons/ut2004/link_equip.wav"
+                ]
+            }
+        },
+        "recharge": {
+            "sound": {
+                "waves": [
+                    "weapons/ut2004/link_equip.wav"
+                ]
             }
         }
     },
@@ -49,7 +79,29 @@
         "ammo_name": "357",
         "fire": {
             "sound": {
-                "waves": ["weapons/deagle-1.wav", "weapons/deagle-2.wav"]
+                "waves": [
+                    "weapons/deagle-1.wav",
+                    "weapons/deagle-2.wav"
+                ]
+            }
+        },
+        "reload": {
+            "sound": {
+                "waves": [
+                    "weapons/de_clipout.wav"
+                ]
+            }
+        },
+        "laser_spot": {
+            "activation_sound": {
+                "waves": [
+                    "weapons/de_deploy.wav"
+                ]
+            },
+            "deactivation_sound": {
+                "waves": [
+                    "weapons/de_deploy.wav"
+                ]
             }
         }
     },
@@ -64,7 +116,9 @@
             "bullet_count": 8,
             "bullet_distance": 2048,
             "sound": {
-                "waves": ["weapons/shotgun_fire6.wav"]
+                "waves": [
+                    "weapons/shotgun_fire6.wav"
+                ]
             }
         }
     },
@@ -77,13 +131,17 @@
             "type": "bullet",
             "damage": 40,
             "sound": {
-                "waves": ["weapons/awp1.wav"]
+                "waves": [
+                    "weapons/awp1.wav"
+                ]
             }
         },
         "zoom": {
             "fov": 20,
             "sound": {
-                "waves": ["weapons/zoom.wav"]
+                "waves": [
+                    "weapons/zoom.wav"
+                ]
             }
         }
     }

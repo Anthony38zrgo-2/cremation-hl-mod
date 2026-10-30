@@ -22,6 +22,9 @@ WAVES = {  # bsp base (sin sufijo) = oleada 1
     "maps/cs_mansion_wave3.bsp": 3,
     "maps/cs_mansion_wave4.bsp": 4,
 }
+# Los BSP live ya contienen inyecciones previas: regenerar SIEMPRE desde
+# los originales prístinos para que el script sea idempotente.
+PRISTINE = "backups/rewrite-maps"
 
 CLASSNAMES = {
     0: "monster_zombie",
@@ -122,6 +125,11 @@ def build(wave, entities):
         out.append(maker)
     out.append({"classname": "trigger_relay", "targetname": f"wave{wave}_dead",
                 "target": f"wave{wave}_counter"})
+    # Zonas de plantado del CZ (coords originales de rehenes).
+    out.append({"classname": "info_target", "targetname": "cz_plant_a",
+                "origin": "-304 -272 56"})
+    out.append({"classname": "info_target", "targetname": "cz_plant_b",
+                "origin": "-624 -176 192"})
     out.append({"classname": "game_counter", "targetname": f"wave{wave}_counter",
                 "target": f"wave{wave}_done", "frags": "0",
                 "health": str(total)})
@@ -135,9 +143,13 @@ def build(wave, entities):
 
 
 def main():
+    import os
     write = "--write" in sys.argv
     for path, wave in WAVES.items():
-        bsp = BSP(path)
+        src = os.path.join(PRISTINE, os.path.basename(path))
+        if not os.path.exists(src):
+            src = path  # primera vez: el live aún es prístino
+        bsp = BSP(src)
         comp = composition(wave)
         print(f"{path}: oleada {wave}, {len(comp)} monstruos")
         if not write:

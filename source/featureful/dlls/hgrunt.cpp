@@ -2571,10 +2571,3 @@ void CDeadHGrunt::Spawn()
 	MonsterInitDead();
 }
 
-// Cremation (rewrite): infiltrador CZ sobre grunt; template monster_czero_zombie + arma por child key.
-class CCZeroZombie : public CHGrunt
-{
-	const char* DefaultModel() override { return "models/cremation/czero/zombie_knife.mdl"; }
-};
-
-LINK_ENTITY_TO_CLASS(monster_czero_zombie, CCZeroZombie);
